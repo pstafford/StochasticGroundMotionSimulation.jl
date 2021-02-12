@@ -1,0 +1,13 @@
+name = "StochasticGroundMotionSimulation"
+uuid = "b8c06d6b-f458-43ac-b37a-3e779b88779f"
+authors = ["Peter Stafford <p.stafford@me.com>"]
+version = "0.1.0"
+
+[compat]
+julia = "1.5"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
