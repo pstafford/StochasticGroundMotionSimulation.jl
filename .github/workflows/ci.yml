@@ -5,7 +5,7 @@ on:
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
-    runs-on: ${{ matrix.os }}
+    runs-on: self-hosted
     strategy:
       fail-fast: false
       matrix:
@@ -13,9 +13,7 @@ jobs:
           - '1.5'
           - 'nightly'
         os:
-          - ubuntu-latest
           - macOS-latest
-          - windows-latest
         arch:
           - x64
     steps:
@@ -42,7 +40,7 @@ jobs:
           file: lcov.info
   docs:
     name: Documentation
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
