@@ -1,6 +1,5 @@
 using StochasticGroundMotionSimulation
 using Test
-using BenchmarkTools
 
 @testset "StochasticGroundMotionSimulation.jl" begin
 
