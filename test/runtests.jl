@@ -13,7 +13,7 @@ using BenchmarkTools
         @time Sai = rvt_response_spectrum(Ti, m, r, fas)
         # @btime Sai = rvt_response_spectrum(Ti, m, r, fas)
         # @btime rvt_response_spectrum_cy!(Sai, Ti, m, r, fas)
-    
+
     end
 
     @testset "Oscillator" begin
@@ -86,6 +86,9 @@ using BenchmarkTools
 
         @test Dex == Dex0
 
+    end
+
+    @testset "RVT" begin
 
 
 
