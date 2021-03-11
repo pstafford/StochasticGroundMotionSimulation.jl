@@ -156,7 +156,7 @@ end
 # time_c(fas)
 # time_c(gfas)
 
-function fourier_source(f::T, m::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::String="Brune") where T<:Real
+function fourier_source(f::T, m::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::Symbol=:Brune) where T<:Real
 	Mo = magnitude_to_moment(m)
 	(fa, fb, ε) = corner_frequency(m, fas; fc_fun=fc_fun)
 	if isnan(ε) == true
@@ -173,7 +173,7 @@ end
 # time_Ef(1.0,5.0,fas)
 # time_Ef(1.0,5.0,gfas)
 
-function fourier_source_shape(f::T, m::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::String="Brune") where T<:Real
+function fourier_source_shape(f::T, m::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::Symbol=:Brune) where T<:Real
 	# fc = corner_frequency(m, fas; fc_fun=fc_fun)
 	# return 1.0 / (1.0 + (f/fc)^2)
 	(fa, fb, ε) = corner_frequency(m, fas; fc_fun=fc_fun)
@@ -297,7 +297,7 @@ end
 # time_κ(1.0,100.0,fas)
 # time_κ(1.0,100.0,gfas)
 
-function fourier_site(f::Real, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; amp_model::String="Boore (2016)")
+function fourier_site(f::Real, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; amp_model::Symbol=:AlAtik2021_cy14)
 	# kappa filter
     Sf = exp( -π*f*fas.κ0 )
     # site impedence function
@@ -309,7 +309,7 @@ end
 # time_Sf(1.0,fas)
 # time_Sf(1.0,gfas)
 
-function fourier_spectral_ordinate( f::T, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
+function fourier_spectral_ordinate( f::T, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14 ) where T<:Real
 	# define all constant terms here
   	C = fourier_constant(fas)
 	# source term
@@ -334,7 +334,7 @@ end
 # time_fas(1.0,5.0,60.0,gfas)
 
 
-function fourier_spectrum( f::Vector{T}, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
+function fourier_spectrum( f::Vector{T}, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14 ) where T<:Real
 	# define all frequency independent terms here
   	C = fourier_constant(fas)
 	Mo = magnitude_to_moment(m)
@@ -361,7 +361,7 @@ end
 
 
 
-function fourier_spectrum!( Af::Vector, f::Vector{T}, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
+function fourier_spectrum!( Af::Vector, f::Vector{T}, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14 ) where T<:Real
 	# define all frequency independent terms here
 	C = fourier_constant(fas)
 	Mo = magnitude_to_moment(m)
@@ -392,7 +392,7 @@ end
 # time_fs(ff,5.0,10.0,gfas)
 
 
-function squared_fourier_spectrum!( Af2::Vector, f::Vector{T}, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
+function squared_fourier_spectrum!( Af2::Vector, f::Vector{T}, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14 ) where T<:Real
 	# define all frequency independent terms here
 	C = fourier_constant(fas)
 	Mo = magnitude_to_moment(m)
@@ -416,7 +416,7 @@ function squared_fourier_spectrum!( Af2::Vector, f::Vector{T}, m::T, r::T, fas::
   	nothing
 end
 
-function squared_fourier_spectrum!( Af2::Vector, f::Vector, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
+function squared_fourier_spectrum!( Af2::Vector, f::Vector, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14 ) where T<:Real
 	# define all frequency independent terms here
 	C = fourier_constant(fas)
 	Mo = magnitude_to_moment(m)
@@ -441,7 +441,7 @@ function squared_fourier_spectrum!( Af2::Vector, f::Vector, m::T, r::T, fas::Uni
 end
 
 
-function squared_fourier_spectrum_cy!( Af2::Vector, f::Vector{T}, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
+function squared_fourier_spectrum_cy!( Af2::Vector, f::Vector{T}, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14 ) where T<:Real
 	# define all frequency independent terms here
 	C = fourier_constant(fas)
 	Mo = magnitude_to_moment(m)
@@ -466,7 +466,7 @@ function squared_fourier_spectrum_cy!( Af2::Vector, f::Vector{T}, m::T, r::T, fa
 end
 
 
-function squared_fourier_spectrum_cy!( Af2::Vector, f::Vector, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
+function squared_fourier_spectrum_cy!( Af2::Vector, f::Vector, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14 ) where T<:Real
 	# define all frequency independent terms here
 	C = fourier_constant(fas)
 	Mo = magnitude_to_moment(m)

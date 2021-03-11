@@ -13,7 +13,7 @@ end
 
 
 
-function spectral_moment( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}, order::Int; fc_fun::String="Brune", amp_model::String="Boore (2016)", intervals::Int=101 ) where T<:Real
+function spectral_moment( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}, order::Int; fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14, intervals::Int=101 ) where T<:Real
 	# pre-allocate for squared fourier amplitude spectrum
 	Af2 = zeros(Real,intervals)
 	Hf2 = zeros(Real,intervals)
@@ -32,7 +32,7 @@ function spectral_moment( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParam
 		if fi[i] != fi[i+1]
 			xx = collect(range(fi[i], stop=fi[i+1], length=intervals))
 			squared_transfer!(Hf2, xx, sdof)
-			squared_fourier_spectrum!(Af2, xx, m, r, fas; fc_fun=fc_fun, amp_model=amp_model )
+			squared_fourier_spectrum!(Af2, xx, m, r, fas; fc_fun=fc_fun, amp_model=amp_model)
 			yy = (2π * xx).^order .* Hf2 .* Af2
 			int_sum += simpsons_rule(xx,yy)
 		end
@@ -43,7 +43,7 @@ end
 
 
 # function to compute spectral moments (m_0, m_2 & m_4)
-function spectral_moments( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}; fc_fun::String="Brune", amp_model::String="Boore (2016)", intervals::Int=101 ) where T<:Real
+function spectral_moments( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}; fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14, intervals::Int=101 ) where T<:Real
 	# pre-allocate for squared fourier amplitude spectrum
 	Af2 = zeros(Real, intervals)
 	Hf2 = zeros(Real, intervals)
@@ -77,7 +77,7 @@ function spectral_moments( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASPara
 end
 
 
-function spectral_moments_cy( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}; fc_fun::String="Brune", amp_model::String="Boore (2016)", intervals::Int=101 ) where T<:Real
+function spectral_moments_cy( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}; fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14, intervals::Int=101 ) where T<:Real
 	# pre-allocate for squared fourier amplitude spectrum
 	Af2 = zeros(Real, intervals)
 	Hf2 = zeros(Real, intervals)
@@ -108,7 +108,7 @@ end
 
 
 # function to define functions to compute the extrema and zero-crossing frequencies
-function zeros_extrema_frequencies( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}; fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
+function zeros_extrema_frequencies( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}; fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14 ) where T<:Real
 	m_0, m_2, m_4 = spectral_moments( m, r, fas, sdof; fc_fun=fc_fun, amp_model=amp_model )
 
 	fzero = sqrt( m_2 / m_0 ) / (2π)
@@ -118,7 +118,7 @@ end
 
 
 # function to define the numbers of zero crossings and extrema
-function zeros_extrema_numbers( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}; fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
+function zeros_extrema_numbers( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}; fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14 ) where T<:Real
     (fz, fe) = zeros_extrema_frequencies( m, r, fas, sdof; fc_fun=fc_fun, amp_model=amp_model )
     Dex = boore_thompson_2014( m, r, fas; fc_fun=fc_fun )
     return (2fz*Dex, 2fe*Dex)
@@ -127,7 +127,7 @@ end
 
 
 # function to compute the peak over rms ratio, a.k.a. peak factor
-function peak_factor( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}; fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
+function peak_factor( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}; fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14 ) where T<:Real
 	# get the numbers of zero crossing and extrema
 	n_z, n_e = zeros_extrema_numbers( m, r, fas, sdof; fc_fun=fc_fun, amp_model=amp_model )
 	# get the ratio of zero crossings to extrema
@@ -158,7 +158,7 @@ function peak_factor(n_z::T, n_e::T) where T<:Real
 end
 
 
-function find_integrand_value( v, m, r, fas, sdof; fc_fun::String="Brune", site_amp::Function=boore_2016_generic_amplification )
+function find_integrand_value( v, m, r, fas, sdof; fc_fun::Symbol=:Brune, site_amp::Function=boore_2016_generic_amplification )
   n_z, n_e = zeros_extrema_numbers( m, r, fas, sdof; fc_fun=fc_fun, site_amp=site_amp )
   z = sqrt( -log( n_e/n_z * ( 1.0 - (1.0 - v)^(1/n_e) ) ) )
   return z
@@ -172,7 +172,7 @@ end
 
 
 
-function rvt_response_spectral_ordinate( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}; region::String="WNA", fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
+function rvt_response_spectral_ordinate( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}; region::Symbol=:WNA, fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14 ) where T<:Real
   # get all relevant spectral moments
   m_0, m_2, m_4 = spectral_moments( m, r, fas, sdof; fc_fun=fc_fun, amp_model=amp_model )
   # get the duration metrics
@@ -188,7 +188,7 @@ function rvt_response_spectral_ordinate( m::T, r::T, fas::Union{FASParams,FASPar
   return Sa
 end
 
-function rvt_response_spectral_ordinate_cy( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}; region::String="WNA", fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
+function rvt_response_spectral_ordinate_cy( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}; region::Symbol=:WNA, fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14 ) where T<:Real
   # get all relevant spectral moments
   m_0, m_2, m_4 = spectral_moments_cy( m, r, fas, sdof; fc_fun=fc_fun, amp_model=amp_model )
   # get the duration metrics
@@ -205,14 +205,14 @@ function rvt_response_spectral_ordinate_cy( m::T, r::T, fas::Union{FASParams,FAS
 end
 
 
-function rvt_response_spectral_ordinate( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, period::T; region::String="WNA", fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
+function rvt_response_spectral_ordinate( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, period::T; region::Symbol=:WNA, fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14 ) where T<:Real
   	# create a sdof instance
   	sdof = Oscillator(1.0/period)
 	# call other function
 	return rvt_response_spectral_ordinate(m, r, fas, sdof; region=region, fc_fun=fc_fun, amp_model=amp_model)
 end
 
-function rvt_response_spectral_ordinate_cy( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, period::T; region::String="WNA", fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
+function rvt_response_spectral_ordinate_cy( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, period::T; region::Symbol=:WNA, fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14 ) where T<:Real
   	# create a sdof instance
   	sdof = Oscillator(1.0/period)
 	# call other function
@@ -220,7 +220,7 @@ function rvt_response_spectral_ordinate_cy( m::T, r::T, fas::Union{FASParams,FAS
 end
 
 
-function rvt_response_spectrum( period::Vector{T}, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; region::String="WNA", fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
+function rvt_response_spectrum( period::Vector{T}, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; region::Symbol=:WNA, fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14 ) where T<:Real
 	Sa = zeros(typeof(fas.Δσ),length(period))
 	for i = 1:length(period)
 		Sa[i] = rvt_response_spectral_ordinate( m, r, fas, period[i]; region=region, fc_fun=fc_fun, amp_model=amp_model )
@@ -228,7 +228,7 @@ function rvt_response_spectrum( period::Vector{T}, m::T, r::T, fas::Union{FASPar
   	return Sa
 end
 
-function rvt_response_spectrum_cy( period::Vector{T}, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; region::String="WNA", fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
+function rvt_response_spectrum_cy( period::Vector{T}, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; region::Symbol=:WNA, fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14 ) where T<:Real
 	Sa = zeros(typeof(fas.Δσ),length(period))
 	for i = 1:length(period)
 		Sa[i] = rvt_response_spectral_ordinate_cy( m, r, fas, period[i]; region=region, fc_fun=fc_fun, amp_model=amp_model )
@@ -236,13 +236,13 @@ function rvt_response_spectrum_cy( period::Vector{T}, m::T, r::T, fas::Union{FAS
   	return Sa
 end
 
-function rvt_response_spectrum!( Sa::Vector, period::Vector{T}, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; region::String="WNA", fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
+function rvt_response_spectrum!( Sa::Vector, period::Vector{T}, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; region::Symbol=:WNA, fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14 ) where T<:Real
 	for i = 1:length(period)
 		Sa[i] = rvt_response_spectral_ordinate( m, r, fas, period[i]; region=region, fc_fun=fc_fun, amp_model=amp_model )
   	end
 end
 
-function rvt_response_spectrum_cy!( Sa::Vector, period::Vector{T}, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; region::String="WNA", fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
+function rvt_response_spectrum_cy!( Sa::Vector, period::Vector{T}, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; region::Symbol=:WNA, fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14 ) where T<:Real
 	for i = 1:length(period)
 		Sa[i] = rvt_response_spectral_ordinate_cy( m, r, fas, period[i]; region=region, fc_fun=fc_fun, amp_model=amp_model )
   	end

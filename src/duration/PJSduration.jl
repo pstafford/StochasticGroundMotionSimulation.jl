@@ -2,7 +2,7 @@
 
 
 # function to implement the Boore & Thompson (2014) excitation duration function
-function boore_thompson_2014( m::Real, r::Real, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::String="Brune" )
+function boore_thompson_2014( m::Real, r::Real, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::Symbol=:Brune )
   # source duration
   fa, fb, ε = corner_frequency(m, fas; fc_fun=fc_fun)
   if fc_fun == :Atkinson_Silva_2000
