@@ -109,8 +109,8 @@ function boore_thompson_2012(m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASPa
     else # we need to interpolate the distance values only
       r_lo = r_jj_bt12[j_lo]
       r_hi = r_jj_bt12[j_hi]
-      c_lo = boore_thompson_2012_coefs(i_lo, r_lo; region=region)
-      c_hi = boore_thompson_2012_coefs(i_lo, r_hi; region=region)
+      c_lo = boore_thompson_2012_coefs(i_lo, j_lo; region=region)
+      c_hi = boore_thompson_2012_coefs(i_lo, j_hi; region=region)
       D_lo = boore_thompson_2012_base(η, c_lo)
       D_hi = boore_thompson_2012_base(η, c_hi)
       Dratio = D_lo + (r - r_lo)/(r_hi - r_lo)*(D_hi - D_lo)
