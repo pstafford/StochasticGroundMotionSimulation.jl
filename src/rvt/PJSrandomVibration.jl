@@ -1,19 +1,8 @@
 
 
 
-function simpsons_rule(x::Vector, y::Vector)
-    n = length(y)-1
-    n % 2 == 0 || error("`y` length (number of intervals) must be odd")
-    length(x)-1 == n || error("`x` and `y` length must be equal")
-    h = (x[end]-x[1])/n
-    @inbounds @views s = sum(y[1:2:n] .+ 4y[2:2:n] .+ y[3:2:n+1])
-    return h/3 * s
-end
 
-
-
-
-function spectral_moment( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}, order::Int; fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14, intervals::Int=101 ) where T<:Real
+function spectral_moment(order::Int, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}; fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14, intervals::Int=101 ) where T<:Real
 	# pre-allocate for squared fourier amplitude spectrum
 	Af2 = zeros(Real,intervals)
 	Hf2 = zeros(Real,intervals)
@@ -38,6 +27,47 @@ function spectral_moment( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParam
 		end
 	end
     return 2int_sum
+end
+
+
+function spectral_moments(order::Vector{Int}, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}; fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14, intervals::Int=101 ) where T<:Real
+	# pre-allocate for squared fourier amplitude spectrum
+	Af2 = zeros(Real, intervals)
+	Hf2 = zeros(Real, intervals)
+	# partition the integration domain to make sure the integral captures the key change in the integrand
+	# the key frequencies are likely to be
+	# - f_c (corner frequency)
+	# - f_osc (oscillator frequency and two values either side)
+	# - f_Q (combined kappa_0 & kappa_r fall-off frequency)
+	f_n = sdof.f_n
+ 	# note that we start slightly above zero to avoid a numerical issue with the frequency dependent Q(f) gradients
+	fi = [ 1e-10, 0.1, 1.0, 10.0, f_n/1.1, f_n, f_n*1.1, 100.0, 300.0 ]
+	sort!(fi)
+
+	# make sure the orders are listed as increasing for the following loop approach
+	sort!(order)
+	dorder = diff(order)
+	int_sumi = zeros(length(order))
+
+	for i in 1:length(fi)-1
+		if fi[i] != fi[i+1] # this can arise because of the mix of static and dynamic frequencies in the fi definition
+			xx = collect(range(fi[i], stop=fi[i+1], length=intervals))
+			squared_transfer!(Hf2, xx, sdof)
+			squared_fourier_spectrum!(Af2, xx, m, r, fas; fc_fun=fc_fun, amp_model=amp_model)
+			# compute default zeroth order integrand amplitude
+			yy = Hf2 .* Af2
+
+			for (idx, o) in enumerate(order)
+				if idx == 1
+					yy .*= (2π*xx).^o
+				else
+					yy .*= (2π*xx).^(dorder[idx-1])
+				end
+				@inbounds int_sumi[idx] += simpsons_rule(xx,yy)
+			end
+		end
+	end
+    return 2.0 * int_sumi
 end
 
 
@@ -125,50 +155,6 @@ function zeros_extrema_numbers( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FA
 end
 
 
-
-# function to compute the peak over rms ratio, a.k.a. peak factor
-function peak_factor( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}; fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14 ) where T<:Real
-	# get the numbers of zero crossing and extrema
-	n_z, n_e = zeros_extrema_numbers( m, r, fas, sdof; fc_fun=fc_fun, amp_model=amp_model )
-	# get the ratio of zero crossings to extrema
-	ξ = n_z / n_e
-	# define the integrand
-	integrand(z) = 1.0 - (1.0 - ξ*exp(-z^2))^n_e
-	# compute the peak factor
-	xx = collect(range(0.0, stop=10.0, length=101))
-	yy = integrand.(xx)
-	int_sum = simpsons_rule(xx, yy)
-
-	pf = sqrt(2.0) * int_sum
-	return pf
-end
-
-function peak_factor(n_z::T, n_e::T) where T<:Real
-	# get the ratio of zero crossings to extrema
-	ξ = n_z / n_e
-	# define the integrand
-	integrand(z) = 1.0 - (1.0 - ξ*exp(-z^2))^n_e
-	# compute the peak factor
-	xx = collect(range(0.0, stop=10.0, length=101))
-	yy = integrand.(xx)
-	int_sum = simpsons_rule(xx, yy)
-
-	pf = sqrt(2.0) * int_sum
-	return pf
-end
-
-
-function find_integrand_value( v, m, r, fas, sdof; fc_fun::Symbol=:Brune, site_amp::Function=boore_2016_generic_amplification )
-  n_z, n_e = zeros_extrema_numbers( m, r, fas, sdof; fc_fun=fc_fun, site_amp=site_amp )
-  z = sqrt( -log( n_e/n_z * ( 1.0 - (1.0 - v)^(1/n_e) ) ) )
-  return z
-end
-
-
-function peak_factor_integrand(z, n_z, n_e)
-  ξ = n_z / n_e
-  return 1.0 - (1.0 - ξ*exp(-z^2))^n_e
-end
 
 
 

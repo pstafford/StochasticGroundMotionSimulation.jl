@@ -13,17 +13,17 @@ function boore_thompson_2014( m::Real, r::Real, fas::Union{FASParams,FASParamsGe
   # path duration
   if r == 0.0
     return Ds
-  elseif r > 0.0 && r < 7.0
+  elseif r > 0.0 && r <= 7.0
     return Ds + r / 7.0 * 2.4
-  elseif r >= 7.0 && r < 45.0
+  elseif r > 7.0 && r <= 45.0
     return Ds + 2.4 + (r - 7.0)/(45.0 - 7.0)*(8.4 - 2.4)
-  elseif r >= 45.0 && r < 125.0
+  elseif r > 45.0 && r <= 125.0
     return Ds + 8.4 + (r - 45.0)/(125.0 - 45.0)*(10.9 - 8.4)
-  elseif r >= 125.0 && r < 175.0
+  elseif r > 125.0 && r <= 175.0
     return Ds + 10.9 + (r - 125.0)/(175.0 - 125.0)*(17.4 - 10.9)
-  elseif r >= 175.0 && r < 270.0
+  elseif r > 175.0 && r <= 270.0
     return Ds + 17.4 + (r - 175.0)/(270.0 - 175.0)*(34.2 - 17.4)
-  elseif r >= 270.0
+  elseif r > 270.0
     return Ds + 34.2 + 0.156 * (r - 270.0)
   end
 end
@@ -126,10 +126,10 @@ function boore_thompson_2012(m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASPa
       Dratio = D_lo + (m - m_lo)/(m_hi - m_lo)*(D_hi - D_lo)
     else # we need to interpolate for this magnitude and distance
       # create the combinations of (m,r) from these indices
-      m_lo = m_i[i_lo]
-      m_hi = m_i[i_hi]
-      r_lo = r_j[j_lo]
-      r_hi = r_j[j_hi]
+      m_lo = m_ii_bt12[i_lo]
+      m_hi = m_ii_bt12[i_hi]
+      r_lo = r_jj_bt12[j_lo]
+      r_hi = r_jj_bt12[j_hi]
 
       # get the corresponding coefficients
       c_ll = boore_thompson_2012_coefs(i_lo, j_lo; region=region)

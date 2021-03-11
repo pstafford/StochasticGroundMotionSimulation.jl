@@ -59,7 +59,7 @@ end
 
 
 """
-    corner_frequency(m::Real, fas::Union{PJSfasPararms,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::Symbol=:Brune)
+    corner_frequency(m::Real, fas::Union{FASPararms,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::Symbol=:Brune)
 
 Computes a 3-tuple of corner frequency components depending upon source spectrum type. By default the single-corner Brune spectrum is considered, but it `fc_fun` equals `"Atkinson_Silva_2000"` then the components of the double-corner spectrum are returned. If some other string is passed then a 3-tuple of NaN::Real values is returned.
 

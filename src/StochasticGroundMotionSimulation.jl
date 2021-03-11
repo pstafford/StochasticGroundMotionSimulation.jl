@@ -17,6 +17,10 @@ export Oscillator,
         squared_transfer,
         squared_transfer!,
         site_amplification,
+	magnitude_to_moment,
+        corner_frequency_brune,
+        corner_frequency_atkinson_silva_2000,
+        corner_frequency,
         finite_fault_factor,
     	geometric_spreading,
     	geometric_spreading_cy,
@@ -60,6 +64,8 @@ include("fourier/PJSsite.jl")
 include("fourier/PJSsource.jl")
 include("fourier/PJSpath.jl")
 include("duration/PJSduration.jl")
+include("rvt/PJSintegration.jl")
+include("rvt/PJSpeakFactor.jl")
 include("rvt/PJSrandomVibration.jl")
 
 
