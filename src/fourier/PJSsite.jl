@@ -107,6 +107,7 @@ function alatik_2021_cy14_inverted_amplification_seg(f::Real)
                 end
             end
         end
+        return Aii_aa21_cy14_a[end]
     elseif f <= 0.398107
         for i = 1:length(fii_aa21_cy14_b)
             @inbounds if fii_aa21_cy14_b[i] > f
@@ -120,6 +121,7 @@ function alatik_2021_cy14_inverted_amplification_seg(f::Real)
                 end
             end
         end
+        return Aii_aa21_cy14_b[end]
     elseif f <= 0.794328
         for i = 1:length(fii_aa21_cy14_c)
             @inbounds if fii_aa21_cy14_c[i] > f
@@ -133,6 +135,7 @@ function alatik_2021_cy14_inverted_amplification_seg(f::Real)
                 end
             end
         end
+        return Aii_aa21_cy14_c[end]
     elseif f <= 1.584893
         for i = 1:length(fii_aa21_cy14_d)
             @inbounds if fii_aa21_cy14_d[i] > f
@@ -146,6 +149,7 @@ function alatik_2021_cy14_inverted_amplification_seg(f::Real)
                 end
             end
         end
+        return Aii_aa21_cy14_d[end]
     elseif f <= 3.162278
         for i = 1:length(fii_aa21_cy14_e)
             @inbounds if fii_aa21_cy14_e[i] > f
@@ -159,6 +163,7 @@ function alatik_2021_cy14_inverted_amplification_seg(f::Real)
                 end
             end
         end
+        return Aii_aa21_cy14_e[end]
     elseif f <= 6.309573
         for i = 1:length(fii_aa21_cy14_f)
             @inbounds if fii_aa21_cy14_f[i] > f
@@ -172,6 +177,7 @@ function alatik_2021_cy14_inverted_amplification_seg(f::Real)
                 end
             end
         end
+        return Aii_aa21_cy14_f[end]
     elseif f <= 12.589251
         for i = 1:length(fii_aa21_cy14_g)
             @inbounds if fii_aa21_cy14_g[i] > f
@@ -185,6 +191,7 @@ function alatik_2021_cy14_inverted_amplification_seg(f::Real)
                 end
             end
         end
+        return Aii_aa21_cy14_g[end]
     elseif f <= 25.032
         for i = 1:length(fii_aa21_cy14_h)
             @inbounds if fii_aa21_cy14_h[i] > f
@@ -198,6 +205,7 @@ function alatik_2021_cy14_inverted_amplification_seg(f::Real)
                 end
             end
         end
+        return Aii_aa21_cy14_h[end]
     elseif f <= 50.032
         for i = 1:length(fii_aa21_cy14_i)
             @inbounds if fii_aa21_cy14_i[i] > f
@@ -211,7 +219,8 @@ function alatik_2021_cy14_inverted_amplification_seg(f::Real)
                 end
             end
         end
-    elseif f <= 100.0
+        return Aii_aa21_cy14_i[end]
+    elseif f < 100.0
         for i = 1:length(fii_aa21_cy14_j)
             @inbounds if fii_aa21_cy14_j[i] > f
                 j = i-1

@@ -1,5 +1,6 @@
 using StochasticGroundMotionSimulation
 using Test
+using QuadGK
 
 @testset "StochasticGroundMotionSimulation.jl" begin
 
@@ -87,10 +88,89 @@ using Test
 
     end
 
-    # @testset "RVT" begin
-    #
-    #
-    #
-    # end
+    @testset "RVT" begin
+
+        @testset "Integration" begin
+
+            integrand(x) = sin(x)
+
+            intervals = 101
+            x_min = 0.0
+            x_max = 2π
+            xx = collect(range(x_min, stop=x_max, length=intervals))
+            yy = integrand.(xx)
+
+            isr = simpsons_rule(xx, yy)
+
+            igk = quadgk(integrand, x_min, x_max)[1]
+
+            @test isr ≈ igk atol=10*eps()
+
+
+            m = 6.0
+            r = 100.0
+            fas = FASParams(100.0, [1.0, 50.0, Inf], [1.0, 0.5], 200.0, 0.4, 0.039)
+            sdof = Oscillator(1.0)
+
+            integrand(f) = squared_transfer(f, sdof) * fourier_spectral_ordinate(f, m, r, fas)^2
+
+            intervals = 101
+            x_min = sdof.f_n/1.1
+            x_max = sdof.f_n*1.1
+            xx = collect(range(x_min, stop=x_max, length=intervals))
+            yy = integrand.(xx)
+
+            isr = simpsons_rule(xx, yy)
+            igk = quadgk(integrand, x_min, x_max)[1]
+
+            @test isr ≈ igk rtol=1e-6
+            @test isr ≈ igk atol=1e-6
+
+
+            integrand(f) = squared_transfer(f, sdof) * fourier_spectral_ordinate(f, m, r, fas)^2
+
+            intervals = 101
+            x_min = 100.0
+            x_max = 200.0
+            xx = collect(range(x_min, stop=x_max, length=intervals))
+            yy = integrand.(xx)
+
+            isr = simpsons_rule(xx, yy)
+            igk = quadgk(integrand, x_min, x_max)[1]
+
+            @test isr ≈ igk rtol=1e-3
+            @test isr ≈ igk atol=1e-6
+
+
+            integrand(f) = (2π*f)^4 * squared_transfer(f, sdof) * fourier_spectral_ordinate(f, m, r, fas)^2
+
+            intervals = 101
+            x_min = 100.0
+            x_max = 200.0
+            xx = collect(range(x_min, stop=x_max, length=intervals))
+            yy = integrand.(xx)
+
+            isr = simpsons_rule(xx, yy)
+            igk = quadgk(integrand, x_min, x_max)[1]
+
+            @test isr ≈ igk rtol=1e-3
+            @test isr ≈ igk atol=1e-6
+
+            x_min = 300.0
+            x_max = 500.0
+            xx = collect(range(x_min, stop=x_max, length=intervals))
+            yy = integrand.(xx)
+
+            isr = simpsons_rule(xx, yy)
+            igk = quadgk(integrand, x_min, x_max)[1]
+
+            @test isr ≈ igk rtol=1e-3
+            @test isr ≈ igk atol=1e-6
+
+        end
+
+
+
+    end
 
 end

@@ -250,47 +250,63 @@ end
 # time_Pf(1.0,100.0,gfas)
 
 function fourier_attenuation(f::T, r::T, fas::Union{FASParams,FASParamsGeo}) where T<:Real
-	return exp( -π*f*r / ( fas.Q0 * f^fas.η * fas.cQ ) - π*f*fas.κ0 )
+	if f < eps()
+		return 1.0
+	else
+		return exp( -π*f*r / ( fas.Q0 * f^fas.η * fas.cQ ) - π*f*fas.κ0 )
+	end
 end
 
 function fourier_attenuation(f::Real, r::T, fas::Union{FASParams,FASParamsGeo}) where T<:Real
-	return exp( -π*f*r / ( fas.Q0 * f^fas.η * fas.cQ ) - π*f*fas.κ0 )
+	if f < eps()
+		return 1.0
+	else
+		return exp( -π*f*r / ( fas.Q0 * f^fas.η * fas.cQ ) - π*f*fas.κ0 )
+	end
 end
 
 function fourier_attenuation(f::T, r::T, fas::Union{FASParamsQr,FASParamsGeoQr}) where T<:Real
-	Kr = exp( -π*f*fas.κ0 )
-	Qr = 1.0
-	if r <= fas.QRrefi[1]
-		Qr *= exp( -π*f*r / ( fas.Q0i[1] * f^fas.ηi[1] * fas.cQ ) )
+	if f < eps()
+		return 1.0
 	else
-		Qr *= exp( -π*f*fas.QRrefi[1] / ( fas.Q0i[1] * f^fas.ηi[1] * fas.cQ ) )
-		for i in 2:length(fas.QRrefi)
-			if r <= fas.QRrefi[i]
-				Qr *= exp( -π*f*(r-fas.QRrefi[i-1]) / ( fas.Q0i[i] * f^fas.ηi[i] * fas.cQ ) )
-			else
-				Qr *= exp( -π*f*(fas.QRrefi[i]-fas.QRrefi[i-1]) / ( fas.Q0i[i] * f^fas.ηi[i] * fas.cQ ) )
+		Kr = exp( -π*f*fas.κ0 )
+		Qr = 1.0
+		if r <= fas.QRrefi[1]
+			Qr *= exp( -π*f*r / ( fas.Q0i[1] * f^fas.ηi[1] * fas.cQ ) )
+		else
+			Qr *= exp( -π*f*fas.QRrefi[1] / ( fas.Q0i[1] * f^fas.ηi[1] * fas.cQ ) )
+			for i in 2:length(fas.QRrefi)
+				if r <= fas.QRrefi[i]
+					Qr *= exp( -π*f*(r-fas.QRrefi[i-1]) / ( fas.Q0i[i] * f^fas.ηi[i] * fas.cQ ) )
+				else
+					Qr *= exp( -π*f*(fas.QRrefi[i]-fas.QRrefi[i-1]) / ( fas.Q0i[i] * f^fas.ηi[i] * fas.cQ ) )
+				end
 			end
 		end
+		return Kr * Qr
 	end
-	return Kr * Qr
 end
 
 function fourier_attenuation(f::Real, r::T, fas::Union{FASParamsQr,FASParamsGeoQr}) where T<:Real
-	Kr = exp( -π*f*fas.κ0 )
-	Qr = 1.0
-	if r <= fas.QRrefi[1]
-		Qr *= exp( -π*f*r / ( fas.Q0i[1] * f^fas.ηi[1] * fas.cQ ) )
+	if f < eps()
+		return 1.0
 	else
-		Qr *= exp( -π*f*fas.QRrefi[1] / ( fas.Q0i[1] * f^fas.ηi[1] * fas.cQ ) )
-		for i in 2:length(fas.QRrefi)
-			if r <= fas.QRrefi[i]
-				Qr *= exp( -π*f*(r-fas.QRrefi[i-1]) / ( fas.Q0i[i] * f^fas.ηi[i] * fas.cQ ) )
-			else
-				Qr *= exp( -π*f*(fas.QRrefi[i]-fas.QRrefi[i-1]) / ( fas.Q0i[i] * f^fas.ηi[i] * fas.cQ ) )
+		Kr = exp( -π*f*fas.κ0 )
+		Qr = 1.0
+		if r <= fas.QRrefi[1]
+			Qr *= exp( -π*f*r / ( fas.Q0i[1] * f^fas.ηi[1] * fas.cQ ) )
+		else
+			Qr *= exp( -π*f*fas.QRrefi[1] / ( fas.Q0i[1] * f^fas.ηi[1] * fas.cQ ) )
+			for i in 2:length(fas.QRrefi)
+				if r <= fas.QRrefi[i]
+					Qr *= exp( -π*f*(r-fas.QRrefi[i-1]) / ( fas.Q0i[i] * f^fas.ηi[i] * fas.cQ ) )
+				else
+					Qr *= exp( -π*f*(fas.QRrefi[i]-fas.QRrefi[i-1]) / ( fas.Q0i[i] * f^fas.ηi[i] * fas.cQ ) )
+				end
 			end
 		end
+		return Kr * Qr
 	end
-	return Kr * Qr
 end
 
 # time_κ(f,r,fas) = @time fourier_attenuation(f,r,fas)
