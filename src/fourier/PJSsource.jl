@@ -59,7 +59,7 @@ end
 
 
 """
-    corner_frequency(m::Real, fas::Union{PJSfasPararms,PJSfasParamsGeo,PJSfasParamsQr,PJSfasParamsGeoQr}; fc_fun::String="Brune")
+    corner_frequency(m::Real, fas::Union{PJSfasPararms,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::String="Brune")
 
 Computes a 3-tuple of corner frequency components depending upon source spectrum type. By default the single-corner Brune spectrum is considered, but it `fc_fun` equals `"Atkinson_Silva_2000"` then the components of the double-corner spectrum are returned. If some other string is passed then a 3-tuple of NaN::Real values is returned.
 
@@ -68,7 +68,7 @@ Computes a 3-tuple of corner frequency components depending upon source spectrum
     m = 6.0
     Δσ = 100.0
     κ0 = 0.035
-    fas = PJSfasParams(Δσ, κ0)
+    fas = FASParams(Δσ, κ0)
     # compute single corner frequency
     fc, tmp1, tmp2 = corner_frequency(m, fas)
     fc, tmp1, tmp2 = corner_frequency(m, fas; fc_fun="Brune")
@@ -76,7 +76,7 @@ Computes a 3-tuple of corner frequency components depending upon source spectrum
     fa, fb, ε = corner_frequency(m, fas; fc_fun="Atkinson_Silva_2000")
 ```
 """
-function corner_frequency(m::Real, fas::Union{PJSfasParams,PJSfasParamsGeo,PJSfasParamsQr,PJSfasParamsGeoQr}; fc_fun::Symbol=:Brune)
+function corner_frequency(m::Real, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::Symbol=:Brune)
     if fc_fun == :Brune
         return corner_frequency_brune(m, fas.Δσ, fas.β)::Real, NaN::Real, NaN::Real
     elseif fc_fun == :Atkinson_Silva_2000

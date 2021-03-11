@@ -1,6 +1,6 @@
 
 # function to implement generic geometric spreading (piecewise log-linear)
-function geometric_spreading( r::Real, fas::Union{PJSfasParams,PJSfasParamsQr} )
+function geometric_spreading( r::Real, fas::Union{FASParams,FASParamsQr} )
     z_r = 1.0
     for i = 2:length(fas.Rrefi)
       @inbounds if r < fas.Rrefi[i]
@@ -13,7 +13,7 @@ function geometric_spreading( r::Real, fas::Union{PJSfasParams,PJSfasParamsQr} )
     return z_r
 end
 
-function geometric_spreading( r::Real, fas::Union{PJSfasParamsGeo,PJSfasParamsGeoQr} )
+function geometric_spreading( r::Real, fas::Union{FASParamsGeo,FASParamsGeoQr} )
     z_r = 1.0
     for i = 2:length(fas.Rrefi)
       	@inbounds if r < fas.Rrefi[i]
@@ -30,13 +30,13 @@ function geometric_spreading( r::Real, fas::Union{PJSfasParamsGeo,PJSfasParamsGe
 end
 
 # try implementing the smooth CY14 transition here
-function geometric_spreading_cy( r::Real, fas::Union{PJSfasParams,PJSfasParamsQr} )
+function geometric_spreading_cy( r::Real, fas::Union{FASParams,FASParamsQr} )
     ln_z_r = -fas.γi[1]*log(r) + (-fas.γi[2]+fas.γi[1])*log(sqrt(r^2 + 50.0^2)) - (-fas.γi[2]+fas.γi[1])*log(sqrt(1.0^2 + 50.0^2))
 	z_r = exp(ln_z_r)
 	return z_r
 end
 
-function geometric_spreading_cy( r::Real, fas::Union{PJSfasParamsGeo,PJSfasParamsGeoQr} )
+function geometric_spreading_cy( r::Real, fas::Union{FASParamsGeo,FASParamsGeoQr} )
     ln_z_r = -fas.γi[1]*log(r) + (-fas.γf+fas.γi[1])*log(sqrt(r^2 + 50.0^2)) - (-fas.γf+fas.γi[1])*log(sqrt(1.0^2 + 50.0^2))
 	z_r = exp(ln_z_r)
 	return z_r

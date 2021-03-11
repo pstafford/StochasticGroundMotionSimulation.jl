@@ -1,5 +1,11 @@
 module StochasticGroundMotionSimulation
 
+using Interpolations
+using Roots
+using ForwardDiff
+using ForwardDiff: Dual
+
+
 export Oscillator,
         FASParams,
         FASParamsGeo,

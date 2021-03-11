@@ -1,6 +1,6 @@
 
 """
-    PJSfasParams
+    FASParams
 
 Custom type for the parameters the Fourier amplitude spectrum. Note that type doesn't include the impedance effects. The parameters defined as `Union{Real, ForwardDiff.Dual{Real}}` are differentiable.
 
@@ -25,10 +25,10 @@ Custom type for the parameters the Fourier amplitude spectrum. Note that type do
 # Examples
 ```julia-repl
     # define fas with
-    PJSfasParams( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, [ 1.0, 100.0, 140.0, 1000.0 ], [1.0, 0.0, 0.5, 0.5], 400.0, 0.0, 3.5, κ0 )
+    FASParams( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, [ 1.0, 100.0, 140.0, 1000.0 ], [1.0, 0.0, 0.5, 0.5], 400.0, 0.0, 3.5, κ0 )
 ```
 """
-struct PJSfasParams
+struct FASParams
 	# source parameters
 	Δσ::Union{Real,ForwardDiff.Dual{Real}}             # stressParameter
 	RΘϕ::Float64                                       # radiationPattern
@@ -49,21 +49,21 @@ struct PJSfasParams
 end
 
 # simplified constructor that takes just values of the Δσ and κ0
-PJSfasParams( Δσ, κ0 ) = PJSfasParams( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, [ 1.0, 100.0, 140.0, 1000.0 ], [1.0, 0.0, 0.5, 0.5], 400.0, 0.0, 3.5, κ0 )
+FASParams( Δσ, κ0 ) = FASParams( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, [ 1.0, 100.0, 140.0, 1000.0 ], [1.0, 0.0, 0.5, 0.5], 400.0, 0.0, 3.5, κ0 )
 # simplified constructor that takes values of Δσ, Q0, η and κ0
-PJSfasParams( Δσ, Q0, η, κ0 ) = PJSfasParams( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, [ 1.0, 100.0, 140.0, 1000.0 ], [1.0, 0.0, 0.5, 0.5], Q0, η, 3.5, κ0 )
+FASParams( Δσ, Q0, η, κ0 ) = FASParams( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, [ 1.0, 100.0, 140.0, 1000.0 ], [1.0, 0.0, 0.5, 0.5], Q0, η, 3.5, κ0 )
 # simplified constructor that takes values of Δσ, Q0 and κ0
-PJSfasParams( Δσ, Q0, κ0 ) = PJSfasParams( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, [ 1.0, 100.0, 140.0, 1000.0 ], [1.0, 0.0, 0.5, 0.5], Q0, 0.0, 3.5, κ0 )
+FASParams( Δσ, Q0, κ0 ) = FASParams( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, [ 1.0, 100.0, 140.0, 1000.0 ], [1.0, 0.0, 0.5, 0.5], Q0, 0.0, 3.5, κ0 )
 # simplified constructor that takes values of Δσ, Rrefi, γi, Q0 and κ0
-PJSfasParams( Δσ, Rrefi, γi, Q0, κ0 ) = PJSfasParams( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, Rrefi, γi, Q0, 0.0, 3.5, κ0 )
+FASParams( Δσ, Rrefi, γi, Q0, κ0 ) = FASParams( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, Rrefi, γi, Q0, 0.0, 3.5, κ0 )
 # simplified constructor that takes values of Δσ, Rrefi, γi, Q0, η and κ0
-PJSfasParams( Δσ, Rrefi, γi, Q0, η, κ0 ) = PJSfasParams( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, Rrefi, γi, Q0, η, 3.5, κ0 )
+FASParams( Δσ, Rrefi, γi, Q0, η, κ0 ) = FASParams( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, Rrefi, γi, Q0, η, 3.5, κ0 )
 
 
 # create an alternative struct that allows for a more generic allocation of the geometric spreading rates
 # for example, this allows the spreading rate for a particular segment to be constrained while others may
 # adopt a ForwardDiff.Dual type
-struct PJSfasParamsGeo
+struct FASParamsGeo
 	# source parameters
 	Δσ::Union{Real,Dual{Real}}           # stressParameter
 	RΘϕ::Float64                         # radiationPattern
@@ -85,12 +85,12 @@ struct PJSfasParamsGeo
 end
 
 # simplified constructor that takes values of Δσ, Rrefi, γi, Q0 and κ0
-PJSfasParamsGeo( Δσ, Rrefi, γi, γf, Q0, κ0 ) = PJSfasParamsGeo( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, Rrefi, γi, γf, Q0, 0.0, 3.5, κ0 )
+FASParamsGeo( Δσ, Rrefi, γi, γf, Q0, κ0 ) = FASParamsGeo( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, Rrefi, γi, γf, Q0, 0.0, 3.5, κ0 )
 # simplified constructor that takes values of Δσ, Rrefi, γi, Q0, η and κ0
-PJSfasParamsGeo( Δσ, Rrefi, γi, γf, Q0, η, κ0 ) = PJSfasParamsGeo( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, Rrefi, γi, γf, Q0, η, 3.5, κ0 )
+FASParamsGeo( Δσ, Rrefi, γi, γf, Q0, η, κ0 ) = FASParamsGeo( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, Rrefi, γi, γf, Q0, η, 3.5, κ0 )
 
 
-struct PJSfasParamsQr
+struct FASParamsQr
 	# source parameters
 	Δσ::Union{Real,Dual{Real}}           # stressParameter
 	RΘϕ::Float64                         # radiationPattern
@@ -112,12 +112,12 @@ struct PJSfasParamsQr
 end
 
 # simplified constructor that takes values of Δσ, Rrefi, γi, Q0 and κ0
-PJSfasParamsQr( Δσ, Rrefi, γi, QRrefi, Q0i, κ0 ) = PJSfasParamsQr( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, Rrefi, γi, QRrefi, Q0i, zeros(length(Q0i)), 3.5, κ0 )
+FASParamsQr( Δσ, Rrefi, γi, QRrefi, Q0i, κ0 ) = FASParamsQr( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, Rrefi, γi, QRrefi, Q0i, zeros(length(Q0i)), 3.5, κ0 )
 # simplified constructor that takes values of Δσ, Rrefi, γi, Q0, η and κ0
-PJSfasParamsQr( Δσ, Rrefi, γi, QRrefi, Q0i, ηi, κ0 ) = PJSfasParamsQr( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, Rrefi, γi, QRrefi, Q0i, ηi, 3.5, κ0 )
+FASParamsQr( Δσ, Rrefi, γi, QRrefi, Q0i, ηi, κ0 ) = FASParamsQr( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, Rrefi, γi, QRrefi, Q0i, ηi, 3.5, κ0 )
 
 
-struct PJSfasParamsGeoQr
+struct FASParamsGeoQr
 	# source parameters
 	Δσ::Union{Real,Dual{Real}}           # stressParameter
 	RΘϕ::Float64                         # radiationPattern
@@ -140,14 +140,14 @@ struct PJSfasParamsGeoQr
 end
 
 # simplified constructor that takes values of Δσ, Rrefi, γi, Q0 and κ0
-PJSfasParamsGeoQr( Δσ, Rrefi, γi, γf, QRrefi, Q0i, κ0 ) = PJSfasParamsGeoQr( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, Rrefi, γi, γf, QRrefi, Q0i, zeros(length(Q0i)), 3.5, κ0 )
+FASParamsGeoQr( Δσ, Rrefi, γi, γf, QRrefi, Q0i, κ0 ) = FASParamsGeoQr( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, Rrefi, γi, γf, QRrefi, Q0i, zeros(length(Q0i)), 3.5, κ0 )
 # simplified constructor that takes values of Δσ, Rrefi, γi, Q0, η and κ0
-PJSfasParamsGeoQr( Δσ, Rrefi, γi, γf, QRrefi, Q0i, ηi, κ0 ) = PJSfasParamsGeoQr( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, Rrefi, γi, γf, QRrefi, Q0i, ηi, 3.5, κ0 )
+FASParamsGeoQr( Δσ, Rrefi, γi, γf, QRrefi, Q0i, ηi, κ0 ) = FASParamsGeoQr( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, Rrefi, γi, γf, QRrefi, Q0i, ηi, 3.5, κ0 )
 
 
 
 
-function fourier_constant(fas::Union{PJSfasParams,PJSfasParamsGeo,PJSfasParamsQr,PJSfasParamsGeoQr})
+function fourier_constant(fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr})
 	# note that the 1e-20 factor allows one to pass in distances in km, density in t/m^2, velocity in km/s
 	return fas.RΘϕ * fas.V * fas.F * 1e-20 / ( 4π * fas.ρ * fas.β^3 * fas.Rrefi[1] )
 end
@@ -156,7 +156,7 @@ end
 # time_c(fas)
 # time_c(gfas)
 
-function fourier_source(f::T, m::T, fas::Union{PJSfasParams,PJSfasParamsGeo,PJSfasParamsQr,PJSfasParamsGeoQr}; fc_fun::String="Brune") where T<:Real
+function fourier_source(f::T, m::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::String="Brune") where T<:Real
 	Mo = magnitude_to_moment(m)
 	(fa, fb, ε) = corner_frequency(m, fas; fc_fun=fc_fun)
 	if isnan(ε) == true
@@ -173,7 +173,7 @@ end
 # time_Ef(1.0,5.0,fas)
 # time_Ef(1.0,5.0,gfas)
 
-function fourier_source_shape(f::T, m::T, fas::Union{PJSfasParams,PJSfasParamsGeo,PJSfasParamsQr,PJSfasParamsGeoQr}; fc_fun::String="Brune") where T<:Real
+function fourier_source_shape(f::T, m::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::String="Brune") where T<:Real
 	# fc = corner_frequency(m, fas; fc_fun=fc_fun)
 	# return 1.0 / (1.0 + (f/fc)^2)
 	(fa, fb, ε) = corner_frequency(m, fas; fc_fun=fc_fun)
@@ -198,12 +198,12 @@ end
 
 
 
-function fourier_path(f::T, r::T, fas::Union{PJSfasParams,PJSfasParamsGeo}) where T<:Real
+function fourier_path(f::T, r::T, fas::Union{FASParams,FASParamsGeo}) where T<:Real
 	Zr = geometric_spreading( r, fas )
 	return Zr * exp( -π*f*r / ( fas.Q0 * f^fas.η * fas.cQ ) )
 end
 
-function fourier_path(f::T, r::T, fas::Union{PJSfasParamsQr,PJSfasParamsGeoQr}) where T<:Real
+function fourier_path(f::T, r::T, fas::Union{FASParamsQr,FASParamsGeoQr}) where T<:Real
 	Zr = geometric_spreading( r, fas )
 	Qr = 1.0
 	if r <= fas.QRrefi[1]
@@ -221,12 +221,12 @@ function fourier_path(f::T, r::T, fas::Union{PJSfasParamsQr,PJSfasParamsGeoQr}) 
 	return Zr * Qr
 end
 
-function fourier_path_cy(f::T, r::T, fas::Union{PJSfasParams,PJSfasParamsGeo}) where T<:Real
+function fourier_path_cy(f::T, r::T, fas::Union{FASParams,FASParamsGeo}) where T<:Real
 	Zr = geometric_spreading_cy( r, fas )
 	return Zr * exp( -π*f*r / ( fas.Q0 * f^fas.η * fas.cQ ) )
 end
 
-function fourier_path_cy(f::T, r::T, fas::Union{PJSfasParamsQr,PJSfasParamsGeoQr}) where T<:Real
+function fourier_path_cy(f::T, r::T, fas::Union{FASParamsQr,FASParamsGeoQr}) where T<:Real
 	Zr = geometric_spreading_cy( r, fas )
 	Qr = 1.0
 	if r <= fas.QRrefi[1]
@@ -249,15 +249,15 @@ end
 # time_Pf(1.0,100.0,fas)
 # time_Pf(1.0,100.0,gfas)
 
-function fourier_attenuation(f::T, r::T, fas::Union{PJSfasParams,PJSfasParamsGeo}) where T<:Real
+function fourier_attenuation(f::T, r::T, fas::Union{FASParams,FASParamsGeo}) where T<:Real
 	return exp( -π*f*r / ( fas.Q0 * f^fas.η * fas.cQ ) - π*f*fas.κ0 )
 end
 
-function fourier_attenuation(f::Real, r::T, fas::Union{PJSfasParams,PJSfasParamsGeo}) where T<:Real
+function fourier_attenuation(f::Real, r::T, fas::Union{FASParams,FASParamsGeo}) where T<:Real
 	return exp( -π*f*r / ( fas.Q0 * f^fas.η * fas.cQ ) - π*f*fas.κ0 )
 end
 
-function fourier_attenuation(f::T, r::T, fas::Union{PJSfasParamsQr,PJSfasParamsGeoQr}) where T<:Real
+function fourier_attenuation(f::T, r::T, fas::Union{FASParamsQr,FASParamsGeoQr}) where T<:Real
 	Kr = exp( -π*f*fas.κ0 )
 	Qr = 1.0
 	if r <= fas.QRrefi[1]
@@ -275,7 +275,7 @@ function fourier_attenuation(f::T, r::T, fas::Union{PJSfasParamsQr,PJSfasParamsG
 	return Kr * Qr
 end
 
-function fourier_attenuation(f::Real, r::T, fas::Union{PJSfasParamsQr,PJSfasParamsGeoQr}) where T<:Real
+function fourier_attenuation(f::Real, r::T, fas::Union{FASParamsQr,FASParamsGeoQr}) where T<:Real
 	Kr = exp( -π*f*fas.κ0 )
 	Qr = 1.0
 	if r <= fas.QRrefi[1]
@@ -297,7 +297,7 @@ end
 # time_κ(1.0,100.0,fas)
 # time_κ(1.0,100.0,gfas)
 
-function fourier_site(f::Real, fas::Union{PJSfasParams,PJSfasParamsGeo,PJSfasParamsQr,PJSfasParamsGeoQr}; amp_model::String="Boore (2016)")
+function fourier_site(f::Real, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; amp_model::String="Boore (2016)")
 	# kappa filter
     Sf = exp( -π*f*fas.κ0 )
     # site impedence function
@@ -309,7 +309,7 @@ end
 # time_Sf(1.0,fas)
 # time_Sf(1.0,gfas)
 
-function fourier_spectral_ordinate( f::T, m::T, r::T, fas::Union{PJSfasParams,PJSfasParamsGeo,PJSfasParamsQr,PJSfasParamsGeoQr}; fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
+function fourier_spectral_ordinate( f::T, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
 	# define all constant terms here
   	C = fourier_constant(fas)
 	# source term
@@ -334,7 +334,7 @@ end
 # time_fas(1.0,5.0,60.0,gfas)
 
 
-function fourier_spectrum( f::Vector{T}, m::T, r::T, fas::Union{PJSfasParams,PJSfasParamsGeo,PJSfasParamsQr,PJSfasParamsGeoQr}; fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
+function fourier_spectrum( f::Vector{T}, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
 	# define all frequency independent terms here
   	C = fourier_constant(fas)
 	Mo = magnitude_to_moment(m)
@@ -361,7 +361,7 @@ end
 
 
 
-function fourier_spectrum!( Af::Vector, f::Vector{T}, m::T, r::T, fas::Union{PJSfasParams,PJSfasParamsGeo,PJSfasParamsQr,PJSfasParamsGeoQr}; fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
+function fourier_spectrum!( Af::Vector, f::Vector{T}, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
 	# define all frequency independent terms here
 	C = fourier_constant(fas)
 	Mo = magnitude_to_moment(m)
@@ -392,7 +392,7 @@ end
 # time_fs(ff,5.0,10.0,gfas)
 
 
-function squared_fourier_spectrum!( Af2::Vector, f::Vector{T}, m::T, r::T, fas::Union{PJSfasParams,PJSfasParamsGeo,PJSfasParamsQr,PJSfasParamsGeoQr}; fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
+function squared_fourier_spectrum!( Af2::Vector, f::Vector{T}, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
 	# define all frequency independent terms here
 	C = fourier_constant(fas)
 	Mo = magnitude_to_moment(m)
@@ -416,7 +416,7 @@ function squared_fourier_spectrum!( Af2::Vector, f::Vector{T}, m::T, r::T, fas::
   	nothing
 end
 
-function squared_fourier_spectrum!( Af2::Vector, f::Vector, m::T, r::T, fas::Union{PJSfasParams,PJSfasParamsGeo,PJSfasParamsQr,PJSfasParamsGeoQr}; fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
+function squared_fourier_spectrum!( Af2::Vector, f::Vector, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
 	# define all frequency independent terms here
 	C = fourier_constant(fas)
 	Mo = magnitude_to_moment(m)
@@ -441,7 +441,7 @@ function squared_fourier_spectrum!( Af2::Vector, f::Vector, m::T, r::T, fas::Uni
 end
 
 
-function squared_fourier_spectrum_cy!( Af2::Vector, f::Vector{T}, m::T, r::T, fas::Union{PJSfasParams,PJSfasParamsGeo,PJSfasParamsQr,PJSfasParamsGeoQr}; fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
+function squared_fourier_spectrum_cy!( Af2::Vector, f::Vector{T}, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
 	# define all frequency independent terms here
 	C = fourier_constant(fas)
 	Mo = magnitude_to_moment(m)
@@ -466,7 +466,7 @@ function squared_fourier_spectrum_cy!( Af2::Vector, f::Vector{T}, m::T, r::T, fa
 end
 
 
-function squared_fourier_spectrum_cy!( Af2::Vector, f::Vector, m::T, r::T, fas::Union{PJSfasParams,PJSfasParamsGeo,PJSfasParamsQr,PJSfasParamsGeoQr}; fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
+function squared_fourier_spectrum_cy!( Af2::Vector, f::Vector, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::String="Brune", amp_model::String="Boore (2016)" ) where T<:Real
 	# define all frequency independent terms here
 	C = fourier_constant(fas)
 	Mo = magnitude_to_moment(m)
@@ -493,7 +493,7 @@ end
 
 
 # function gives the frequency at which the combined κ_r and κ_0 filters (squared versions) give a value of 0.5
-function combined_kappa_frequency( r::Real, fas::Union{PJSfasParams,PJSfasParamsGeo,PJSfasParamsQr,PJSfasParamsGeoQr} )
+function combined_kappa_frequency( r::Real, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr} )
   if fas.η < 0.1
     # a closed form solution exists
     return log(2.0) / ( 2π * ( r / (fas.Q0 * fas.cQ) + fas.κ0 ) )
