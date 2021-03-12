@@ -91,9 +91,9 @@ struct FASParamsGeo
 end
 
 # simplified constructor that takes values of Δσ, Rrefi, γi, Q0 and κ0
-FASParamsGeo( Δσ, Rrefi, γi, γf, Q0, κ0 ) = FASParamsGeo( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, Rrefi, γi, γf, Q0, 0.0, 3.5, κ0 )
+FASParamsGeo( Δσ, Rrefi, γi, γf, Q0, κ0 ) = FASParamsGeo( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, :Brune, Rrefi, γi, γf, Q0, 0.0, 3.5, :Piecewise, κ0, :AlAtik2021_cy14 )
 # simplified constructor that takes values of Δσ, Rrefi, γi, Q0, η and κ0
-FASParamsGeo( Δσ, Rrefi, γi, γf, Q0, η, κ0 ) = FASParamsGeo( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, Rrefi, γi, γf, Q0, η, 3.5, κ0 )
+FASParamsGeo( Δσ, Rrefi, γi, γf, Q0, η, κ0 ) = FASParamsGeo( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, :Brune, Rrefi, γi, γf, Q0, η, 3.5, :Piecewise, κ0, :AlAtik2021_cy14 )
 
 
 struct FASParamsQr
@@ -121,9 +121,9 @@ struct FASParamsQr
 end
 
 # simplified constructor that takes values of Δσ, Rrefi, γi, Q0 and κ0
-FASParamsQr( Δσ, Rrefi, γi, QRrefi, Q0i, κ0 ) = FASParamsQr( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, Rrefi, γi, QRrefi, Q0i, zeros(length(Q0i)), 3.5, κ0 )
+FASParamsQr( Δσ, Rrefi, γi, QRrefi, Q0i, κ0 ) = FASParamsQr( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, :Brune, Rrefi, γi, QRrefi, Q0i, zeros(length(Q0i)), 3.5, :Piecewise, κ0, :AlAtik2021_cy14 )
 # simplified constructor that takes values of Δσ, Rrefi, γi, Q0, η and κ0
-FASParamsQr( Δσ, Rrefi, γi, QRrefi, Q0i, ηi, κ0 ) = FASParamsQr( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, Rrefi, γi, QRrefi, Q0i, ηi, 3.5, κ0 )
+FASParamsQr( Δσ, Rrefi, γi, QRrefi, Q0i, ηi, κ0 ) = FASParamsQr( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, :Brune, Rrefi, γi, QRrefi, Q0i, ηi, 3.5, :Piecewise, κ0, :AlAtik2021_cy14 )
 
 
 struct FASParamsGeoQr
@@ -152,9 +152,9 @@ struct FASParamsGeoQr
 end
 
 # simplified constructor that takes values of Δσ, Rrefi, γi, Q0 and κ0
-FASParamsGeoQr( Δσ, Rrefi, γi, γf, QRrefi, Q0i, κ0 ) = FASParamsGeoQr( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, Rrefi, γi, γf, QRrefi, Q0i, zeros(length(Q0i)), 3.5, κ0 )
+FASParamsGeoQr( Δσ, Rrefi, γi, γf, QRrefi, Q0i, κ0 ) = FASParamsGeoQr( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, :Brune, Rrefi, γi, γf, QRrefi, Q0i, zeros(length(Q0i)), 3.5, :Piecewise, κ0, :AlAtik2021_cy14 )
 # simplified constructor that takes values of Δσ, Rrefi, γi, Q0, η and κ0
-FASParamsGeoQr( Δσ, Rrefi, γi, γf, QRrefi, Q0i, ηi, κ0 ) = FASParamsGeoQr( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, Rrefi, γi, γf, QRrefi, Q0i, ηi, 3.5, κ0 )
+FASParamsGeoQr( Δσ, Rrefi, γi, γf, QRrefi, Q0i, ηi, κ0 ) = FASParamsGeoQr( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, :Brune, Rrefi, γi, γf, QRrefi, Q0i, ηi, 3.5, :Piecewise, κ0, :AlAtik2021_cy14 )
 
 
 
@@ -178,10 +178,8 @@ function fourier_source(f::T, m::T, fas::Union{FASParams,FASParamsGeo,FASParamsQ
 end
 
 
-function fourier_source_shape(f::T, m::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::Symbol=:Brune) where T<:Real
-	# fc = corner_frequency(m, fas; fc_fun=fc_fun)
-	# return 1.0 / (1.0 + (f/fc)^2)
-	(fa, fb, ε) = corner_frequency(m, fas; fc_fun=fc_fun)
+function fourier_source_shape(f::T, m::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}) where T<:Real
+	(fa, fb, ε) = corner_frequency(m, fas)
 	if isnan(ε) == true
 		# use single corner, with fa=fc
 		return 1.0 / (1.0 + (f/fa)^2)
