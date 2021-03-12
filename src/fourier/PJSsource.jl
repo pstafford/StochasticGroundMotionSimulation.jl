@@ -70,16 +70,17 @@ Computes a 3-tuple of corner frequency components depending upon source spectrum
     κ0 = 0.035
     fas = FASParams(Δσ, κ0)
     # compute single corner frequency
+	fas.src_model = :Brune
     fc, tmp1, tmp2 = corner_frequency(m, fas)
-    fc, tmp1, tmp2 = corner_frequency(m, fas; fc_fun="Brune")
     # compute double corner frequencies
-    fa, fb, ε = corner_frequency(m, fas; fc_fun="Atkinson_Silva_2000")
+	fas.src_model = :Atkinson_Silva_2000
+    fa, fb, ε = corner_frequency(m, fas)
 ```
 """
-function corner_frequency(m::Real, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::Symbol=:Brune)
-    if fc_fun == :Brune
+function corner_frequency(m::Real, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr})
+    if fas.src_model == :Brune
         return corner_frequency_brune(m, fas.Δσ, fas.β)::Real, NaN::Real, NaN::Real
-    elseif fc_fun == :Atkinson_Silva_2000
+    elseif fas.src_model == :Atkinson_Silva_2000
         return corner_frequency_atkinson_silva_2000(m)
     else
         return NaN::Real, NaN::Real, NaN::Real

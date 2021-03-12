@@ -36,6 +36,7 @@ struct FASParams
 	F::Float64                                         # freeSurfaceFactor
 	β::Float64                                         # sourceVelocity
   	ρ::Float64                                         # sourceDensity
+	src_model::Symbol 								   # source spectrum model
 
 	# path parameters
   	Rrefi::Vector{Float64}                             # geometricReferenceDistances
@@ -43,21 +44,23 @@ struct FASParams
 	Q0::Union{Real,ForwardDiff.Dual{Real}}             # qualityConstant
 	η::Union{Real,ForwardDiff.Dual{Real}}              # qualityExponent
 	cQ::Float64                                        # qualityVelocity
+	dis_model::Symbol 								   # distance scaling model
 
 	# site parameters
 	κ0::Union{Real,ForwardDiff.Dual{Real}}             # site kappa
+	amp_model::Symbol								   # site amplification model
 end
 
 # simplified constructor that takes just values of the Δσ and κ0
-FASParams( Δσ, κ0 ) = FASParams( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, [ 1.0, 100.0, 140.0, 1000.0 ], [1.0, 0.0, 0.5, 0.5], 400.0, 0.0, 3.5, κ0 )
+FASParams( Δσ, κ0 ) = FASParams( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, :Brune, [ 1.0, 100.0, 140.0, 1000.0 ], [1.0, 0.0, 0.5, 0.5], 400.0, 0.0, 3.5, :Piecewise, κ0, :AlAtik2021_cy14 )
 # simplified constructor that takes values of Δσ, Q0, η and κ0
-FASParams( Δσ, Q0, η, κ0 ) = FASParams( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, [ 1.0, 100.0, 140.0, 1000.0 ], [1.0, 0.0, 0.5, 0.5], Q0, η, 3.5, κ0 )
+FASParams( Δσ, Q0, η, κ0 ) = FASParams( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, :Brune, [ 1.0, 100.0, 140.0, 1000.0 ], [1.0, 0.0, 0.5, 0.5], Q0, η, 3.5, :Piecewise, κ0, :AlAtik2021_cy14 )
 # simplified constructor that takes values of Δσ, Q0 and κ0
-FASParams( Δσ, Q0, κ0 ) = FASParams( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, [ 1.0, 100.0, 140.0, 1000.0 ], [1.0, 0.0, 0.5, 0.5], Q0, 0.0, 3.5, κ0 )
+FASParams( Δσ, Q0, κ0 ) = FASParams( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, :Brune, [ 1.0, 100.0, 140.0, 1000.0 ], [1.0, 0.0, 0.5, 0.5], Q0, 0.0, 3.5, :Piecewise, κ0, :AlAtik2021_cy14 )
 # simplified constructor that takes values of Δσ, Rrefi, γi, Q0 and κ0
-FASParams( Δσ, Rrefi, γi, Q0, κ0 ) = FASParams( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, Rrefi, γi, Q0, 0.0, 3.5, κ0 )
+FASParams( Δσ, Rrefi, γi, Q0, κ0 ) = FASParams( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, :Brune, Rrefi, γi, Q0, 0.0, 3.5, :Piecewise, κ0, :AlAtik2021_cy14 )
 # simplified constructor that takes values of Δσ, Rrefi, γi, Q0, η and κ0
-FASParams( Δσ, Rrefi, γi, Q0, η, κ0 ) = FASParams( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, Rrefi, γi, Q0, η, 3.5, κ0 )
+FASParams( Δσ, Rrefi, γi, Q0, η, κ0 ) = FASParams( Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, :Brune, Rrefi, γi, Q0, η, 3.5, :Piecewise, κ0, :AlAtik2021_cy14 )
 
 
 # create an alternative struct that allows for a more generic allocation of the geometric spreading rates
@@ -71,6 +74,7 @@ struct FASParamsGeo
 	F::Float64                           # freeSurfaceFactor
 	β::Float64                           # sourceVelocity
   	ρ::Float64                           # sourceDensity
+	src_model::Symbol 								   # source spectrum model
 
 	# path parameters
   	Rrefi::Vector{Float64}               # geometricReferenceDistances
@@ -79,9 +83,11 @@ struct FASParamsGeo
 	Q0::Union{Real,Dual{Real}}           # qualityConstant
 	η::Union{Real,Dual{Real}}            # qualityExponent
 	cQ::Float64                          # qualityVelocity
+	dis_model::Symbol 								   # distance scaling model
 
 	# site parameters
 	κ0::Union{Real,Dual{Real}}           # site kappa
+	amp_model::Symbol								   # site amplification model
 end
 
 # simplified constructor that takes values of Δσ, Rrefi, γi, Q0 and κ0
@@ -98,6 +104,7 @@ struct FASParamsQr
 	F::Float64                           # freeSurfaceFactor
 	β::Float64                           # sourceVelocity
   	ρ::Float64                           # sourceDensity
+	src_model::Symbol 								   # source spectrum model
 
 	# path parameters
   	Rrefi::Vector{Float64}               # geometricReferenceDistances
@@ -106,9 +113,11 @@ struct FASParamsQr
 	Q0i::Vector{Union{Real,Dual{Real}}}  # qualityConstants
 	ηi::Vector{Union{Real,Dual{Real}}}   # qualityExponent
 	cQ::Float64                          # qualityVelocity
+	dis_model::Symbol 								   # distance scaling model
 
 	# site parameters
 	κ0::Union{Real,Dual{Real}}           # site kappa
+	amp_model::Symbol								   # site amplification model
 end
 
 # simplified constructor that takes values of Δσ, Rrefi, γi, Q0 and κ0
@@ -125,6 +134,7 @@ struct FASParamsGeoQr
 	F::Float64                           # freeSurfaceFactor
 	β::Float64                           # sourceVelocity
   	ρ::Float64                           # sourceDensity
+	src_model::Symbol 								   # source spectrum model
 
 	# path parameters
   	Rrefi::Vector{Float64}               # geometricReferenceDistances
@@ -134,9 +144,11 @@ struct FASParamsGeoQr
 	Q0i::Vector{Union{Real,Dual{Real}}}  # qualityConstants
 	ηi::Vector{Union{Real,Dual{Real}}}   # qualityExponent
 	cQ::Float64                          # qualityVelocity
+	dis_model::Symbol 								   # distance scaling model
 
 	# site parameters
 	κ0::Union{Real,Dual{Real}}           # site kappa
+	amp_model::Symbol								   # site amplification model
 end
 
 # simplified constructor that takes values of Δσ, Rrefi, γi, Q0 and κ0
@@ -152,13 +164,10 @@ function fourier_constant(fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParam
 	return fas.RΘϕ * fas.V * fas.F * 1e-20 / ( 4π * fas.ρ * fas.β^3 * fas.Rrefi[1] )
 end
 
-# time_c(fas) = @time fourier_constant(fas)
-# time_c(fas)
-# time_c(gfas)
 
-function fourier_source(f::T, m::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::Symbol=:Brune) where T<:Real
+function fourier_source(f::T, m::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}) where T<:Real
 	Mo = magnitude_to_moment(m)
-	(fa, fb, ε) = corner_frequency(m, fas; fc_fun=fc_fun)
+	(fa, fb, ε) = corner_frequency(m, fas)
 	if isnan(ε) == true
 		# use single corner, with fa=fc
 		return Mo / (1.0 + (f/fa)^2)
@@ -166,12 +175,8 @@ function fourier_source(f::T, m::T, fas::Union{FASParams,FASParamsGeo,FASParamsQ
 		# use double corner model
 		return Mo * ( (1.0 - ε)/(1.0 + (f/fa)^2 ) + ε/(1.0 + (f/fb)^2) )
 	end
-	# fc = corner_frequency(m, fas; fc_fun=fc_fun)
 end
 
-# time_Ef(f,m,fas) = @time fourier_source(f,m,fas)
-# time_Ef(1.0,5.0,fas)
-# time_Ef(1.0,5.0,gfas)
 
 function fourier_source_shape(f::T, m::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::Symbol=:Brune) where T<:Real
 	# fc = corner_frequency(m, fas; fc_fun=fc_fun)
