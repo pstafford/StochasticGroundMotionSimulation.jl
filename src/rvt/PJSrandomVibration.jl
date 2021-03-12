@@ -2,7 +2,7 @@
 
 
 
-function spectral_moment(order::Int, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}; fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14, intervals::Int=101 ) where T<:Real
+function spectral_moment(order::Int, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}; fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14, intervals::Int=101, control_freqs::Vector{Float64}=[1e-3, 1e-1, 1.0, 10.0, 100.0, 300.0] ) where T<:Real
 	# pre-allocate for squared fourier amplitude spectrum
 	Af2 = zeros(Real,intervals)
 	Hf2 = zeros(Real,intervals)
@@ -13,8 +13,9 @@ function spectral_moment(order::Int, m::T, r::T, fas::Union{FASParams,FASParamsG
 	# - f_Q (combined kappa_0 & kappa_r fall-off frequency)
 	f_n = sdof.f_n
 	# note that we start slightly above zero to avoid a numerical issue with the frequency dependent Q(f) gradients
-	fi = [ 1e-10, 0.1, 1.0, 10.0, f_n/1.1, f_n, f_n*1.1, 100.0, 300.0 ]
-	sort!(fi)
+	fidLO = findall(control_freqs .< f_n/1.5)
+	fidHI = findall(control_freqs .> f_n*1.5)
+	fi = [ control_freqs[fidLO]; f_n/1.5; f_n*1.5; control_freqs[fidHI] ]
 
 	int_sum = 0.0
 	for i in 1:length(fi)-1
@@ -22,15 +23,16 @@ function spectral_moment(order::Int, m::T, r::T, fas::Union{FASParams,FASParamsG
 			xx = collect(range(fi[i], stop=fi[i+1], length=intervals))
 			squared_transfer!(Hf2, xx, sdof)
 			squared_fourier_spectrum!(Af2, xx, m, r, fas; fc_fun=fc_fun, amp_model=amp_model)
-			yy = (2π * xx).^order .* Hf2 .* Af2
-			int_sum += simpsons_rule(xx,yy)
+			yy = @. (2π * xx)^order * Hf2 * Af2
+			# int_sum += simpsons_rule(xx,yy)
+			int_sum += trapezoidal_rule(xx,yy)
 		end
 	end
     return 2int_sum
 end
 
 
-function spectral_moments(order::Vector{Int}, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}; fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14, intervals::Int=101 ) where T<:Real
+function spectral_moments(order::Vector{Int}, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}; fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14, intervals::Int=101, control_freqs::Vector{Float64}=[1e-3, 1e-1, 1.0, 10.0, 100.0, 300.0] ) where T<:Real
 	# pre-allocate for squared fourier amplitude spectrum
 	Af2 = zeros(Real, intervals)
 	Hf2 = zeros(Real, intervals)
@@ -41,8 +43,10 @@ function spectral_moments(order::Vector{Int}, m::T, r::T, fas::Union{FASParams,F
 	# - f_Q (combined kappa_0 & kappa_r fall-off frequency)
 	f_n = sdof.f_n
  	# note that we start slightly above zero to avoid a numerical issue with the frequency dependent Q(f) gradients
-	fi = [ 1e-10, 0.1, 1.0, 10.0, f_n/1.1, f_n, f_n*1.1, 100.0, 300.0 ]
-	sort!(fi)
+	# fi = [ 1e-10, 0.1, 1.0, 10.0, f_n/1.1, f_n, f_n*1.1, 100.0, 300.0 ]
+	fidLO = findall(control_freqs .< f_n/1.5)
+	fidHI = findall(control_freqs .> f_n*1.5)
+	fi = [ control_freqs[fidLO]; f_n/1.5; f_n*1.5; control_freqs[fidHI] ]
 
 	# make sure the orders are listed as increasing for the following loop approach
 	sort!(order)
@@ -55,25 +59,23 @@ function spectral_moments(order::Vector{Int}, m::T, r::T, fas::Union{FASParams,F
 			squared_transfer!(Hf2, xx, sdof)
 			squared_fourier_spectrum!(Af2, xx, m, r, fas; fc_fun=fc_fun, amp_model=amp_model)
 			# compute default zeroth order integrand amplitude
-			yy = Hf2 .* Af2
+			yy = @. Hf2 * Af2
 
 			for (idx, o) in enumerate(order)
 				if idx == 1
 					yy .*= (2π*xx).^o
 				else
-					yy .*= (2π*xx).^(dorder[idx-1])
+					@inbounds yy .*= (2π*xx).^(dorder[idx-1])
 				end
-				@inbounds int_sumi[idx] += simpsons_rule(xx,yy)
+				# @inbounds int_sumi[idx] += simpsons_rule(xx,yy)
+				@inbounds int_sumi[idx] += trapezoidal_rule(xx,yy)
 			end
 		end
 	end
     return 2.0 * int_sumi
 end
 
-
-
-# function to compute spectral moments (m_0, m_2 & m_4)
-function spectral_moments( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}; fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14, intervals::Int=101 ) where T<:Real
+function spectral_moments_ln(order::Vector{Int}, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}; fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14, intervals::Int=101, control_freqs::Vector{Float64}=[1e-3, 1e-1, 1.0, 10.0, 100.0, 300.0] ) where T<:Real
 	# pre-allocate for squared fourier amplitude spectrum
 	Af2 = zeros(Real, intervals)
 	Hf2 = zeros(Real, intervals)
@@ -84,27 +86,50 @@ function spectral_moments( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASPara
 	# - f_Q (combined kappa_0 & kappa_r fall-off frequency)
 	f_n = sdof.f_n
  	# note that we start slightly above zero to avoid a numerical issue with the frequency dependent Q(f) gradients
-	fi = [ 1e-10, 0.1, 1.0, 10.0, f_n/1.1, f_n, f_n*1.1, 100.0, 300.0 ]
-	sort!(fi)
+	fidLO = findall(control_freqs .< f_n/1.5)
+	fidHI = findall(control_freqs .> f_n*1.5)
+	fi = [ control_freqs[fidLO]; f_n/1.5; f_n*1.5; control_freqs[fidHI] ]
+	lnfi = log.(fi)
 
-	int_sum0 = 0.0
-	int_sum2 = 0.0
-	int_sum4 = 0.0
-	for i in 1:length(fi)-1
-		if fi[i] != fi[i+1]
-			xx = collect(range(fi[i], stop=fi[i+1], length=intervals))
+	# make sure the orders are listed as increasing for the following loop approach
+	sort!(order)
+	dorder = diff(order)
+	int_sumi = zeros(length(order))
+
+	for i in 1:length(lnfi)-1
+		if lnfi[i] != lnfi[i+1] # this can arise because of the mix of static and dynamic frequencies in the fi definition
+			uu = collect(range(lnfi[i], stop=lnfi[i+1], length=intervals))
+			xx = exp.(uu)
 			squared_transfer!(Hf2, xx, sdof)
-			squared_fourier_spectrum!(Af2, xx, m, r, fas; fc_fun=fc_fun, amp_model=amp_model )
-			yy = Hf2 .* Af2
-			int_sum0 += simpsons_rule(xx,yy)
-			yy .*= (2π*xx).^2
-			int_sum2 += simpsons_rule(xx,yy)
-			yy .*= (2π*xx).^2
-			int_sum4 += simpsons_rule(xx,yy)
+			squared_fourier_spectrum!(Af2, xx, m, r, fas; fc_fun=fc_fun, amp_model=amp_model)
+			# compute default zeroth order integrand amplitude
+			yy = @. Hf2 * Af2 * xx
+
+			for (idx, o) in enumerate(order)
+				if idx == 1
+					yy .*= (2π*xx).^o
+				else
+					@inbounds yy .*= (2π*xx).^(dorder[idx-1])
+				end
+				# @inbounds int_sumi[idx] += simpsons_rule(uu,yy)
+				@inbounds int_sumi[idx] += trapezoidal_rule(uu,yy)
+			end
 		end
 	end
-    return 2int_sum0, 2int_sum2, 2int_sum4
+    return 2.0 * int_sumi
 end
+
+function spectral_moments_gk(order::Vector{Int}, m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}; fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14, intervals::Int=101 ) where T<:Real
+	int_sumi = zeros(length(order))
+
+	for (i, o) in enumerate(order)
+		moment_integrand(f) = squared_transfer(f, sdof) * ( fourier_spectral_ordinate(f, m, r, fas, fc_fun=fc_fun, amp_model=amp_model)^2 ) * (2π*f)^o
+		int_sumi[i] = quadgk(moment_integrand, 0, sdof.f_n, Inf)[1]
+	end
+
+    return 2.0 * int_sumi
+end
+
 
 
 function spectral_moments_cy( m::T, r::T, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr}, sdof::Oscillator{T}; fc_fun::Symbol=:Brune, amp_model::Symbol=:AlAtik2021_cy14, intervals::Int=101 ) where T<:Real

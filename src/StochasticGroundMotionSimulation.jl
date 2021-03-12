@@ -4,6 +4,7 @@ using Interpolations
 using Roots
 using ForwardDiff
 using ForwardDiff: Dual
+using QuadGK
 
 
 export Oscillator,
@@ -38,8 +39,12 @@ export Oscillator,
 	squared_fourier_spectrum_cy!,
     	boore_thompson_2014,
     	combined_kappa_frequency,
+	simpsons_rule,
+	trapezoidal_rule,
     	spectral_moment,
     	spectral_moments,
+	spectral_moments_ln,
+	spectral_moments_gk,
 	spectral_moments_cy,
     	zeros_extrema_frequencies,
     	zeros_extrema_numbers,

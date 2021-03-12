@@ -4,17 +4,17 @@ using QuadGK
 
 @testset "StochasticGroundMotionSimulation.jl" begin
 
-    # @testset "Performance" begin
-    #     Ti = [ 0.01, 0.02, 0.03, 0.04, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 5.0, 7.5, 10.0 ]
-    #     m = 4.0+π
-    #     r = 500.0+π
-    #     fas = FASParams(100.0, [1.0, 50.0, Inf], [1.0, 0.5], 200.0, 0.4, 0.039 )
-    #
-    #     @time Sai = rvt_response_spectrum(Ti, m, r, fas)
-    #     # @btime Sai = rvt_response_spectrum(Ti, m, r, fas)
-    #     # @btime rvt_response_spectrum_cy!(Sai, Ti, m, r, fas)
-    #
-    # end
+    @testset "Performance" begin
+        Ti = [ 0.01, 0.02, 0.03, 0.04, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 5.0, 7.5, 10.0 ]
+        m = 4.0+π
+        r = 500.0+π
+        fas = FASParams(100.0, [1.0, 50.0, Inf], [1.0, 0.5], 200.0, 0.4, 0.039 )
+
+        @time Sai = rvt_response_spectrum(Ti, m, r, fas)
+        # @btime Sai = rvt_response_spectrum(Ti, m, r, fas)
+        # @btime rvt_response_spectrum_cy!(Sai, Ti, m, r, fas)
+
+    end
 
     @testset "Oscillator" begin
         ζ = 0.05
@@ -101,10 +101,12 @@ using QuadGK
             yy = integrand.(xx)
 
             isr = simpsons_rule(xx, yy)
+            ist = trapezoidal_rule(xx, yy)
 
             igk = quadgk(integrand, x_min, x_max)[1]
 
             @test isr ≈ igk atol=10*eps()
+            @test ist ≈ igk atol=10*eps()
 
 
             m = 6.0
@@ -169,7 +171,64 @@ using QuadGK
 
         end
 
+        @testset "Spectral Moments" begin
 
+            m = 6.0
+            r = 10.0
+            fas = FASParams(100.0, [1.0, 50.0, Inf], [1.0, 0.5], 200.0, 0.4, 0.039)
+            sdof = Oscillator(1.0)
+
+            @time mi = spectral_moments([0, 2, 4], m, r, fas, sdof, intervals=101, control_freqs=[1e-3, 10.0, 100.0, 300.0])
+            @time mics = spectral_moments([0, 2, 4], m, r, fas, sdof, intervals=301, control_freqs=[1e-3, 100.0])
+            @time miln = spectral_moments_ln([0, 2, 4], m, r, fas, sdof, intervals=101, control_freqs=[1e-3, 10.0, 300.0])
+            @time milncs = spectral_moments_ln([0, 2, 4], m, r, fas, sdof, intervals=201, control_freqs=[1e-3, 300.0])
+            @time migk = spectral_moments_gk([0, 2, 4], m, r, fas, sdof)
+
+            # [ migk mi miln mics milncs ]
+
+            @test all(isapprox.(migk, mi, rtol=1e-3))
+            @test all(isapprox.(migk, miln, rtol=1e-3))
+            @test all(isapprox.(migk, milncs, rtol=1e-4))
+
+
+            m = 6.0
+            r = 10.0
+            fas = FASParams(100.0, [1.0, 50.0, Inf], [1.0, 0.5], 200.0, 0.4, 0.039)
+            sdof = Oscillator(1e-2)
+
+            @time mi = spectral_moments([0, 2, 4], m, r, fas, sdof, intervals=101, control_freqs=[1e-3, 10.0, 100.0, 300.0])
+            @time mics = spectral_moments([0, 2, 4], m, r, fas, sdof, intervals=301, control_freqs=[1e-3, 100.0])
+            @time miln = spectral_moments_ln([0, 2, 4], m, r, fas, sdof, intervals=101, control_freqs=[1e-3, 10.0, 300.0])
+            @time milncs = spectral_moments_ln([0, 2, 4], m, r, fas, sdof, intervals=201, control_freqs=[1e-3, 300.0])
+            @time migk = spectral_moments_gk([0, 2, 4], m, r, fas, sdof)
+
+            # [ migk mi miln mics milncs ]
+
+            # @test all(isapprox.(migk, mi, rtol=1e-3))
+            @test all(isapprox.(migk, miln, rtol=1e-3))
+            @test all(isapprox.(migk, milncs, rtol=1e-4))
+
+            m = 6.0
+            r = 10.0
+            fas = FASParams(100.0, [1.0, 50.0, Inf], [1.0, 0.5], 200.0, 0.4, 0.039)
+            sdof = Oscillator(1e2)
+
+            @time mi = spectral_moments([0, 2, 4], m, r, fas, sdof, intervals=101, control_freqs=[1e-3, 10.0, 100.0, 300.0])
+            @time mics = spectral_moments([0, 2, 4], m, r, fas, sdof, intervals=301, control_freqs=[1e-3, 100.0])
+            @time miln = spectral_moments_ln([0, 2, 4], m, r, fas, sdof, intervals=101, control_freqs=[1e-3, 10.0, 300.0])
+            @time milncs = spectral_moments_ln([0, 2, 4], m, r, fas, sdof, intervals=201, control_freqs=[1e-3, 300.0])
+            @time migk = spectral_moments_gk([0, 2, 4], m, r, fas, sdof)
+
+            # [ migk mi miln mics milncs ]
+
+            @test all(isapprox.(migk, mi, rtol=1e-3))
+            @test all(isapprox.(migk, miln, rtol=1e-3))
+            @test all(isapprox.(migk, milncs, rtol=1e-4))
+
+            # TODO: Confirm the use of course sampling and logarithmic integration as this performs better for broader range of periods
+            # the linear spacing really doesn't do well for long periods (short frequencies)
+
+        end
 
     end
 
