@@ -230,6 +230,23 @@ using QuadGK
 
         end
 
+        @testset "Peak Factor" begin
+
+            m = 6.0
+            r = 10.0
+            fas = FourierParameters(100.0, [1.0, 50.0, Inf], [1.0, 0.5], 200.0, 0.4, 0.039)
+            sdof = Oscillator(1.0)
+
+            peak_factor_dk80(m, r, fas, sdof)
+            peak_factor_dk80_gk(m, r, fas, sdof)
+
+            integrand(x) = vanmarcke_ccdf(x, 10.0, 0.13)
+            @time quadgk(integrand, 0.0, Inf)[1]
+
+            integrandu(u) = vanmarcke_ccdf(exp(u), 10.0, 0.13)*exp(u)
+            @time quadgk(integrandu, -Inf, 10.0)[1]
+        end
+
     end
 
 end

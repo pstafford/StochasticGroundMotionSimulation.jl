@@ -293,7 +293,7 @@ end
 
 
 """
-	site_amplification(f::Real; amp_model::Symbol=:AlAtik2021_cy14)
+	site_amplification(f::Real, amp_model::Symbol)
 
 Computes the site amplification (impedance) for a given frequency `f`. Requires the keyword argument `amp_model` as a `String` and defaults to the Boore (2016) model. Currently, any other string passed to the function will return the unit amplification
 
@@ -309,13 +309,21 @@ Computes the site amplification (impedance) for a given frequency `f`. Requires 
 	Af = site_amplification(f; amp_model=:Unit)
 ```
 """
-function site_amplification(f::Real; amp_model::Symbol=:AlAtik2021_cy14 )
+function site_amplification(f::Real, amp_model::Symbol)
     if amp_model == :Unit
         return unit_generic_amplification()
     elseif amp_model == :Boore2016
         return boore_2016_generic_amplification(f)
-    else
-        # make the default return the same as the default argument in the function call
+    elseif amp_model == :AlAtik2021_cy14
         return alatik_2021_cy14_inverted_amplification_seg(f)
+	else
+		return NaN
     end
 end
+
+"""
+	site_amplification(f::Real, site::SiteParameters)
+
+Computes the site amplification (impedance) for a given frequency `f`.
+"""
+site_amplification(f::Real, site::SiteParameters) = site_amplification(f, site.amp_model)

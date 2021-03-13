@@ -1,7 +1,7 @@
 
 
 """
-	magnitude_to_moment(m::Real)
+	magnitude_to_moment(m::Float64)
 
 Converts moment magnitude to seismic moment (in dyne-cm).
 
@@ -11,13 +11,13 @@ Converts moment magnitude to seismic moment (in dyne-cm).
 	M0 = magnitude_to_moment(m)
 ```
 """
-function magnitude_to_moment(m::Real)
+function magnitude_to_moment(m::Float64)
 	# equivalent to: return 10.0^( 1.5*( m + 10.7 ) )
     return 10.0^( 1.5m + 16.05 )
 end
 
 """
-	corner_frequency_brune(m::Real, Δσ::Real, β::Real=3.5)
+	corner_frequency_brune(m::Float64, Δσ::Float64, β::Float64=3.5)
 
 Computes the corner frequency using the Brune model.
 	- `m` is the moment magnitude
@@ -32,14 +32,14 @@ Computes the corner frequency using the Brune model.
 	fc = corner_frequency_brune(m, Δσ, β)
 ```
 """
-function corner_frequency_brune(m::Real, Δσ::Real, β::Real=3.5)
+function corner_frequency_brune(m::Float64, Δσ::Float64, β::Float64=3.5)
     Mo = magnitude_to_moment(m)
     return 4.9058e6 * β * ( Δσ / Mo )^(1/3)
 end
 
 
 """
-    corner_frequency_atkinson_silva_2000(m::Real)
+    corner_frequency_atkinson_silva_2000(m::Float64)
 
 Computes the corner frequencies, `fa`, `fb`, and the mixing parameter `ε` from the Atkinson & Silva (2000) double corner frequency model.
 This is the default source corner frequency model used by Boore & Thompson (2014) to define their source duration. But note that they just use fa. This function returns fb and ε also
@@ -50,7 +50,7 @@ This is the default source corner frequency model used by Boore & Thompson (2014
     fa, fb, ε = corner_frequency_atkinson_silva_2000(m)
 ```
 """
-function corner_frequency_atkinson_silva_2000(m::Real)
+function corner_frequency_atkinson_silva_2000(m::Float64)
 	fa = 10.0^( 2.181 - 0.496*m )
 	fb = 10.0^( 2.410 - 0.408*m )
 	ε = 10.0^( 0.605 - 0.255*m )
@@ -59,9 +59,9 @@ end
 
 
 """
-    corner_frequency(m::Real, fas::Union{FASPararms,FASParamsGeo,FASParamsQr,FASParamsGeoQr}; fc_fun::Symbol=:Brune)
+    corner_frequency(m::Float64, src::SourceParameters)
 
-Computes a 3-tuple of corner frequency components depending upon source spectrum type. By default the single-corner Brune spectrum is considered, but it `fc_fun` equals `"Atkinson_Silva_2000"` then the components of the double-corner spectrum are returned. If some other string is passed then a 3-tuple of NaN::Real values is returned.
+Computes a 3-tuple of corner frequency components depending upon source spectrum type. By default the single-corner Brune spectrum is considered, but it `fc_fun` equals `"Atkinson_Silva_2000"` then the components of the double-corner spectrum are returned. If some other string is passed then a 3-tuple of NaN::Float64 values is returned.
 
 # Examples
 ```julia-repl
@@ -77,12 +77,14 @@ Computes a 3-tuple of corner frequency components depending upon source spectrum
     fa, fb, ε = corner_frequency(m, fas)
 ```
 """
-function corner_frequency(m::Real, fas::Union{FASParams,FASParamsGeo,FASParamsQr,FASParamsGeoQr})
-    if fas.src_model == :Brune
-        return corner_frequency_brune(m, fas.Δσ, fas.β)::Real, NaN::Real, NaN::Real
-    elseif fas.src_model == :Atkinson_Silva_2000
+function corner_frequency(m::Float64, src::FourierParameters)
+    if src.src_model == :Brune
+        return corner_frequency_brune(m, src.Δσ, src.β)::Float64, NaN::Float64, NaN::Float64
+    elseif src.src_model == :Atkinson_Silva_2000
         return corner_frequency_atkinson_silva_2000(m)
     else
-        return NaN::Real, NaN::Real, NaN::Real
+        return NaN::Float64, NaN::Float64, NaN::Float64
     end
 end
+
+corner_frequency(m::Float64, fas::FourierParameters) = corner_frequency(m, fas.source)
