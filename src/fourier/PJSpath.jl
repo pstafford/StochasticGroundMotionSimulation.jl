@@ -1,119 +1,160 @@
 
 """
-	PathParameters
-
-Custom type defining the path parameters of a Fourier spectrum
-
-- `Rrefi::Vector{Float64}` is a vector of reference distances for geometric spreading in units of km
-- `γi::Vector{Union{Float64,Dual{Float64}}` is a vector of geometric spreading rates. Note that to initialize individual elements we need to pass `Union{Float64,Dual{Float64}}[ 1.0, Dual{Float64}(0.5) ]`, for example
-- `Q0::Union{Float64,Dual{Float64}}` is the Quality Constant
-- `η::Union{Float64,Dual{Float64}}` is the Quality Exponent
-- `cQ::Float64` is the velocity used to determine Q(f) (or the travel time) in units of km/s
-- `geo_model::Symbol` indicates the type of geometric spreading `:Piecewise` or `:CY14`
-- `sat_model::Symbol` indicates the near source saturation model `:BT15`
-"""
-struct PathParameters
-	# path parameters
-  	Rrefi::Vector{Float64} 	# geometricReferenceDistances
-	γi::Vector{Union{Float64,Dual{Float64,Float64}}}        # geometricSpreadingRates
-	Q0::Union{Float64,Dual{Float64}} # qualityConstant
-	η::Union{Float64,Dual{Float64}}  # qualityExponent
-	cQ::Float64             # qualityVelocity
-	geo_model::Symbol 		# geometric spreading model
-	sat_model::Symbol		# saturation model
-	heff::Union{Float64,Dual{Float64}} # near-source saturation
-end
-
-PathParameters(Rrefi, γi, Q0) = PathParameters(Rrefi, γi, Q0, 0.0, 3.5, :Piecewise, :BT15, NaN)
-PathParameters(Rrefi, γi, Q0, η) = PathParameters(Rrefi, γi, Q0, η, 3.5, :Piecewise, :BT15, NaN)
-
-# path = PathParameters([1.0, 50.0, Inf], Union{Float64, Dual{Float64}}[Dual{Float64}(1.0), 0.5], 200.0)
-# typeof(path.γi)
-# typeof(path.γi[1])
-# typeof(path.γi[2])
-# path = PathParameters([1.0, 50.0, Inf], [1.0, Dual(0.5)], 200.0)
-# typeof(path.γi[1])
-# typeof(path.γi[2])
-# path.γi[1].value
-
-
-
-"""
-	geometric_spreading(r::Float64, path::PathParameters)
+	geometric_spreading(r::Float64, geo::GeometricSpreadingParameters)
 
 Geometric spreading function, switches between different approaches on `path.geo_model`.
 """
-function geometric_spreading(r::Float64, path::PathParameters)
-	if path.geo_model == :Piecewise
-		return geometric_spreading_piecewise(r, path)
-	elseif path.geo_model == :CY14
-		return geometric_spreading_cy14(r, path)
+function geometric_spreading(r::Float64, geo::GeometricSpreadingParameters)
+	if geo.model == :Piecewise
+		return geometric_spreading_piecewise(r, geo)
+	elseif geo.model == :CY14
+		return geometric_spreading_cy14(r, geo)
 	else
-		return NaN
+		return NaN * oneunit(get_parametric_type(geo))
 	end
 end
 
+geometric_spreading(r::Float64, path::PathParameters) = geometric_spreading(r, path.geometric)
 geometric_spreading(r::Float64, fas::FourierParameters) = geometric_spreading(r, fas.path)
 
 
+
 """
-	geometric_spreading_piecewise(r::Float64, path::PathParameters)
+	geometric_spreading_piecewise(r::T, geo::GeometricSpreadingParameters{T,T,U}) where {T<:Float64, U<:AbstractVector{Bool}}
 
 Piecewise linear (in log-log space) geometric spreading function.
 Makes use of the reference distances `Rrefi` and spreading rates `γi` in `path`.
 """
-function geometric_spreading_piecewise(r::Float64, path::PathParameters)
-	z_r = 1.0
-    for i = 2:length(path.Rrefi)
-      @inbounds if r < path.Rrefi[i]
-        @inbounds z_r *= (path.Rrefi[i-1] / r)^path.γi[i-1]
-        return z_r
-      else
-        @inbounds z_r *= (path.Rrefi[i-1] / path.Rrefi[i])^path.γi[i-1]
-      end
+function geometric_spreading_piecewise(r::T, geo::GeometricSpreadingParameters{T,T,U}) where {T<:Float64, U<:AbstractVector{Bool}}
+	z_r = oneunit(T)
+    for i in 1:length(geo.γfree)
+		@inbounds Rr0 = geo.Rrefi[i]
+		@inbounds Rr1 = geo.Rrefi[i+1]
+		@inbounds γ_r = geo.γconi[i]
+    	if r < Rr1
+        	z_r *= (Rr0 / r)^γ_r
+        	return z_r
+      	else
+        	z_r *= (Rr0 / Rr1)^γ_r
+      	end
     end
     return z_r
 end
 
-geometric_spreading_piecewise(r::Float64, fas::FourierParameters) = geometric_spreading_piecewise(r, fas.path)
+"""
+	geometric_spreading_piecewise(r::S, geo::GeometricSpreadingParameters{S,T,U}) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}}
+
+Piecewise linear (in log-log space) geometric spreading function.
+Makes use of the reference distances `Rrefi` and spreading rates `γi` in `path`.
+"""
+function geometric_spreading_piecewise(r::S, geo::GeometricSpreadingParameters{S,T,U}) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}}
+	z_r = oneunit(T)
+	j = 1
+	k = 1
+    for i in 1:length(geo.γfree)
+		@inbounds Rr0 = geo.Rrefi[i]
+		@inbounds Rr1 = geo.Rrefi[i+1]
+		γ_r = oneunit(T)
+
+		if geo.γfree[i] == 0
+			@inbounds γ_r *= geo.γconi[j]
+			j += 1
+		else
+			@inbounds γ_r *= geo.γvari[k]
+			k += 1
+		end
+
+    	if r < Rr1
+        	z_r *= (Rr0 / r)^γ_r
+        	return z_r
+      	else
+        	z_r *= (Rr0 / Rr1)^γ_r
+      	end
+    end
+    return z_r
+end
+
+geometric_spreading_piecewise(r, path::PathParameters) = geometric_spreading_piecewise(r, path.geometric)
+geometric_spreading_piecewise(r, fas::FourierParameters) = geometric_spreading_piecewise(r, fas.path)
 
 """
-	geometric_spreading_cy14(r::Float64, path::PathParameters)
+	geometric_spreading_cy14(r::T, geo::GeometricSpreadingParameters{T,T,U}) where {T<:Float64, U<:AbstractVector{Bool}}
 
 Geometric spreading function from Chiou & Youngs (2014).
-Defines a smooth transition from one rate `γi[1]` to another `γi[2]`, with a spreading bandwidth of 50 km.
+Defines a smooth transition from one rate `γi[1]` to another `γi[2]`, with a spreading bandwidth of `Rrefi[2]` km.
 """
-function geometric_spreading_cy14(r::Float64, path::PathParameters)
-    ln_z_r = -path.γi[1]*log(r) + (-path.γi[2]+path.γi[1])*log(sqrt(r^2 + 50.0^2)) - (-path.γi[2]+path.γi[1])*log(sqrt(1.0^2 + 50.0^2))
+function geometric_spreading_cy14(r::T, geo::GeometricSpreadingParameters{T,T,U}) where {T<:Float64, U<:AbstractVector{Bool}}
+	γ1 = geo.γconi[1]
+	γ2 = geo.γconi[2]
+	R0sq = (geo.Rrefi[1])^2
+	Rrsq = (geo.Rrefi[2])^2
+    ln_z_r = -γ1*log(r) + (-γ2+γ1)*log(sqrt(r^2 + Rrsq)) - (-γ2+γ1)*log(sqrt(R0sq + Rrsq))
 	z_r = exp(ln_z_r)
 	return z_r
 end
 
-geometric_spreading_cy14(r::Float64, fas::FourierParameters) = geometric_spreading_cy14(r, fas.path)
-
-
 """
-	near_source_saturation(m::Float64, path::PathParameters)
+	geometric_spreading_cy14(r::S, geo::GeometricSpreadingParameters{S,T,U}) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}}
 
-Near-source saturation term. Used to create equivalent point-source distance. Switches methods based upon `path.sat_model`.
+Geometric spreading function from Chiou & Youngs (2014).
+Defines a smooth transition from one rate `γi[1]` to another `γi[2]`, with a spreading bandwidth of `Rrefi[2]` km.
 """
-function near_source_saturation(m::Float64, path::PathParameters)
-	if path.sat_model == :BT15
-		# use the Boore & Thompson (2015) finite fault factor
-		return finite_fault_factor_bt15(m)
-	elseif path.sat_model == :YA15
-		# use the Yenier & Atkinson (2015) finite fault factor
-		return finite_fault_factor_ya15(m)
-	elseif path.sat_model == :None
-		return 0.0
-	elseif path.sat_model == :Constant
-		return path.heff
+function geometric_spreading_cy14(r::S, geo::GeometricSpreadingParameters{S,T,U}) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}}
+	unit = oneunit(T)
+	j = 1
+	k = 1
+	if geo.γfree[1] == 0
+		γ1 = geo.γconi[j] * unit
+		j += 1
 	else
-		return NaN
+		γ1 = geo.γvari[k]
+		k += 1
+	end
+	if geo.γfree[2] == 0
+		γ2 = geo.γconi[j] * unit
+	else
+		γ2 = geo.γvari[k]
+	end
+	R0sq = (geo.Rrefi[1])^2
+	Rrsq = (geo.Rrefi[2])^2
+    ln_z_r = -γ1*log(r) + (-γ2+γ1)*log(sqrt(r^2 + Rrsq)) - (-γ2+γ1)*log(sqrt(R0sq + Rrsq))
+	z_r = exp(ln_z_r)
+	return z_r
+end
+
+
+geometric_spreading_cy14(r, path::PathParameters) = geometric_spreading_cy14(r, path.geometric)
+geometric_spreading_cy14(r, fas::FourierParameters) = geometric_spreading_cy14(r, fas.path)
+
+
+
+"""
+	near_source_saturation(m::Float64, sat::NearSourceSaturationParameters)
+
+Near-source saturation term. Used to create equivalent point-source distance. Switches methods based upon `sat.model`.
+"""
+function near_source_saturation(m::Float64, sat::NearSourceSaturationParameters)
+	unit = oneunit(get_parametric_type(sat))
+	if sat.model == :BT15
+		# use the Boore & Thompson (2015) finite fault factor
+		return finite_fault_factor_bt15(m) * unit
+	elseif sat.model == :YA15
+		# use the Yenier & Atkinson (2015) finite fault factor
+		return finite_fault_factor_ya15(m) * unit
+	elseif sat.model == :None
+		return zero(get_parametric_type(sat))
+	elseif sat.model == :ConstantConstrained
+		return sat.hconi[1] * unit
+	elseif sat.model == :ConstantVariable
+		return sat.hvari[1] * unit
+	else
+		return NaN * unit
 	end
 end
 
+near_source_saturation(m::Float64, path::PathParameters) = near_source_saturation(m, path.saturation)
 near_source_saturation(m::Float64, fas::FourierParameters) = near_source_saturation(m, fas.path)
+
 
 
 """
@@ -150,3 +191,33 @@ Finite fault factor from Yenier & Atkinson (2015) used to create equivalent poin
 function finite_fault_factor_ya15(m::Float64)
 	return 10.0^(-0.405 + 0.235*m)
 end
+
+
+"""
+	equivalent_point_source_distance(r, m, sat::NearSourceSaturationParameters)
+
+Compute equivalent point source distance
+- `r` is r_hyp or r_rup (depending upon the size of the event -- but is nominally r_rup)
+- `m` is magnitude
+- `sat` contains the `NearSourceSaturationParameters`
+"""
+function equivalent_point_source_distance(r, m, sat::NearSourceSaturationParameters)
+	h = near_source_saturation(m, sat)
+	return sqrt( r*r + h*h )
+end
+
+equivalent_point_source_distance(r, m, path::PathParameters) = equivalent_point_source_distance(r, m, path.saturation)
+equivalent_point_source_distance(r, m, fas::FourierParameters) = equivalent_point_source_distance(r, m, fas.path)
+
+
+"""
+	anelastic_attenuation(f::S, r_ps::T, anelastic::AnelasticAttenuationParameters) where {S<:Float64,T<:Real}
+
+Anelastic attenuation filter, computed using equivalent point source distance metric
+"""
+function anelastic_attenuation(f::S, r_ps::T, anelastic::AnelasticAttenuationParameters) where {S<:Float64,T<:Real}
+	return exp( -π*f*r_ps / ( anelastic.Q0 * f^anelastic.η * anelastic.cQ ) )
+end
+
+anelastic_attenuation(f, r_ps, path::PathParameters) = anelastic_attenuation(f, r_ps, path.anelastic)
+anelastic_attenuation(f, r_ps, fas::FourierParameters) = anelastic_attenuation(f, r_ps, fas.path)

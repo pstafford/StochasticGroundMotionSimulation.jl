@@ -26,7 +26,31 @@ Lengths of vectors must be equal to each other.
 Values in `x` represent equally-spaced abcissa values, while `y` are the integrand counterparts.
 """
 function trapezoidal_rule(x::Vector, y::Vector)
-    # Δx = x[2] - x[1]
-    # return Δx * ( sum(y) - (y[1] + y[end])/2 )
     return (x[2] - x[1]) * ( sum(y) - (y[1] + y[end])/2 )
+end
+
+function trapezoidal(fun::Function, n, flim...)
+    ii = 0.0
+    for i in 2:length(flim)
+        xi = collect(range(flim[i-1], stop=flim[i], length=n))
+        yi = fun.(xi)
+        ii += trapezoidal_rule(xi, yi)
+    end
+    return ii
+end
+
+
+function gauss_interval(integrand::Function, n, fmin, fmax)
+    xi, wi = gausslegendre(n)
+    ifi = @. integrand( (fmax-fmin)/2 * xi + (fmin+fmax)/2 )
+    return (fmax-fmin)/2 * dot( wi, ifi )
+end
+
+function gauss_intervals(fun::Function, n, flim...)
+    xi, wi = gausslegendre(n)
+    ii = 0.0
+    for i in 2:length(flim)
+        ii += (flim[i]-flim[i-1])/2 * dot( wi, fun.( (flim[i]-flim[i-1])/2 * xi .+ (flim[i]+flim[i-1])/2 ) )
+    end
+    return ii
 end

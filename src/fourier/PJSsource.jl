@@ -32,7 +32,7 @@ Computes the corner frequency using the Brune model.
 	fc = corner_frequency_brune(m, Δσ, β)
 ```
 """
-function corner_frequency_brune(m::Float64, Δσ::Float64, β::Float64=3.5)
+function corner_frequency_brune(m::Float64, Δσ::T, β::Float64=3.5) where T<:Real
     Mo = magnitude_to_moment(m)
     return 4.9058e6 * β * ( Δσ / Mo )^(1/3)
 end
@@ -70,20 +70,21 @@ Computes a 3-tuple of corner frequency components depending upon source spectrum
     κ0 = 0.035
     fas = FASParams(Δσ, κ0)
     # compute single corner frequency
-	fas.src_model = :Brune
-    fc, tmp1, tmp2 = corner_frequency(m, fas)
+	src.model = :Brune
+    fc, tmp1, tmp2 = corner_frequency(m, src)
     # compute double corner frequencies
-	fas.src_model = :Atkinson_Silva_2000
-    fa, fb, ε = corner_frequency(m, fas)
+	src.model = :Atkinson_Silva_2000
+    fa, fb, ε = corner_frequency(m, src)
 ```
 """
-function corner_frequency(m::Float64, src::FourierParameters)
-    if src.src_model == :Brune
-        return corner_frequency_brune(m, src.Δσ, src.β)::Float64, NaN::Float64, NaN::Float64
-    elseif src.src_model == :Atkinson_Silva_2000
-        return corner_frequency_atkinson_silva_2000(m)
+function corner_frequency(m::S, src::SourceParameters{S,T}) where {S<:Float64, T<:Real}
+    if src.model == :Brune
+        return corner_frequency_brune(m, src.Δσ, src.β), T(NaN), T(NaN)
+    elseif src.model == :Atkinson_Silva_2000
+        fa, fb, ε = corner_frequency_atkinson_silva_2000(m)
+		return T(fa), T(fb), T(ε)
     else
-        return NaN::Float64, NaN::Float64, NaN::Float64
+        return T(NaN), T(NaN), T(NaN)
     end
 end
 

@@ -2,32 +2,52 @@
 
 
 # function to implement the Boore & Thompson (2014) excitation duration function
-function boore_thompson_2014(m::T, r::T, fas::FourierParameters) where T<:Float64
+function boore_thompson_2014(m::S, r_ps::U, src::SourceParameters{S,T}) where {S<:Float64, T<:Real, U<:Real}
   # source duration
-  fa, fb, ε = corner_frequency(m, fas)
-  if fas.source.source_model == :Atkinson_Silva_2000
+  fa, fb, ε = corner_frequency(m, src)
+  if src.model == :Atkinson_Silva_2000
     Ds = 0.5 / fa + 0.5 / fb
   else
     Ds = 1.0 / fa
   end
   # path duration
-  if r == 0.0
-    return Ds
-  elseif r > 0.0 && r <= 7.0
-    return Ds + r / 7.0 * 2.4
-  elseif r > 7.0 && r <= 45.0
-    return Ds + 2.4 + (r - 7.0)/(45.0 - 7.0)*(8.4 - 2.4)
-  elseif r > 45.0 && r <= 125.0
-    return Ds + 8.4 + (r - 45.0)/(125.0 - 45.0)*(10.9 - 8.4)
-  elseif r > 125.0 && r <= 175.0
-    return Ds + 10.9 + (r - 125.0)/(175.0 - 125.0)*(17.4 - 10.9)
-  elseif r > 175.0 && r <= 270.0
-    return Ds + 17.4 + (r - 175.0)/(270.0 - 175.0)*(34.2 - 17.4)
-  elseif r > 270.0
-    return Ds + 34.2 + 0.156 * (r - 270.0)
+  if r_ps == 0.0
+    return Ds * oneunit(U)
+  elseif r_ps > 0.0 && r_ps <= 7.0
+    return Ds + r_ps / 7.0 * 2.4
+  elseif r_ps > 7.0 && r_ps <= 45.0
+    return Ds + 2.4 + (r_ps - 7.0)/(45.0 - 7.0)*(8.4 - 2.4)
+  elseif r_ps > 45.0 && r_ps <= 125.0
+    return Ds + 8.4 + (r_ps - 45.0)/(125.0 - 45.0)*(10.9 - 8.4)
+  elseif r_ps > 125.0 && r_ps <= 175.0
+    return Ds + 10.9 + (r_ps - 125.0)/(175.0 - 125.0)*(17.4 - 10.9)
+  elseif r_ps > 175.0 && r_ps <= 270.0
+    return Ds + 17.4 + (r_ps - 175.0)/(270.0 - 175.0)*(34.2 - 17.4)
+  elseif r_ps > 270.0
+    return Ds + 34.2 + 0.156 * (r_ps - 270.0)
+  else
+    if T <: Dual
+      return T(NaN)
+    elseif U <: Dual
+      return U(NaN)
+    else
+      return S(NaN)
+    end
   end
 end
 
+boore_thompson_2014(m, r_ps, fas::FourierParameters) = boore_thompson_2014(m, r_ps, fas.source)
+
+
+function excitation_duration(m::S, r_ps::S, src::SourceParameters{S,T}, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
+  if rvt.dur_ex == :BT14
+    return boore_thompson_2014(m, r_ps, src)
+  else
+    return T(NaN)
+  end
+end
+
+excitation_duration(m, r_ps, fas::FourierParameters, rvt::RandomVibrationParameters) = excitation_duration(m, r_ps, fas.source, rvt)
 
 
 # Definition of Boore & Thompson (2012) constant values to be used within subsequent functions
@@ -43,58 +63,63 @@ const coefs_ena_bt12 = [ 4.0    2.00  7.4499e-01 -3.0772e-02 2.0  1.3928e+00  8.
 
 function boore_thompson_2012_coefs(idx_m::T, idx_r::T; region::Symbol=:WNA) where T<:Int
   idx = (idx_m - 1) * num_r_jj_bt12 + idx_r
-  if region == :WNA
-    @inbounds c = coefs_wna_bt12[idx,3:9]
-    return c
-  elseif region == :ENA
+  if region == :ENA
     @inbounds c = coefs_ena_bt12[idx,3:9]
+    return c
+  else
+    @inbounds c = coefs_wna_bt12[idx,3:9]
     return c
   end
 end
 
 
 # base function for Boore & Thompson (2012)
-function boore_thompson_2012_base(η::Float64, c::Vector{Float64}; ζ::Float64=0.05)
-  @inbounds ratio = (c[1] + c[2]*((1.0 - η^c[3])/(1.0 + η^c[3]))) * (1.0 + c[4]/(2π*ζ)*( η /(1.0 + c[5]*η^c[6]) )^c[7])
+function boore_thompson_2012_base(η::S, c::Vector{T}, ζ::T=0.05) where {S<:Real,T<:Float64}
+  @inbounds ηc3 = η^c[3]
+  @inbounds ratio = (c[1] + c[2]*((1.0 - ηc3)/(1.0 + ηc3))) * (1.0 + c[4]/(2π*ζ)*( η /(1.0 + c[5]*η^c[6]) )^c[7])
   return ratio
 end
 
 
 # function to implement the Boore & Thompson (2012) duration ratio model
-function boore_thompson_2012(m::T, r::T, fas::FourierParameters, sdof::Oscillator{T}; region::Symbol=:WNA) where T<:Float64
+function boore_thompson_2012(m::S, r_ps::S, src::SourceParameters{S,T}, sdof::Oscillator{S}, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
   # for magnitude and distance that don't match coefficient tables we need to use bilinear interpolation
   # get the excitation duration (as recommended by Boore & Thompson, 2012)
-  Dex = boore_thompson_2014(m, r, fas)
+  Dex = boore_thompson_2014(m, r_ps, src)
   # get the oscillator period
-  T_n = 1.0 / sdof.f_n
+  T_n = period(sdof)
+  ζ = sdof.ζ_n
   # define the η parameter as T_n/Dex
   η = T_n / Dex
 
   # impose limits on the magnitudes and distances
   m = ( m < 4.0 ) ? 4.0 : m
   m = ( m > 8.0 ) ? 8.0 : m
-  r = ( r < 2.0 ) ? 2.0 : r
-  r = ( r > 1262.0 ) ? 1262.0 : r
+  r_ps = ( r_ps < 2.0 ) ? 2.0 : r_ps
+  r_ps = ( r_ps > 1262.0 ) ? 1262.0 : r_ps
 
   # get the bounding indicies
   i_lo = findlast( m_ii_bt12 .<= m )
   i_hi = findfirst( m_ii_bt12 .>= m )
-  j_lo = findlast( r_jj_bt12 .<= r )
-  j_hi = findfirst( r_jj_bt12 .>= r )
+  j_lo = findlast( r_jj_bt12 .<= r_ps )
+  j_hi = findfirst( r_jj_bt12 .>= r_ps )
+
+  # get the region for the rms duration model
+  region = rvt.dur_region
 
   # check for situations in which the coefficients are known for the given m,r
   if i_lo == i_hi # we have coefficients for this magnitude
     if j_lo == j_hi # we have coefficients for this distance
       c = boore_thompson_2012_coefs(i_lo, j_lo; region=region)
-      Dratio = boore_thompson_2012_base(η, c)
+      Dratio = boore_thompson_2012_base(η, c, ζ)
     else # we need to interpolate the distance values only
       r_lo = r_jj_bt12[j_lo]
       r_hi = r_jj_bt12[j_hi]
       c_lo = boore_thompson_2012_coefs(i_lo, j_lo; region=region)
       c_hi = boore_thompson_2012_coefs(i_lo, j_hi; region=region)
-      D_lo = boore_thompson_2012_base(η, c_lo)
-      D_hi = boore_thompson_2012_base(η, c_hi)
-      Dratio = D_lo + (r - r_lo)/(r_hi - r_lo)*(D_hi - D_lo)
+      D_lo = boore_thompson_2012_base(η, c_lo, ζ)
+      D_hi = boore_thompson_2012_base(η, c_hi, ζ)
+      Dratio = D_lo + (r_ps - r_lo)/(r_hi - r_lo)*(D_hi - D_lo)
     end
   else # we need to interpolate the magnitudes
     if j_lo == j_hi # we have coefficients for this distance
@@ -102,8 +127,8 @@ function boore_thompson_2012(m::T, r::T, fas::FourierParameters, sdof::Oscillato
       m_hi = m_ii_bt12[i_hi]
       c_lo = boore_thompson_2012_coefs(i_lo, j_lo; region=region)
       c_hi = boore_thompson_2012_coefs(i_hi, j_lo; region=region)
-      D_lo = boore_thompson_2012_base(η, c_lo)
-      D_hi = boore_thompson_2012_base(η, c_hi)
+      D_lo = boore_thompson_2012_base(η, c_lo, ζ)
+      D_hi = boore_thompson_2012_base(η, c_hi, ζ)
       Dratio = D_lo + (m - m_lo)/(m_hi - m_lo)*(D_hi - D_lo)
     else # we need to interpolate for this magnitude and distance
       # create the combinations of (m,r) from these indices
@@ -119,19 +144,39 @@ function boore_thompson_2012(m::T, r::T, fas::FourierParameters, sdof::Oscillato
       c_hh = boore_thompson_2012_coefs(i_hi, j_hi; region=region)
 
       # get the corresponding ratios
-      Dr_ll = boore_thompson_2012_base(η, c_ll)
-      Dr_lh = boore_thompson_2012_base(η, c_lh)
-      Dr_hl = boore_thompson_2012_base(η, c_hl)
-      Dr_hh = boore_thompson_2012_base(η, c_hh)
+      Dr_ll = boore_thompson_2012_base(η, c_ll, ζ)
+      Dr_lh = boore_thompson_2012_base(η, c_lh, ζ)
+      Dr_hl = boore_thompson_2012_base(η, c_hl, ζ)
+      Dr_hh = boore_thompson_2012_base(η, c_hh, ζ)
 
       # bilinear interpolation
       D = [ Dr_ll Dr_lh; Dr_hl Dr_hh ]
       knots = ([m_lo, m_hi], [r_lo, r_hi])
       # create interpolant
       itp_D = interpolate(knots, D, Gridded(Linear()))
-      Dratio = itp_D(m,r)
+      Dratio = itp_D(m,r_ps)
     end
   end
   Drms = Dratio * Dex
   return (Drms, Dex, Dratio)
 end
+
+boore_thompson_2012(m, r_ps, fas::FourierParameters, sdof::Oscillator, rvt::RandomVibrationParameters) = boore_thompson_2012(m, r_ps, fas.source, sdof, rvt)
+
+"""
+  rms_duration(m::S, r_ps::S, src::SourceParameters{S,T}, sdof::Oscillator{S}, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
+
+Returns a 3-tuple of (Drms, Dex, Dratio), using a switch on `rvt.dur_rms`.
+Default `:BT12` makes use of the `:BT14` model for excitation duration, `Dex`.
+- `m` is magnitude
+- `r_ps` is an equivalent point source distance
+"""
+function rms_duration(m::S, r_ps::S, src::SourceParameters{S,T}, sdof::Oscillator{S}, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
+  if rvt.dur_rms == :BT12
+    return boore_thompson_2012(m, r_ps, src, sdof, rvt)
+  else
+    return (T(NaN), T(NaN), T(NaN))
+  end
+end
+
+rms_duration(m, r_ps, fas::FourierParameters, sdof::Oscillator, rvt::RandomVibrationParameters) = rms_duration(m, r_ps, fas.source, sdof, rvt)

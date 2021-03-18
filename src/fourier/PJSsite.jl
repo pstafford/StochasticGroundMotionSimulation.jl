@@ -5,7 +5,7 @@ const fii_b16 = [ 0.010, 0.015, 0.021, 0.031, 0.045, 0.065, 0.095, 0.138, 0.200,
 const Aii_b16 = [ 1.00, 1.01, 1.02, 1.02, 1.04, 1.06, 1.09, 1.13, 1.18, 1.25, 1.32, 1.41, 1.51, 1.64, 1.80, 1.99, 2.18, 2.38, 2.56, 2.75, 2.95, 3.17, 3.42, 3.68, 3.96 ]
 
 """
-	boore_2016_generic_amplification(f::Real)
+	boore_2016_generic_amplification(f)
 
 Computes the generic crustal amplification for a WUS velocity profile with Vs30 of 760 m/s using the Boore (2016) velocity model.
 
@@ -15,7 +15,7 @@ Computes the generic crustal amplification for a WUS velocity profile with Vs30 
 	Af = boore_2016_generic_amplification(f)
 ```
 """
-function boore_2016_generic_amplification(f::Real)
+function boore_2016_generic_amplification(f)
     if f <= 0.01
         return 1.0
     elseif f >= 80.0
@@ -34,7 +34,7 @@ function boore_2016_generic_amplification(f::Real)
             end
         end
     end
-    return NaN::Real
+    return NaN
 end
 
 
@@ -77,7 +77,7 @@ const Aii_aa21_cy14_j = [ 3.689114, 3.704366, 3.719671, 3.735033, 3.750447, 3.76
 
 
 """
-	alatik_2021_cy14_inverted_amplification_seg(f::Real)
+	alatik_2021_cy14_inverted_amplification_seg(f)
 
 Computes the generic crustal amplification for a velocity profile with Vs30 of 760 m/s obtained from inverting the Chiou & Youngs (2014) ground-motion model.
 
@@ -91,7 +91,7 @@ Same as alatik_2021_cy14_inverted_amplification, just segmented to speed up the 
 	Af = alatik_2021_cy14_inverted_amplification_seg(f)
 ```
 """
-function alatik_2021_cy14_inverted_amplification_seg(f::Real)
+function alatik_2021_cy14_inverted_amplification_seg(f)
     if f <= 0.01
         return 1.0
     elseif f <= 0.199526
@@ -236,11 +236,11 @@ function alatik_2021_cy14_inverted_amplification_seg(f::Real)
     else
         return 4.170967
     end
-    return NaN::Real
+    return NaN
 end
 
 """
-	alatik_2021_cy14_inverted_amplification(f::Real)
+	alatik_2021_cy14_inverted_amplification(f)
 
 Computes the generic crustal amplification for a velocity profile with Vs30 of 760 m/s obtained from inverting the Chiou & Youngs (2014) ground-motion model.
 
@@ -252,7 +252,7 @@ Amplifications provided ahead of Al Atik & Abrahamson (2021) publication.
 	Af = alatik_2021_cy14_inverted_amplification(f)
 ```
 """
-function alatik_2021_cy14_inverted_amplification(f::Real)
+function alatik_2021_cy14_inverted_amplification(f)
     if f <= 0.01
         return 1.0
     elseif f >= 100.0
@@ -271,7 +271,7 @@ function alatik_2021_cy14_inverted_amplification(f::Real)
             end
         end
     end
-    return NaN::Real
+    return NaN
 end
 
 
@@ -309,12 +309,12 @@ Computes the site amplification (impedance) for a given frequency `f`. Requires 
 	Af = site_amplification(f; amp_model=:Unit)
 ```
 """
-function site_amplification(f::Real, amp_model::Symbol)
-    if amp_model == :Unit
+function site_amplification(f, model::Symbol)
+    if model == :Unit
         return unit_generic_amplification()
-    elseif amp_model == :Boore2016
+    elseif model == :Boore2016
         return boore_2016_generic_amplification(f)
-    elseif amp_model == :AlAtik2021_cy14
+    elseif model == :AlAtik2021_cy14
         return alatik_2021_cy14_inverted_amplification_seg(f)
 	else
 		return NaN
@@ -322,8 +322,25 @@ function site_amplification(f::Real, amp_model::Symbol)
 end
 
 """
-	site_amplification(f::Real, site::SiteParameters)
+	site_amplification(f, site::SiteParameters)
 
 Computes the site amplification (impedance) for a given frequency `f`.
 """
-site_amplification(f::Real, site::SiteParameters) = site_amplification(f, site.amp_model)
+site_amplification(f, site::SiteParameters) = site_amplification(f, site.model)
+
+"""
+	site_amplification(f, fas::FourierParameters)
+
+Computes the site amplification (impedance) for a given frequency `f`.
+"""
+site_amplification(f, fas::FourierParameters) = site_amplification(f, fas.site)
+
+
+"""
+    kappa_filter(f, site::SiteParameters)
+
+Kappa filter for a given frequency `f`
+"""
+function kappa_filter(f, site::SiteParameters)
+    return exp(-π*f*site.κ0)
+end
