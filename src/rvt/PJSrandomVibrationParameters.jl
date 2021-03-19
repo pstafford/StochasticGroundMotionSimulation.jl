@@ -22,5 +22,5 @@ struct RandomVibrationParameters
 	dur_region::Symbol
 end
 
-RandomVibrationParameters() = RandomVibrationParameters(:DK80, :BT14, :BT12, :WNA)
-RandomVibrationParameters(pf) = RandomVibrationParameters(pf, :BT14, :BT12, :WNA)
+RandomVibrationParameters() = RandomVibrationParameters(:DK80, :BT14, :BT15, :WNA)
+RandomVibrationParameters(pf) = RandomVibrationParameters(pf, :BT14, ((pf == :DK80) ? :BT15 : :BT12), :WNA)
