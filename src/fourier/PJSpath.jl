@@ -4,7 +4,7 @@
 
 Geometric spreading function, switches between different approaches on `path.geo_model`.
 """
-function geometric_spreading(r::Float64, geo::GeometricSpreadingParameters)
+function geometric_spreading(r::T, geo::GeometricSpreadingParameters) where T<:Real
 	if geo.model == :Piecewise
 		return geometric_spreading_piecewise(r, geo)
 	elseif geo.model == :CY14
@@ -14,18 +14,18 @@ function geometric_spreading(r::Float64, geo::GeometricSpreadingParameters)
 	end
 end
 
-geometric_spreading(r::Float64, path::PathParameters) = geometric_spreading(r, path.geometric)
-geometric_spreading(r::Float64, fas::FourierParameters) = geometric_spreading(r, fas.path)
+geometric_spreading(r::T, path::PathParameters) where T<:Real = geometric_spreading(r, path.geometric)
+geometric_spreading(r::T, fas::FourierParameters) where T<:Real = geometric_spreading(r, fas.path)
 
 
 
 """
-	geometric_spreading_piecewise(r::T, geo::GeometricSpreadingParameters{T,T,U}) where {T<:Float64, U<:AbstractVector{Bool}}
+	geometric_spreading_piecewise(r::S, geo::GeometricSpreadingParameters{T,T,U}) where {S<:Real, T<:Float64, U<:AbstractVector{Bool}}
 
 Piecewise linear (in log-log space) geometric spreading function.
 Makes use of the reference distances `Rrefi` and spreading rates `γi` in `path`.
 """
-function geometric_spreading_piecewise(r::T, geo::GeometricSpreadingParameters{T,T,U}) where {T<:Float64, U<:AbstractVector{Bool}}
+function geometric_spreading_piecewise(r::S, geo::GeometricSpreadingParameters{T,T,U}) where {S<:Real, T<:Float64, U<:AbstractVector{Bool}}
 	z_r = oneunit(T)
     for i in 1:length(geo.γfree)
 		@inbounds Rr0 = geo.Rrefi[i]
@@ -42,12 +42,12 @@ function geometric_spreading_piecewise(r::T, geo::GeometricSpreadingParameters{T
 end
 
 """
-	geometric_spreading_piecewise(r::S, geo::GeometricSpreadingParameters{S,T,U}) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}}
+	geometric_spreading_piecewise(r::V, geo::GeometricSpreadingParameters{S,T,U}) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}, V<:Real}
 
 Piecewise linear (in log-log space) geometric spreading function.
 Makes use of the reference distances `Rrefi` and spreading rates `γi` in `path`.
 """
-function geometric_spreading_piecewise(r::S, geo::GeometricSpreadingParameters{S,T,U}) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}}
+function geometric_spreading_piecewise(r::V, geo::GeometricSpreadingParameters{S,T,U}) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}, V<:Real}
 	z_r = oneunit(T)
 	j = 1
 	k = 1
@@ -78,12 +78,12 @@ geometric_spreading_piecewise(r, path::PathParameters) = geometric_spreading_pie
 geometric_spreading_piecewise(r, fas::FourierParameters) = geometric_spreading_piecewise(r, fas.path)
 
 """
-	geometric_spreading_cy14(r::T, geo::GeometricSpreadingParameters{T,T,U}) where {T<:Float64, U<:AbstractVector{Bool}}
+	geometric_spreading_cy14(r::S, geo::GeometricSpreadingParameters{T,T,U}) where {S<:Real, T<:Float64, U<:AbstractVector{Bool}}
 
 Geometric spreading function from Chiou & Youngs (2014).
 Defines a smooth transition from one rate `γi[1]` to another `γi[2]`, with a spreading bandwidth of `Rrefi[2]` km.
 """
-function geometric_spreading_cy14(r::T, geo::GeometricSpreadingParameters{T,T,U}) where {T<:Float64, U<:AbstractVector{Bool}}
+function geometric_spreading_cy14(r::S, geo::GeometricSpreadingParameters{T,T,U}) where {S<:Real, T<:Float64, U<:AbstractVector{Bool}}
 	γ1 = geo.γconi[1]
 	γ2 = geo.γconi[2]
 	R0sq = (geo.Rrefi[1])^2
@@ -94,12 +94,12 @@ function geometric_spreading_cy14(r::T, geo::GeometricSpreadingParameters{T,T,U}
 end
 
 """
-	geometric_spreading_cy14(r::S, geo::GeometricSpreadingParameters{S,T,U}) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}}
+	geometric_spreading_cy14(r::V, geo::GeometricSpreadingParameters{S,T,U}) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}, V<:Real}
 
 Geometric spreading function from Chiou & Youngs (2014).
 Defines a smooth transition from one rate `γi[1]` to another `γi[2]`, with a spreading bandwidth of `Rrefi[2]` km.
 """
-function geometric_spreading_cy14(r::S, geo::GeometricSpreadingParameters{S,T,U}) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}}
+function geometric_spreading_cy14(r::V, geo::GeometricSpreadingParameters{S,T,U}) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}, V<:Real}
 	unit = oneunit(T)
 	j = 1
 	k = 1
