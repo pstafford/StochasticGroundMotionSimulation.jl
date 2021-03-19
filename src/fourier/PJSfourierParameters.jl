@@ -60,6 +60,7 @@ GeometricSpreadingParameters(Rrefi, γconi) = GeometricSpreadingParameters(Rrefi
 GeometricSpreadingParameters(Rrefi, γconi, model) = GeometricSpreadingParameters(Rrefi, γconi, Vector{Float64}(), BitVector(undef,length(γconi)), model )
 GeometricSpreadingParameters(Rrefi::Vector{T}, γconi::Vector{T}) where T = GeometricSpreadingParameters{T,T,BitVector}(Rrefi, γconi, Vector{T}(), BitVector(undef,length(γconi)), :Piecewise )
 GeometricSpreadingParameters(Rrefi::Vector{S}, γvari::Vector{T}) where {S<:Float64,T<:Dual} = GeometricSpreadingParameters{S,T,BitVector}(Rrefi, Vector{S}(), γvari, BitVector(ones(length(γvari))), :Piecewise )
+GeometricSpreadingParameters(Rrefi::Vector{S}, γvari::Vector{T}, model::Symbol) where {S<:Float64,T<:Dual} = GeometricSpreadingParameters{S,T,BitVector}(Rrefi, Vector{S}(), γvari, BitVector(ones(length(γvari))), model )
 
 """
 	get_parametric_type(geo::GeometricSpreadingParameters{S,T,U}) where {S,T,U} = T
