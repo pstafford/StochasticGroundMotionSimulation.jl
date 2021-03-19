@@ -2,6 +2,7 @@
 # Definition of Boore & Thompson (2012) constant values to be used within subsequent functions
 const m_ii_bt12 = [ 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0 ]
 const r_jj_bt12 = [ 2.00, 3.17, 5.02, 7.96, 12.62, 20.00, 31.70, 50.24, 79.62, 126.19, 200.00, 317.00, 502.40, 796.20, 1262.00 ]
+const num_m_ii_bt12 = 9
 const num_r_jj_bt12 = 15
 
 const coefs_wna_bt12 = [ 4.0    2.00  8.4312e-01 -2.8671e-02 2.0  1.7316e+00  1.1695e+00  2.1671e+00  9.6224e-01  9.9929e-01  9.4336e-01   4.0    2.00;

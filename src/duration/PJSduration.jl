@@ -54,7 +54,7 @@ excitation_duration(m, r_ps, fas::FourierParameters, rvt::RandomVibrationParamet
 include("coefficients/PJSbooreThompson2012.jl")
 
 function boore_thompson_2012_coefs(idx_m::T, idx_r::T; region::Symbol=:WNA) where T<:Int
-  idx = (idx_m - 1) * num_r_jj_bt12 + idx_r
+  idx = (idx_r - 1) * num_m_ii_bt12 + idx_m
   if region == :ENA
     @inbounds c = coefs_ena_bt12[idx,3:9]
     return c
@@ -166,7 +166,7 @@ boore_thompson_2012(m, r_ps, fas::FourierParameters, sdof::Oscillator, rvt::Rand
 include("coefficients/PJSbooreThompson2015.jl")
 
 function boore_thompson_2015_coefs(idx_m::T, idx_r::T; region::Symbol=:WNA) where T<:Int
-  idx = (idx_m - 1) * num_r_jj_bt15 + idx_r
+  idx = (idx_r - 1) * num_m_ii_bt15 + idx_m
   if region == :ENA
     @inbounds c = coefs_ena_bt15[idx,3:9]
     return c
@@ -176,6 +176,14 @@ function boore_thompson_2015_coefs(idx_m::T, idx_r::T; region::Symbol=:WNA) wher
   end
 end
 
+# function get_mr(idx_m::T, idx_r::T; region::Symbol=:WNA) where T<:Int
+#   idx = (idx_r - 1) * num_m_ii_bt15 + idx_m
+#   if region == :ENA
+#     return ( coefs_ena_bt15[idx,1], coefs_ena_bt15[idx,2] )
+#   else
+#     return ( coefs_wna_bt15[idx,1], coefs_wna_bt15[idx,2] )
+#   end
+# end
 
 # base function for Boore & Thompson (2015) - Note this is the same function as in BT12
 function boore_thompson_2015_base(η::S, c::Vector{T}, ζ::T=0.05) where {S<:Real,T<:Float64}

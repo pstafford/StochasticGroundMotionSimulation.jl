@@ -2,6 +2,7 @@
 # Definition of Boore & Thompson (2012) constant values to be used within subsequent functions
 const m_ii_bt15 = [ 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0 ]
 const r_jj_bt15 = [ 2.00, 3.17, 5.02, 7.96, 12.62, 20.00, 31.70, 50.24, 79.62, 126.20, 200.01, 317.00, 502.41, 796.26, 1262.00 ]
+const num_m_ii_bt15 = 13
 const num_r_jj_bt15 = 15
 
 
