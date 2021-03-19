@@ -57,6 +57,7 @@ struct GeometricSpreadingParameters{S<:Real,T<:Real,U<:AbstractVector{Bool}}
 end
 
 GeometricSpreadingParameters(Rrefi, γconi) = GeometricSpreadingParameters(Rrefi, γconi, Vector{Float64}(), BitVector(undef,length(γconi)), :Piecewise )
+GeometricSpreadingParameters(Rrefi, γconi, model) = GeometricSpreadingParameters(Rrefi, γconi, Vector{Float64}(), BitVector(undef,length(γconi)), model )
 GeometricSpreadingParameters(Rrefi::Vector{T}, γconi::Vector{T}) where T = GeometricSpreadingParameters{T,T,BitVector}(Rrefi, γconi, Vector{T}(), BitVector(undef,length(γconi)), :Piecewise )
 GeometricSpreadingParameters(Rrefi::Vector{S}, γvari::Vector{T}) where {S<:Float64,T<:Dual} = GeometricSpreadingParameters{S,T,BitVector}(Rrefi, Vector{S}(), γvari, BitVector(ones(length(γvari))), :Piecewise )
 
