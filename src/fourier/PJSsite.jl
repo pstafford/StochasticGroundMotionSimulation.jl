@@ -28,8 +28,8 @@ function boore_2016_generic_amplification(f)
                     @inbounds amp = Aii_b16[j]
                     return amp
                 else
-                    @inbounds amp = Aii_b16[j] + (f-fii_b16[j])*(Aii_b16[i]-Aii_b16[j])/(fii_b16[i]-fii_b16[j])
-                    return amp
+                    @inbounds lnAmp = log(Aii_b16[j]) + (f-fii_b16[j])*log(Aii_b16[i]/Aii_b16[j])/(fii_b16[i]-fii_b16[j])
+                    return exp(lnAmp)
                 end
             end
         end
@@ -95,141 +95,141 @@ function alatik_2021_cy14_inverted_amplification_seg(f)
     if f <= 0.01
         return 1.0
     elseif f <= 0.199526
-        for i = 1:length(fii_aa21_cy14_a)
+        for i in 1:length(fii_aa21_cy14_a)
             @inbounds if fii_aa21_cy14_a[i] > f
                 j = i-1
                 @inbounds if fii_aa21_cy14_a[j] == f
                     @inbounds amp = Aii_aa21_cy14_a[j]
                     return amp
                 else
-                    @inbounds amp = Aii_aa21_cy14_a[j] + (f-fii_aa21_cy14_a[j])*(Aii_aa21_cy14_a[i]-Aii_aa21_cy14_a[j])/(fii_aa21_cy14_a[i]-fii_aa21_cy14_a[j])
-                    return amp
+                    @inbounds lnAmp = log(Aii_aa21_cy14_a[j]) + (f-fii_aa21_cy14_a[j])*log(Aii_aa21_cy14_a[i]/Aii_aa21_cy14_a[j])/(fii_aa21_cy14_a[i]-fii_aa21_cy14_a[j])
+                    return exp(lnAmp)
                 end
             end
         end
         return Aii_aa21_cy14_a[end]
     elseif f <= 0.398107
-        for i = 1:length(fii_aa21_cy14_b)
+        for i in 1:length(fii_aa21_cy14_b)
             @inbounds if fii_aa21_cy14_b[i] > f
                 j = i-1
                 @inbounds if fii_aa21_cy14_b[j] == f
                     @inbounds amp = Aii_aa21_cy14_b[j]
                     return amp
                 else
-                    @inbounds amp = Aii_aa21_cy14_b[j] + (f-fii_aa21_cy14_b[j])*(Aii_aa21_cy14_b[i]-Aii_aa21_cy14_b[j])/(fii_aa21_cy14_b[i]-fii_aa21_cy14_b[j])
-                    return amp
+                    @inbounds lnAmp = log(Aii_aa21_cy14_b[j]) + (f-fii_aa21_cy14_b[j])*log(Aii_aa21_cy14_b[i]/Aii_aa21_cy14_b[j])/(fii_aa21_cy14_b[i]-fii_aa21_cy14_b[j])
+                    return exp(lnAmp)
                 end
             end
         end
         return Aii_aa21_cy14_b[end]
     elseif f <= 0.794328
-        for i = 1:length(fii_aa21_cy14_c)
+        for i in 1:length(fii_aa21_cy14_c)
             @inbounds if fii_aa21_cy14_c[i] > f
                 j = i-1
                 @inbounds if fii_aa21_cy14_c[j] == f
                     @inbounds amp = Aii_aa21_cy14_c[j]
                     return amp
                 else
-                    @inbounds amp = Aii_aa21_cy14_c[j] + (f-fii_aa21_cy14_c[j])*(Aii_aa21_cy14_c[i]-Aii_aa21_cy14_c[j])/(fii_aa21_cy14_c[i]-fii_aa21_cy14_c[j])
-                    return amp
+                    @inbounds lnAmp = log(Aii_aa21_cy14_c[j]) + (f-fii_aa21_cy14_c[j])*log(Aii_aa21_cy14_c[i]/Aii_aa21_cy14_c[j])/(fii_aa21_cy14_c[i]-fii_aa21_cy14_c[j])
+                    return exp(lnAmp)
                 end
             end
         end
         return Aii_aa21_cy14_c[end]
     elseif f <= 1.584893
-        for i = 1:length(fii_aa21_cy14_d)
+        for i in 1:length(fii_aa21_cy14_d)
             @inbounds if fii_aa21_cy14_d[i] > f
                 j = i-1
                 @inbounds if fii_aa21_cy14_d[j] == f
                     @inbounds amp = Aii_aa21_cy14_d[j]
                     return amp
                 else
-                    @inbounds amp = Aii_aa21_cy14_d[j] + (f-fii_aa21_cy14_d[j])*(Aii_aa21_cy14_d[i]-Aii_aa21_cy14_d[j])/(fii_aa21_cy14_d[i]-fii_aa21_cy14_d[j])
-                    return amp
+                    @inbounds lnAmp = log(Aii_aa21_cy14_d[j]) + (f-fii_aa21_cy14_d[j])*log(Aii_aa21_cy14_d[i]/Aii_aa21_cy14_d[j])/(fii_aa21_cy14_d[i]-fii_aa21_cy14_d[j])
+                    return exp(lnAmp)
                 end
             end
         end
         return Aii_aa21_cy14_d[end]
     elseif f <= 3.162278
-        for i = 1:length(fii_aa21_cy14_e)
+        for i in 1:length(fii_aa21_cy14_e)
             @inbounds if fii_aa21_cy14_e[i] > f
                 j = i-1
                 @inbounds if fii_aa21_cy14_e[j] == f
                     @inbounds amp = Aii_aa21_cy14_e[j]
                     return amp
                 else
-                    @inbounds amp = Aii_aa21_cy14_e[j] + (f-fii_aa21_cy14_e[j])*(Aii_aa21_cy14_e[i]-Aii_aa21_cy14_e[j])/(fii_aa21_cy14_e[i]-fii_aa21_cy14_e[j])
-                    return amp
+                    @inbounds lnAmp = log(Aii_aa21_cy14_e[j]) + (f-fii_aa21_cy14_e[j])*log(Aii_aa21_cy14_e[i]/Aii_aa21_cy14_e[j])/(fii_aa21_cy14_e[i]-fii_aa21_cy14_e[j])
+                    return exp(lnAmp)
                 end
             end
         end
         return Aii_aa21_cy14_e[end]
     elseif f <= 6.309573
-        for i = 1:length(fii_aa21_cy14_f)
+        for i in 1:length(fii_aa21_cy14_f)
             @inbounds if fii_aa21_cy14_f[i] > f
                 j = i-1
                 @inbounds if fii_aa21_cy14_f[j] == f
                     @inbounds amp = Aii_aa21_cy14_f[j]
                     return amp
                 else
-                    @inbounds amp = Aii_aa21_cy14_f[j] + (f-fii_aa21_cy14_f[j])*(Aii_aa21_cy14_f[i]-Aii_aa21_cy14_f[j])/(fii_aa21_cy14_f[i]-fii_aa21_cy14_f[j])
-                    return amp
+                    @inbounds lnAmp = log(Aii_aa21_cy14_f[j]) + (f-fii_aa21_cy14_f[j])*log(Aii_aa21_cy14_f[i]/Aii_aa21_cy14_f[j])/(fii_aa21_cy14_f[i]-fii_aa21_cy14_f[j])
+                    return exp(lnAmp)
                 end
             end
         end
         return Aii_aa21_cy14_f[end]
     elseif f <= 12.589251
-        for i = 1:length(fii_aa21_cy14_g)
+        for i in 1:length(fii_aa21_cy14_g)
             @inbounds if fii_aa21_cy14_g[i] > f
                 j = i-1
                 @inbounds if fii_aa21_cy14_g[j] == f
                     @inbounds amp = Aii_aa21_cy14_g[j]
                     return amp
                 else
-                    @inbounds amp = Aii_aa21_cy14_g[j] + (f-fii_aa21_cy14_g[j])*(Aii_aa21_cy14_g[i]-Aii_aa21_cy14_g[j])/(fii_aa21_cy14_g[i]-fii_aa21_cy14_g[j])
-                    return amp
+                    @inbounds lnAmp = log(Aii_aa21_cy14_g[j]) + (f-fii_aa21_cy14_g[j])*log(Aii_aa21_cy14_g[i]/Aii_aa21_cy14_g[j])/(fii_aa21_cy14_g[i]-fii_aa21_cy14_g[j])
+                    return exp(lnAmp)
                 end
             end
         end
         return Aii_aa21_cy14_g[end]
     elseif f <= 25.032
-        for i = 1:length(fii_aa21_cy14_h)
+        for i in 1:length(fii_aa21_cy14_h)
             @inbounds if fii_aa21_cy14_h[i] > f
                 j = i-1
                 @inbounds if fii_aa21_cy14_h[j] == f
                     @inbounds amp = Aii_aa21_cy14_h[j]
                     return amp
                 else
-                    @inbounds amp = Aii_aa21_cy14_h[j] + (f-fii_aa21_cy14_h[j])*(Aii_aa21_cy14_h[i]-Aii_aa21_cy14_h[j])/(fii_aa21_cy14_h[i]-fii_aa21_cy14_h[j])
-                    return amp
+                    @inbounds lnAmp = log(Aii_aa21_cy14_h[j]) + (f-fii_aa21_cy14_h[j])*log(Aii_aa21_cy14_h[i]/Aii_aa21_cy14_h[j])/(fii_aa21_cy14_h[i]-fii_aa21_cy14_h[j])
+                    return exp(lnAmp)
                 end
             end
         end
         return Aii_aa21_cy14_h[end]
     elseif f <= 50.032
-        for i = 1:length(fii_aa21_cy14_i)
+        for i in 1:length(fii_aa21_cy14_i)
             @inbounds if fii_aa21_cy14_i[i] > f
                 j = i-1
                 @inbounds if fii_aa21_cy14_i[j] == f
                     @inbounds amp = Aii_aa21_cy14_i[j]
                     return amp
                 else
-                    @inbounds amp = Aii_aa21_cy14_i[j] + (f-fii_aa21_cy14_i[j])*(Aii_aa21_cy14_i[i]-Aii_aa21_cy14_i[j])/(fii_aa21_cy14_i[i]-fii_aa21_cy14_i[j])
-                    return amp
+                    @inbounds lnAmp = log(Aii_aa21_cy14_i[j]) + (f-fii_aa21_cy14_i[j])*log(Aii_aa21_cy14_i[i]/Aii_aa21_cy14_i[j])/(fii_aa21_cy14_i[i]-fii_aa21_cy14_i[j])
+                    return exp(lnAmp)
                 end
             end
         end
         return Aii_aa21_cy14_i[end]
     elseif f < 100.0
-        for i = 1:length(fii_aa21_cy14_j)
+        for i in 1:length(fii_aa21_cy14_j)
             @inbounds if fii_aa21_cy14_j[i] > f
                 j = i-1
                 @inbounds if fii_aa21_cy14_j[j] == f
                     @inbounds amp = Aii_aa21_cy14_j[j]
                     return amp
                 else
-                    @inbounds amp = Aii_aa21_cy14_j[j] + (f-fii_aa21_cy14_j[j])*(Aii_aa21_cy14_j[i]-Aii_aa21_cy14_j[j])/(fii_aa21_cy14_j[i]-fii_aa21_cy14_j[j])
-                    return amp
+                    @inbounds lnAmp = log(Aii_aa21_cy14_j[j]) + (f-fii_aa21_cy14_j[j])*log(Aii_aa21_cy14_j[i]/Aii_aa21_cy14_j[j])/(fii_aa21_cy14_j[i]-fii_aa21_cy14_j[j])
+                    return exp(lnAmp)
                 end
             end
         end
@@ -258,15 +258,15 @@ function alatik_2021_cy14_inverted_amplification(f)
     elseif f >= 100.0
         return 4.170967
     else
-        for i = 1:length(fii_aa21_cy14)
+        for i in 1:length(fii_aa21_cy14)
             @inbounds if fii_aa21_cy14[i] > f
                 j = i-1
                 @inbounds if fii_aa21_cy14[j] == f
                     @inbounds amp = Aii_aa21_cy14[j]
                     return amp
                 else
-                    @inbounds amp = Aii_aa21_cy14[j] + (f-fii_aa21_cy14[j])*(Aii_aa21_cy14[i]-Aii_aa21_cy14[j])/(fii_aa21_cy14[i]-fii_aa21_cy14[j])
-                    return amp
+                    @inbounds lnAmp = log(Aii_aa21_cy14[j]) + (f-fii_aa21_cy14[j])*log(Aii_aa21_cy14[i]/Aii_aa21_cy14[j])/(fii_aa21_cy14[i]-fii_aa21_cy14[j])
+                    return exp(lnAmp)
                 end
             end
         end
