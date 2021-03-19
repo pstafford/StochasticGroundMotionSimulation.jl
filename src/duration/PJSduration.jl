@@ -39,7 +39,7 @@ end
 boore_thompson_2014(m, r_ps, fas::FourierParameters) = boore_thompson_2014(m, r_ps, fas.source)
 
 
-function excitation_duration(m::S, r_ps::S, src::SourceParameters{S,T}, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
+function excitation_duration(m::S, r_ps::T, src::SourceParameters, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
   if rvt.dur_ex == :BT14
     return boore_thompson_2014(m, r_ps, src)
   else
@@ -74,7 +74,7 @@ end
 
 
 # function to implement the Boore & Thompson (2012) duration ratio model
-function boore_thompson_2012(m::S, r_ps::S, src::SourceParameters{S,T}, sdof::Oscillator{S}, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
+function boore_thompson_2012(m::S, r_ps::T, src::SourceParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
   # for magnitude and distance that don't match coefficient tables we need to use bilinear interpolation
   # get the excitation duration (as recommended by Boore & Thompson, 2012)
   Dex = boore_thompson_2014(m, r_ps, src)
@@ -194,7 +194,7 @@ end
 
 
 # function to implement the Boore & Thompson (2015) duration ratio model
-function boore_thompson_2015(m::S, r_ps::S, src::SourceParameters{S,T}, sdof::Oscillator{S}, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
+function boore_thompson_2015(m::S, r_ps::T, src::SourceParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
   # for magnitude and distance that don't match coefficient tables we need to use bilinear interpolation of the log Drms values
   # get the excitation duration (as recommended by Boore & Thompson, 2015)
   Dex = boore_thompson_2014(m, r_ps, src)
@@ -282,14 +282,14 @@ boore_thompson_2015(m, r_ps, fas::FourierParameters, sdof::Oscillator, rvt::Rand
 
 
 """
-  rms_duration(m::S, r_ps::S, src::SourceParameters{S,T}, sdof::Oscillator{S}, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
+  rms_duration(m::S, r_ps::T, src::SourceParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
 
 Returns a 3-tuple of (Drms, Dex, Dratio), using a switch on `rvt.dur_rms`.
 Default `:BT12` makes use of the `:BT14` model for excitation duration, `Dex`.
 - `m` is magnitude
 - `r_ps` is an equivalent point source distance
 """
-function rms_duration(m::S, r_ps::S, src::SourceParameters{S,T}, sdof::Oscillator{S}, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
+function rms_duration(m::S, r_ps::T, src::SourceParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
   if rvt.dur_rms == :BT15
     return boore_thompson_2015(m, r_ps, src, sdof, rvt)
   elseif rvt.dur_rms == :BT12
