@@ -118,7 +118,7 @@ geometric_spreading_cy14(r_ps, fas::FourierParameters) = geometric_spreading_cy1
 
 
 """
-	geometric_spreading_cy14mod(r_ps::V, geo::GeometricSpreadingParameters{S,T,U}) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}, V<:Real}
+	geometric_spreading_cy14mod(r_ps::V, m::S, geo::GeometricSpreadingParameters{S,T,U}, sat::NearSourceSaturationParameters) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}, V<:Real}
 
 Geometric spreading function from Chiou & Youngs (2014).
 Modified to make use of both `r_ps` and `r_rup` so that only the first saturation term contaminates the source amplitudes.
