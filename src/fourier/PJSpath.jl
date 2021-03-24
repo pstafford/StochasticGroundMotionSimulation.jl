@@ -1,20 +1,25 @@
 
 """
-	geometric_spreading(r_ps::Float64, geo::GeometricSpreadingParameters)
+	geometric_spreading(r_ps::T, m::S, geo::GeometricSpreadingParameters, sat::NearSourceSaturationParameters) where {S<:Float64, T<:Real}
 
 Geometric spreading function, switches between different approaches on `path.geo_model`.
 """
-function geometric_spreading(r_ps::T, geo::GeometricSpreadingParameters) where T<:Real
+function geometric_spreading(r_ps::T, m::S, geo::GeometricSpreadingParameters, sat::NearSourceSaturationParameters) where {S<:Float64, T<:Real}
 	if geo.model == :Piecewise
 		return geometric_spreading_piecewise(r_ps, geo)
 	elseif geo.model == :CY14
 		return geometric_spreading_cy14(r_ps, geo)
+	elseif geo.model == :CY14mod
+		return geometric_spreading_cy14mod(r_ps, m, geo, sat)
 	else
 		return NaN * oneunit(get_parametric_type(geo))
 	end
 end
 
-geometric_spreading(r_ps::T, path::PathParameters) where T<:Real = geometric_spreading(r_ps, path.geometric)
+geometric_spreading(r_ps::T, m::S, path::PathParameters) where {S<:Float64, T<:Real} = geometric_spreading(r_ps, m, path.geometric, path.saturation)
+geometric_spreading(r_ps::T, m::S, fas::FourierParameters) where {S<:Float64, T<:Real} = geometric_spreading(r_ps, m, fas.path)
+# special variants that don't require a magnitude input
+geometric_spreading(r_ps::T, path::PathParameters) where T<:Real = geometric_spreading(r_ps, NaN, path.geometric, path.saturation)
 geometric_spreading(r_ps::T, fas::FourierParameters) where T<:Real = geometric_spreading(r_ps, fas.path)
 
 
@@ -112,6 +117,42 @@ geometric_spreading_cy14(r_ps, path::PathParameters) = geometric_spreading_cy14(
 geometric_spreading_cy14(r_ps, fas::FourierParameters) = geometric_spreading_cy14(r_ps, fas.path)
 
 
+"""
+	geometric_spreading_cy14mod(r_ps::V, geo::GeometricSpreadingParameters{S,T,U}) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}, V<:Real}
+
+Geometric spreading function from Chiou & Youngs (2014).
+Modified to make use of both `r_ps` and `r_rup` so that only the first saturation term contaminates the source amplitudes.
+Defines a smooth transition from one rate `γi[1]` to another `γi[2]`, with a spreading bandwidth of `Rrefi[2]` km.
+"""
+function geometric_spreading_cy14mod(r_ps::V, m::S, geo::GeometricSpreadingParameters{S,T,U}, sat::NearSourceSaturationParameters) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}, V<:Real}
+	unit = oneunit(T)
+	j = 1
+	k = 1
+	if geo.γfree[1] == 0
+		γ1 = geo.γconi[j] * unit
+		j += 1
+	else
+		γ1 = geo.γvari[k]
+		k += 1
+	end
+	if geo.γfree[2] == 0
+		γ2 = geo.γconi[j] * unit
+	else
+		γ2 = geo.γvari[k]
+	end
+	R0sq = (geo.Rrefi[1])^2
+	Rrsq = (geo.Rrefi[2])^2
+	r_rup = rupture_distance_from_equivalent_point_source_distance(r_ps, m, sat)
+	ln_z_r = -γ1*log(r_ps) + (-γ2+γ1)/2*log( (r_rup^2 + Rrsq) / (R0sq + Rrsq) )
+	z_r = exp(ln_z_r)
+	return z_r
+end
+
+
+geometric_spreading_cy14mod(r_ps, m, path::PathParameters) = geometric_spreading_cy14mod(r_ps, m, path.geometric, path.saturation)
+geometric_spreading_cy14mod(r_ps, m, fas::FourierParameters) = geometric_spreading_cy14mod(r_ps, m, fas.path)
+
+
 
 """
 	near_source_saturation(m::Float64, sat::NearSourceSaturationParameters)
@@ -194,6 +235,24 @@ end
 
 equivalent_point_source_distance(r, m, path::PathParameters) = equivalent_point_source_distance(r, m, path.saturation)
 equivalent_point_source_distance(r, m, fas::FourierParameters) = equivalent_point_source_distance(r, m, fas.path)
+
+
+"""
+	rupture_distance_from_equivalent_point_source_distance(r_ps, m, sat::NearSourceSaturationParameters)
+
+Compute rupture distance from equivalent point source distance
+- `r_ps` is the equivalent point source distance
+- `m` is magnitude
+- `sat` contains the `NearSourceSaturationParameters`
+"""
+function rupture_distance_from_equivalent_point_source_distance(r_ps, m, sat::NearSourceSaturationParameters)
+	h = near_source_saturation(m, sat)
+	n = sat.exponent
+	return ( r_ps^n - h^n )^(1/n)
+end
+
+rupture_distance_from_equivalent_point_source_distance(r_ps, m, path::PathParameters) = rupture_distance_from_equivalent_point_source_distance(r_ps, m, path.saturation)
+rupture_distance_from_equivalent_point_source_distance(r_ps, m, fas::FourierParameters) = rupture_distance_from_equivalent_point_source_distance(r_ps, m, fas.path)
 
 
 """
