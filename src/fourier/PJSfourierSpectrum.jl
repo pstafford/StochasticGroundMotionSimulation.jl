@@ -69,14 +69,17 @@ fourier_source(f::T, m::T, fas::FourierParameters) where T = fourier_source(f, m
 
 
 
-function fourier_path(f::S, r_ps::T, geo::GeometricSpreadingParameters, ane::AnelasticAttenuationParameters) where {S<:Float64,T<:Real}
-	Zr = geometric_spreading(r_ps, geo)
+function fourier_path(f::S, r_ps::T, m::S, geo::GeometricSpreadingParameters, sat::NearSourceSaturationParameters, ane::AnelasticAttenuationParameters) where {S<:Float64,T<:Real}
+	Zr = geometric_spreading(r_ps, m, geo, sat)
 	Qr = anelastic_attenuation(f, r_ps, ane)
 	return Zr * Qr
 end
 
-fourier_path(f, r, path::PathParameters) = fourier_path(f, r, path.geometric, path.anelastic)
-fourier_path(f, r, fas::FourierParameters) = fourier_path(f, r, fas.path)
+fourier_path(f, r_ps, m, path::PathParameters) = fourier_path(f, r_ps, m, path.geometric, path.saturation, path.anelastic)
+fourier_path(f, r_ps, m, fas::FourierParameters) = fourier_path(f, r_ps, m, fas.path)
+# simplified cases where m is not required
+fourier_path(f, r_ps, path::PathParameters) = fourier_path(f, r_ps, NaN, path.geometric, path.saturation, path.anelastic)
+fourier_path(f, r_ps, fas::FourierParameters) = fourier_path(f, r_ps, fas.path)
 
 
 """
@@ -125,16 +128,17 @@ Fourier acceleration spectral ordinate (m/s) based upon an equivalent point sour
 - `r_ps` is the equivalent point source distance including saturation effects (km)
 - `src` are the source parameters `SourceParameters`
 - `geo` are the geometric spreading parameters `GeometricSpreadingParameters`
+- `sat` are the near source saturation parameters `NearSourceSaturationParameters`
 - `ane` are the anelastic attenuation parameters `AnelasticAttenuationParameters`
 - `site` are the site parameters `SiteParameters`
 """
-function fourier_spectral_ordinate(f::S, m::S, r_ps::T, src::SourceParameters, geo::GeometricSpreadingParameters, ane::AnelasticAttenuationParameters, site::SiteParameters) where {S<:Float64,T<:Real}
+function fourier_spectral_ordinate(f::S, m::S, r_ps::T, src::SourceParameters, geo::GeometricSpreadingParameters, sat::NearSourceSaturationParameters, ane::AnelasticAttenuationParameters, site::SiteParameters) where {S<:Float64,T<:Real}
 	# define all constant terms here
   	C = fourier_constant(src)
 	# source term
 	Ef = fourier_source(f, m, src)
 	# geometric spreading
-	Gr = geometric_spreading(r_ps, geo)
+	Gr = geometric_spreading(r_ps, m, geo, sat)
 	# combined attenuation of both path (κr) and site (κ0)
 	Kf = fourier_attenuation(f, r_ps, ane, site)
 	# site impedance
@@ -156,7 +160,7 @@ Fourier acceleration spectral ordinate (m/s) based upon an equivalent point sour
 - `path` are the path parameters `PathParameters`
 - `site` are the site parameters `SiteParameters`
 """
-fourier_spectral_ordinate(f::S, m::S, r_ps::T, src::SourceParameters, path::PathParameters, site::SiteParameters) where {S<:Float64,T<:Real} = fourier_spectral_ordinate(f, m, r_ps, src, path.geometric, path.anelastic, site)
+fourier_spectral_ordinate(f::S, m::S, r_ps::T, src::SourceParameters, path::PathParameters, site::SiteParameters) where {S<:Float64,T<:Real} = fourier_spectral_ordinate(f, m, r_ps, src, path.geometric, path.saturation, path.anelastic, site)
 
 """
 	fourier_spectral_ordinate(f::S, m::S, r_ps::T, fas::FourierParameters) where {S<:Float64,T<:Real}
@@ -179,14 +183,15 @@ Squared Fourier acceleration spectral ordinate (m^2/s^2) based upon an equivalen
 - `r_ps` is the equivalent point source distance including saturation effects (km)
 - `src` are the source parameters `SourceParameters`
 - `geo` are the geometric spreading parameters `GeometricSpreadingParameters`
+- `sat` are the near source saturation parameters `NearSourceSaturationParameters`
 - `ane` are the anelastic attenuation parameters `AnelasticAttenuationParameters`
 - `site` are the site parameters `SiteParameters`
 """
-function squared_fourier_spectral_ordinate(f::S, m::S, r_ps::T, src::SourceParameters, geo::GeometricSpreadingParameters, ane::AnelasticAttenuationParameters, site::SiteParameters) where {S<:Float64,T<:Real}
-	return fourier_spectral_ordinate(f, m, r_ps, src, geo, ane, site)^2
+function squared_fourier_spectral_ordinate(f::S, m::S, r_ps::T, src::SourceParameters, geo::GeometricSpreadingParameters, sat::NearSourceSaturationParameters, ane::AnelasticAttenuationParameters, site::SiteParameters) where {S<:Float64,T<:Real}
+	return fourier_spectral_ordinate(f, m, r_ps, src, geo, sat, ane, site)^2
 end
 
-squared_fourier_spectral_ordinate(f::S, m::S, r_ps::T, src::SourceParameters, path::PathParameters, site::SiteParameters) where {S<:Float64,T<:Real} = squared_fourier_spectral_ordinate(f, m, r_ps, src, path.geometric, path.anelastic, site)
+squared_fourier_spectral_ordinate(f::S, m::S, r_ps::T, src::SourceParameters, path::PathParameters, site::SiteParameters) where {S<:Float64,T<:Real} = squared_fourier_spectral_ordinate(f, m, r_ps, src, path.geometric, path.saturation, path.anelastic, site)
 squared_fourier_spectral_ordinate(f::S, m::S, r_ps::T, fas::FourierParameters) where {S<:Float64,T<:Real} = squared_fourier_spectral_ordinate(f, m, r_ps, fas.source, fas.path, fas.site)
 
 
@@ -212,7 +217,7 @@ function fourier_spectrum(f::Vector{S}, m::S, r_ps::T, fas::FourierParameters) w
 		Mo = magnitude_to_moment(m)
 		fa, fb, ε = corner_frequency(m, fas)
 		# geometric spreading
-		Gr = geometric_spreading(r_ps, fas)
+		Gr = geometric_spreading(r_ps, m, fas)
 		factor = 4π^2 * C * Mo * Gr / 100.0
 
 		Af = Vector{U}(undef, numf)
@@ -260,7 +265,7 @@ function fourier_spectrum!(Af::Vector{U}, f::Vector{S}, m::S, r_ps::T, fas::Four
 		Mo = magnitude_to_moment(m)
 		fa, fb, ε = corner_frequency(m, fas)
 		# geometric spreading
-		Gr = geometric_spreading(r_ps, fas)
+		Gr = geometric_spreading(r_ps, m, fas)
 		factor = 4π^2 * C * Mo * Gr / 100.0
 
 		for i in 1:numf
@@ -303,7 +308,7 @@ function squared_fourier_spectrum!(Afsq::Vector{U}, f::Vector{S}, m::S, r_ps::T,
 		Mo = magnitude_to_moment(m)
 		fa, fb, ε = corner_frequency(m, fas)
 		# geometric spreading
-		Gr = geometric_spreading(r_ps, fas)
+		Gr = geometric_spreading(r_ps, m, fas)
 		factor = (4π^2 * C * Mo * Gr / 100.0)^2
 
 		for i in 1:numf
