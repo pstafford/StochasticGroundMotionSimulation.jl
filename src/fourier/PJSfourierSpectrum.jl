@@ -229,8 +229,8 @@ function fourier_spectrum(f::Vector{S}, m::S, r_ps::T, fas::FourierParameters) w
 		# geometric spreading
 		Gr = geometric_spreading(r_ps, m, fas)
 		factor = 4π^2 * C * Mo * Gr / 100.0
-		if ane.rmetric == :Rrup
-			r_rup = rupture_distance_from_equivalent_point_source_distance(r_ps, m, sat)
+		if fas.path.anelastic.rmetric == :Rrup
+			r_rup = rupture_distance_from_equivalent_point_source_distance(r_ps, m, fas)
 		end
 
 		Af = Vector{U}(undef, numf)
@@ -239,7 +239,7 @@ function fourier_spectrum(f::Vector{S}, m::S, r_ps::T, fas::FourierParameters) w
 		  	# source term
 			Ef = fourier_source_shape(fi, fa, fb, ε, fas.source.model)
 	  		# combined attenuation
-			if ane.rmetric == :Rrup
+			if fas.path.anelastic.rmetric == :Rrup
 				Kf = fourier_attenuation(fi, r_rup, fas)
 			else
 				Kf = fourier_attenuation(fi, r_ps, fas)
@@ -284,8 +284,8 @@ function fourier_spectrum!(Af::Vector{U}, f::Vector{S}, m::S, r_ps::T, fas::Four
 		# geometric spreading
 		Gr = geometric_spreading(r_ps, m, fas)
 		factor = 4π^2 * C * Mo * Gr / 100.0
-		if ane.rmetric == :Rrup
-			r_rup = rupture_distance_from_equivalent_point_source_distance(r_ps, m, sat)
+		if fas.path.anelastic.rmetric == :Rrup
+			r_rup = rupture_distance_from_equivalent_point_source_distance(r_ps, m, fas)
 		end
 
 		for i in 1:numf
@@ -293,7 +293,7 @@ function fourier_spectrum!(Af::Vector{U}, f::Vector{S}, m::S, r_ps::T, fas::Four
 			# source term
 			Ef = fourier_source_shape(fi, fa, fb, ε, fas.source.model)
 	  		# combined attenuation
-			if ane.rmetric == :Rrup
+			if fas.path.anelastic.rmetric == :Rrup
 				Kf = fourier_attenuation(fi, r_rup, fas)
 			else
 				Kf = fourier_attenuation(fi, r_ps, fas)
@@ -334,8 +334,8 @@ function squared_fourier_spectrum!(Afsq::Vector{U}, f::Vector{S}, m::S, r_ps::T,
 		# geometric spreading
 		Gr = geometric_spreading(r_ps, m, fas)
 		factor = (4π^2 * C * Mo * Gr / 100.0)^2
-		if ane.rmetric == :Rrup
-			r_rup = rupture_distance_from_equivalent_point_source_distance(r_ps, m, sat)
+		if fas.path.anelastic.rmetric == :Rrup
+			r_rup = rupture_distance_from_equivalent_point_source_distance(r_ps, m, fas)
 		end
 
 		for i in 1:numf
@@ -343,7 +343,7 @@ function squared_fourier_spectrum!(Afsq::Vector{U}, f::Vector{S}, m::S, r_ps::T,
 			# source term
 			Ef = fourier_source_shape(fi, fa, fb, ε, fas.source.model)
 	  		# combined attenuation
-			if ane.rmetric == :Rrup
+			if fas.path.anelastic.rmetric == :Rrup
 				Kf = fourier_attenuation(fi, r_rup, fas)
 			else
 				Kf = fourier_attenuation(fi, r_ps, fas)
