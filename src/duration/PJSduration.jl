@@ -39,11 +39,17 @@ end
 boore_thompson_2014(m, r_ps, fas::FourierParameters) = boore_thompson_2014(m, r_ps, fas.source)
 
 
-function excitation_duration(m::S, r_ps::T, src::SourceParameters, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
+function excitation_duration(m::S, r_ps::U, src::SourceParameters{S,T}, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real,U<:Real}
   if rvt.dur_ex == :BT14
     return boore_thompson_2014(m, r_ps, src)
   else
-    return T(NaN)
+    if T <: Dual
+      return T(NaN)
+    elseif U <: Dual
+      return U(NaN)
+    else
+      return S(NaN)
+    end
   end
 end
 
