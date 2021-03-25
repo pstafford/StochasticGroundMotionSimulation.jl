@@ -256,13 +256,13 @@ rupture_distance_from_equivalent_point_source_distance(r_ps, m, fas::FourierPara
 
 
 """
-	anelastic_attenuation(f::S, r_ps::T, anelastic::AnelasticAttenuationParameters) where {S<:Float64,T<:Real}
+	anelastic_attenuation(f::S, r::T, anelastic::AnelasticAttenuationParameters) where {S<:Float64,T<:Real}
 
-Anelastic attenuation filter, computed using equivalent point source distance metric
+Anelastic attenuation filter, computed using equivalent point source distance metric or a standard rupture distance.
 """
-function anelastic_attenuation(f::S, r_ps::T, anelastic::AnelasticAttenuationParameters) where {S<:Float64,T<:Real}
-	return exp( -π*f*r_ps / ( anelastic.Q0 * f^anelastic.η * anelastic.cQ ) )
+function anelastic_attenuation(f::S, r::T, anelastic::AnelasticAttenuationParameters) where {S<:Float64,T<:Real}
+	return exp( -π*f*r / ( anelastic.Q0 * f^anelastic.η * anelastic.cQ ) )
 end
 
-anelastic_attenuation(f, r_ps, path::PathParameters) = anelastic_attenuation(f, r_ps, path.anelastic)
-anelastic_attenuation(f, r_ps, fas::FourierParameters) = anelastic_attenuation(f, r_ps, fas.path)
+anelastic_attenuation(f, r, path::PathParameters) = anelastic_attenuation(f, r, path.anelastic)
+anelastic_attenuation(f, r, fas::FourierParameters) = anelastic_attenuation(f, r, fas.path)
