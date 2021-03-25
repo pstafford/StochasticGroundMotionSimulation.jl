@@ -128,17 +128,20 @@ Holds fields:
 - `Q0` quality factor at 1 Hz
 - `η` quality exponent ∈ [0,1)
 - `cQ` velocity (km/s) along propagation path used to determine `Q(f)`
+- `rmetric` is a symbol `:Rrup` or `:Rps` to define which distance metric is used for anelastic attenuation
 """
 struct AnelasticAttenuationParameters{S<:Real,T<:Real}
 	Q0::S
 	η::T
 	cQ::Float64
+	rmetric::Symbol
 end
 
-AnelasticAttenuationParameters(Q0) = AnelasticAttenuationParameters(Q0, 0.0, 3.5)
-AnelasticAttenuationParameters(Q0, η) = AnelasticAttenuationParameters(Q0, η, 3.5)
-AnelasticAttenuationParameters(Q0::T, η::T) where T = AnelasticAttenuationParameters{T,T}(Q0, η, 3.5)
-AnelasticAttenuationParameters(Q0::T, η::T, cQ::Float64) where T = AnelasticAttenuationParameters{T,T}(Q0, η, cQ)
+AnelasticAttenuationParameters(Q0) = AnelasticAttenuationParameters(Q0, 0.0, 3.5, :Rps)
+AnelasticAttenuationParameters(Q0, η) = AnelasticAttenuationParameters(Q0, η, 3.5, :Rps)
+AnelasticAttenuationParameters(Q0::T, η::T) where T = AnelasticAttenuationParameters{T,T}(Q0, η, 3.5, :Rps)
+AnelasticAttenuationParameters(Q0::T, η::T, cQ::Float64) where T = AnelasticAttenuationParameters{T,T}(Q0, η, cQ, :Rps)
+AnelasticAttenuationParameters(Q0, η, rmetric) = AnelasticAttenuationParameters(Q0, η, 3.5, rmetric)
 
 """
 	get_parametric_type(anelastic::AnelasticAttenuationParameters{S,T}) where {S,T}

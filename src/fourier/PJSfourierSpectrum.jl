@@ -71,7 +71,12 @@ fourier_source(f::T, m::T, fas::FourierParameters) where T = fourier_source(f, m
 
 function fourier_path(f::S, r_ps::T, m::S, geo::GeometricSpreadingParameters, sat::NearSourceSaturationParameters, ane::AnelasticAttenuationParameters) where {S<:Float64,T<:Real}
 	Zr = geometric_spreading(r_ps, m, geo, sat)
-	Qr = anelastic_attenuation(f, r_ps, ane)
+	if ane.rmetric == :Rrup
+		r_rup = rupture_distance_from_equivalent_point_source_distance(r_ps, m, sat)
+		Qr = anelastic_attenuation(f, r_rup, ane)
+	else
+		Qr = anelastic_attenuation(f, r_ps, ane)
+	end
 	return Zr * Qr
 end
 
@@ -83,23 +88,23 @@ fourier_path(f, r_ps, fas::FourierParameters) = fourier_path(f, r_ps, fas.path)
 
 
 """
-	fourier_attenuation(f::S, r_ps::T, ane::AnelasticAttenuationParameters{U,V}, site::SiteParameters{W}) where {S<:Float64,T<:Real,U<:Real,V<:Real,W<:Real}
+	fourier_attenuation(f::S, r::T, ane::AnelasticAttenuationParameters{U,V}, site::SiteParameters{W}) where {S<:Float64,T<:Real,U<:Real,V<:Real,W<:Real}
 
 Combined full-path attenuation, including `Q(f)` effects and `κ0` filter for frequency `f`
-Distance defined in terms of an equivalent point source distance `r_ps`
+Distance defined in terms of an equivalent point source distance `r_ps` or rupture distance `r_rup` depending upon what metric is defined in `ane.rmetric`
 """
-function fourier_attenuation(f::S, r_ps::T, ane::AnelasticAttenuationParameters{U,V}, site::SiteParameters{W}) where {S<:Float64,T<:Real,U<:Real,V<:Real,W<:Real}
+function fourier_attenuation(f::S, r::T, ane::AnelasticAttenuationParameters{U,V}, site::SiteParameters{W}) where {S<:Float64,T<:Real,U<:Real,V<:Real,W<:Real}
 	if f < eps()
 		return oneunit(T)*oneunit(U)*oneunit(V)*oneunit(W)
 	else
-		Qr = anelastic_attenuation(f, r_ps, ane)
+		Qr = anelastic_attenuation(f, r, ane)
 		Kf = kappa_filter(f, site)
 		return Qr * Kf
 	end
 end
 
-fourier_attenuation(f::S, r_ps::T, path::PathParameters, site::SiteParameters) where {S<:Float64,T<:Real} = fourier_attenuation(f, r_ps, path.anelastic, site)
-fourier_attenuation(f::S, r_ps::T, fas::FourierParameters) where {S<:Float64,T<:Real} = fourier_attenuation(f, r_ps, fas.path, fas.site)
+fourier_attenuation(f::S, r::T, path::PathParameters, site::SiteParameters) where {S<:Float64,T<:Real} = fourier_attenuation(f, r, path.anelastic, site)
+fourier_attenuation(f::S, r::T, fas::FourierParameters) where {S<:Float64,T<:Real} = fourier_attenuation(f, r, fas.path, fas.site)
 
 
 """
@@ -140,7 +145,12 @@ function fourier_spectral_ordinate(f::S, m::S, r_ps::T, src::SourceParameters, g
 	# geometric spreading
 	Gr = geometric_spreading(r_ps, m, geo, sat)
 	# combined attenuation of both path (κr) and site (κ0)
-	Kf = fourier_attenuation(f, r_ps, ane, site)
+	if ane.rmetric == :Rrup
+		r_rup = rupture_distance_from_equivalent_point_source_distance(r_ps, m, sat)
+		Kf = fourier_attenuation(f, r_rup, ane, site)
+	else
+		Kf = fourier_attenuation(f, r_ps, ane, site)
+	end
 	# site impedance
     Sf = site_amplification(f, site)
 
@@ -219,6 +229,9 @@ function fourier_spectrum(f::Vector{S}, m::S, r_ps::T, fas::FourierParameters) w
 		# geometric spreading
 		Gr = geometric_spreading(r_ps, m, fas)
 		factor = 4π^2 * C * Mo * Gr / 100.0
+		if ane.rmetric == :Rrup
+			r_rup = rupture_distance_from_equivalent_point_source_distance(r_ps, m, sat)
+		end
 
 		Af = Vector{U}(undef, numf)
 	  	for i in 1:numf
@@ -226,7 +239,11 @@ function fourier_spectrum(f::Vector{S}, m::S, r_ps::T, fas::FourierParameters) w
 		  	# source term
 			Ef = fourier_source_shape(fi, fa, fb, ε, fas.source.model)
 	  		# combined attenuation
-	  		Kf = fourier_attenuation(fi, r_ps, fas)
+			if ane.rmetric == :Rrup
+				Kf = fourier_attenuation(fi, r_rup, fas)
+			else
+				Kf = fourier_attenuation(fi, r_ps, fas)
+			end
 	  		# site impedance
 	      	Sf = site_amplification(fi, fas)
 			# apply factor and convert to acceleration in appropriate units
@@ -267,13 +284,20 @@ function fourier_spectrum!(Af::Vector{U}, f::Vector{S}, m::S, r_ps::T, fas::Four
 		# geometric spreading
 		Gr = geometric_spreading(r_ps, m, fas)
 		factor = 4π^2 * C * Mo * Gr / 100.0
+		if ane.rmetric == :Rrup
+			r_rup = rupture_distance_from_equivalent_point_source_distance(r_ps, m, sat)
+		end
 
 		for i in 1:numf
 			@inbounds fi = f[i]
 			# source term
 			Ef = fourier_source_shape(fi, fa, fb, ε, fas.source.model)
 	  		# combined attenuation
-	  		Kf = fourier_attenuation(fi, r_ps, fas)
+			if ane.rmetric == :Rrup
+				Kf = fourier_attenuation(fi, r_rup, fas)
+			else
+				Kf = fourier_attenuation(fi, r_ps, fas)
+			end
 	  		# site impedance
 	      	Sf = site_amplification(fi, fas)
 			# apply factor and convert to acceleration in appropriate units
@@ -310,13 +334,20 @@ function squared_fourier_spectrum!(Afsq::Vector{U}, f::Vector{S}, m::S, r_ps::T,
 		# geometric spreading
 		Gr = geometric_spreading(r_ps, m, fas)
 		factor = (4π^2 * C * Mo * Gr / 100.0)^2
+		if ane.rmetric == :Rrup
+			r_rup = rupture_distance_from_equivalent_point_source_distance(r_ps, m, sat)
+		end
 
 		for i in 1:numf
 			@inbounds fi = f[i]
 			# source term
 			Ef = fourier_source_shape(fi, fa, fb, ε, fas.source.model)
 	  		# combined attenuation
-	  		Kf = fourier_attenuation(fi, r_ps, fas)
+			if ane.rmetric == :Rrup
+				Kf = fourier_attenuation(fi, r_rup, fas)
+			else
+				Kf = fourier_attenuation(fi, r_ps, fas)
+			end
 	  		# site impedance
 	      	Sf = site_amplification(fi, fas)
 			# apply factor and convert to acceleration in appropriate units
@@ -327,16 +358,17 @@ function squared_fourier_spectrum!(Afsq::Vector{U}, f::Vector{S}, m::S, r_ps::T,
 end
 
 """
-	combined_kappa_frequency(r_ps::T, ane::AnelasticAttenuationParameters, site::SiteParameters) where T<:Real
+	combined_kappa_frequency(r::T, ane::AnelasticAttenuationParameters, site::SiteParameters) where T<:Real
 
-Frequency at which the combined κ_r and κ_0 filters (squared versions) give a value of 0.5
+Frequency at which the combined κ_r and κ_0 filters (squared versions) give a value of 0.5.
+`r` can be either `r_ps` or `r_rup` depending upon what matches `ane.rmetric`
 """
-function combined_kappa_frequency(r_ps::T, ane::AnelasticAttenuationParameters, site::SiteParameters) where T<:Real
+function combined_kappa_frequency(r::T, ane::AnelasticAttenuationParameters, site::SiteParameters) where T<:Real
   	if ane.η < 0.1
     	# a closed form solution exists (for effectively η=0)
-    	return log(2.0) / ( 2π * ( r_ps / (ane.Q0 * ane.cQ) + site.κ0 ) )
+    	return log(2.0) / ( 2π * ( r / (ane.Q0 * ane.cQ) + site.κ0 ) )
   	else
-		g(f) = 0.5 - (fourier_attenuation(f, r_ps, ane, site)^2)
+		g(f) = 0.5 - (fourier_attenuation(f, r, ane, site)^2)
 		f_0 = find_zero(g, (0.01,100.0), Bisection(); xatol=1e-2)
 		fk = min(max(f_0, 0.2), 1.0)
 		U = get_parametric_type(ane)
@@ -354,5 +386,5 @@ function combined_kappa_frequency(r_ps::T, ane::AnelasticAttenuationParameters, 
   	end
 end
 
-combined_kappa_frequency(r_ps::T, path::PathParameters, site::SiteParameters) where T<:Real = combined_kappa_frequency(r_ps, path.anelastic, site)
-combined_kappa_frequency(r_ps::T, fas::FourierParameters) where T<:Real = combined_kappa_frequency(r_ps, fas.path, fas.site)
+combined_kappa_frequency(r::T, path::PathParameters, site::SiteParameters) where T<:Real = combined_kappa_frequency(r, path.anelastic, site)
+combined_kappa_frequency(r::T, fas::FourierParameters) where T<:Real = combined_kappa_frequency(r, fas.path, fas.site)
