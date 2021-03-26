@@ -15,12 +15,12 @@ fourier_constant(fas::FourierParameters) = fourier_constant(fas.source)
 
 
 """
-	fourier_source_shape(f::T, m::T, src::SourceParameters) where T<:Float64
+	fourier_source_shape(f::T, m::S, src::SourceParameters) where {S<:Real,T<:Float64}
 
 Source shape of the Fourier Amplitude Spectrum of _displacement_, without the constant term or seismic moment.
 This simply includes the source spectral shape.
 """
-function fourier_source_shape(f::T, m::T, src::SourceParameters) where T<:Float64
+function fourier_source_shape(f::T, m::S, src::SourceParameters) where {S<:Real,T<:Float64}
 	fa, fb, ε = corner_frequency(m, src)
 	if src.model == :Brune
 		# use single corner, with fa=fc
@@ -34,7 +34,7 @@ function fourier_source_shape(f::T, m::T, src::SourceParameters) where T<:Float6
 	end
 end
 
-fourier_source_shape(f::T, m::T, fas::FourierParameters) where T = fourier_source_shape(f, m, fas.source)
+fourier_source_shape(f, m, fas::FourierParameters) = fourier_source_shape(f, m, fas.source)
 
 
 function fourier_source_shape(f::Float64, fa::T, fb::T, ε::T, model::Symbol) where T<:Real
@@ -53,23 +53,23 @@ end
 
 
 """
-	fourier_source(f::T, m::T, src::SourceParameters) where T<:Float64
+	fourier_source(f::T, m::S, src::SourceParameters) where {S<:Real,T<:Float64}
 
 Source Fourier Amplitude Spectrum of displacement, without the constant term.
 This simply includes the seismic moment and the source spectral shape.
 """
-function fourier_source(f::T, m::T, src::SourceParameters) where T<:Float64
+function fourier_source(f::T, m::S, src::SourceParameters) where {S<:Real,T<:Float64}
 	Mo = magnitude_to_moment(m)
 	return Mo * fourier_source_shape(f, m, src)
 end
 
-fourier_source(f::T, m::T, fas::FourierParameters) where T = fourier_source(f, m, fas.source)
+fourier_source(f, m, fas::FourierParameters) where T = fourier_source(f, m, fas.source)
 
 
 
 
 
-function fourier_path(f::S, r_ps::T, m::S, geo::GeometricSpreadingParameters, sat::NearSourceSaturationParameters, ane::AnelasticAttenuationParameters) where {S<:Float64,T<:Real}
+function fourier_path(f::U, r_ps::T, m::S, geo::GeometricSpreadingParameters, sat::NearSourceSaturationParameters, ane::AnelasticAttenuationParameters) where {S<:Real,T<:Real,U<:Float64}
 	Zr = geometric_spreading(r_ps, m, geo, sat)
 	if ane.rmetric == :Rrup
 		r_rup = rupture_distance_from_equivalent_point_source_distance(r_ps, m, sat)
@@ -137,7 +137,7 @@ Fourier acceleration spectral ordinate (m/s) based upon an equivalent point sour
 - `ane` are the anelastic attenuation parameters `AnelasticAttenuationParameters`
 - `site` are the site parameters `SiteParameters`
 """
-function fourier_spectral_ordinate(f::S, m::S, r_ps::T, src::SourceParameters, geo::GeometricSpreadingParameters, sat::NearSourceSaturationParameters, ane::AnelasticAttenuationParameters, site::SiteParameters) where {S<:Float64,T<:Real}
+function fourier_spectral_ordinate(f::U, m::S, r_ps::T, src::SourceParameters, geo::GeometricSpreadingParameters, sat::NearSourceSaturationParameters, ane::AnelasticAttenuationParameters, site::SiteParameters) where {S<:Real,T<:Real,U<:Float64}
 	# define all constant terms here
   	C = fourier_constant(src)
 	# source term
@@ -160,7 +160,7 @@ function fourier_spectral_ordinate(f::S, m::S, r_ps::T, src::SourceParameters, g
 end
 
 """
-	fourier_spectral_ordinate(f::S, m::S, r_ps::T, src::SourceParameters, path::PathParameters, site::SiteParameters) where {S<:Float64,T<:Real}
+	fourier_spectral_ordinate(f::U, m::S, r_ps::T, src::SourceParameters, path::PathParameters, site::SiteParameters) where {S<:Real,T<:Real,U<:Float64}
 
 Fourier acceleration spectral ordinate (m/s) based upon an equivalent point source distance `r_ps`
 - `f` is frequency (Hz)
@@ -170,10 +170,10 @@ Fourier acceleration spectral ordinate (m/s) based upon an equivalent point sour
 - `path` are the path parameters `PathParameters`
 - `site` are the site parameters `SiteParameters`
 """
-fourier_spectral_ordinate(f::S, m::S, r_ps::T, src::SourceParameters, path::PathParameters, site::SiteParameters) where {S<:Float64,T<:Real} = fourier_spectral_ordinate(f, m, r_ps, src, path.geometric, path.saturation, path.anelastic, site)
+fourier_spectral_ordinate(f::U, m::S, r_ps::T, src::SourceParameters, path::PathParameters, site::SiteParameters) where {S<:Real,T<:Real,U<:Float64} = fourier_spectral_ordinate(f, m, r_ps, src, path.geometric, path.saturation, path.anelastic, site)
 
 """
-	fourier_spectral_ordinate(f::S, m::S, r_ps::T, fas::FourierParameters) where {S<:Float64,T<:Real}
+	fourier_spectral_ordinate(f::U, m::S, r_ps::T, fas::FourierParameters) where {S<:Real,T<:Real,U<:Float64}
 
 Fourier acceleration spectral ordinate (m/s) based upon an equivalent point source distance `r_ps`
 - `f` is frequency (Hz)
@@ -181,11 +181,11 @@ Fourier acceleration spectral ordinate (m/s) based upon an equivalent point sour
 - `r_ps` is the equivalent point source distance including saturation effects (km)
 - `fas` are the Fourier spectral parameters `FourierParameters`
 """
-fourier_spectral_ordinate(f::S, m::S, r_ps::T, fas::FourierParameters) where {S<:Float64,T<:Real} = fourier_spectral_ordinate(f, m, r_ps, fas.source, fas.path, fas.site)
+fourier_spectral_ordinate(f::U, m::S, r_ps::T, fas::FourierParameters) where {S<:Real,T<:Real,U<:Float64} = fourier_spectral_ordinate(f, m, r_ps, fas.source, fas.path, fas.site)
 
 
 """
-	squared_fourier_spectral_ordinate(f::S, m::S, r_ps::T, src::SourceParameters, geo::GeometricSpreadingParameters, ane::AnelasticAttenuationParameters, site::SiteParameters) where {S<:Float64,T<:Real}
+	squared_fourier_spectral_ordinate(f::U, m::S, r_ps::T, src::SourceParameters, geo::GeometricSpreadingParameters, ane::AnelasticAttenuationParameters, site::SiteParameters) where {S<:Real,T<:Real,U<:Float64}
 
 Squared Fourier acceleration spectral ordinate (m^2/s^2) based upon an equivalent point source distance `r_ps`
 - `f` is frequency (Hz)
@@ -197,17 +197,17 @@ Squared Fourier acceleration spectral ordinate (m^2/s^2) based upon an equivalen
 - `ane` are the anelastic attenuation parameters `AnelasticAttenuationParameters`
 - `site` are the site parameters `SiteParameters`
 """
-function squared_fourier_spectral_ordinate(f::S, m::S, r_ps::T, src::SourceParameters, geo::GeometricSpreadingParameters, sat::NearSourceSaturationParameters, ane::AnelasticAttenuationParameters, site::SiteParameters) where {S<:Float64,T<:Real}
+function squared_fourier_spectral_ordinate(f::S, m::S, r_ps::T, src::SourceParameters, geo::GeometricSpreadingParameters, sat::NearSourceSaturationParameters, ane::AnelasticAttenuationParameters, site::SiteParameters) where {S<:Real,T<:Real,U<:Float64}
 	return fourier_spectral_ordinate(f, m, r_ps, src, geo, sat, ane, site)^2
 end
 
-squared_fourier_spectral_ordinate(f::S, m::S, r_ps::T, src::SourceParameters, path::PathParameters, site::SiteParameters) where {S<:Float64,T<:Real} = squared_fourier_spectral_ordinate(f, m, r_ps, src, path.geometric, path.saturation, path.anelastic, site)
-squared_fourier_spectral_ordinate(f::S, m::S, r_ps::T, fas::FourierParameters) where {S<:Float64,T<:Real} = squared_fourier_spectral_ordinate(f, m, r_ps, fas.source, fas.path, fas.site)
+squared_fourier_spectral_ordinate(f::U, m::S, r_ps::T, src::SourceParameters, path::PathParameters, site::SiteParameters) where {S<:Real,T<:Real,U<:Float64} = squared_fourier_spectral_ordinate(f, m, r_ps, src, path.geometric, path.saturation, path.anelastic, site)
+squared_fourier_spectral_ordinate(f::U, m::S, r_ps::T, fas::FourierParameters) where {S<:Real,T<:Real,U<:Float64} = squared_fourier_spectral_ordinate(f, m, r_ps, fas.source, fas.path, fas.site)
 
 
 
 """
-	fourier_spectrum(f::Vector{S}, m::S, r_ps::T, fas::FourierParameters) where {S<:Float64,T<:Real}
+	fourier_spectrum(f::Vector{U}, m::S, r_ps::T, fas::FourierParameters) where {S<:Real,T<:Real,U<:Float64}
 
 Fourier acceleration spectrum (m/s) based upon an equivalent point source distance `r_ps`
 - `f` is `Vector` of frequencies (Hz)
@@ -215,11 +215,11 @@ Fourier acceleration spectrum (m/s) based upon an equivalent point source distan
 - `r_ps` is the equivalent point source distance including saturation effects (km)
 - `fas` are the Fourier spectral parameters `FourierParameters`
 """
-function fourier_spectrum(f::Vector{S}, m::S, r_ps::T, fas::FourierParameters) where {S<:Float64,T<:Real}
+function fourier_spectrum(f::Vector{U}, m::S, r_ps::T, fas::FourierParameters) where {S<:Real,T<:Real,U<:Float64}
 	numf = length(f)
-	U = get_parametric_type(fas)
+	V = get_parametric_type(fas)
 	if numf == 0
-		return Vector{U}()
+		return Vector{V}()
 	else
 		# define all frequency independent terms here
 	  	C = fourier_constant(fas)
@@ -253,14 +253,14 @@ function fourier_spectrum(f::Vector{S}, m::S, r_ps::T, fas::FourierParameters) w
 	end
 end
 
-function squared_fourier_spectrum(f::Vector{S}, m::S, r_ps::T, fas::FourierParameters) where {S<:Float64,T<:Real}
+function squared_fourier_spectrum(f::Vector{U}, m::S, r_ps::T, fas::FourierParameters) where {S<:Real,T<:Real,U<:Float64}
 	Af = fourier_spectrum(f, m, r_ps, fas)
 	return Af.^2
 end
 
 
 """
-	fourier_spectrum!(Af::Vector{U}, f::Vector{S}, m::S, r_ps::T, fas::FourierParameters) where {S<:Float64,T<:Real,U<:Real}
+	fourier_spectrum!(Af::Vector{U}, f::Vector{V}, m::S, r_ps::T, fas::FourierParameters) where {S<:Real,T<:Real,U<:Real,V<:Float64}
 
 Fourier acceleration spectrum (m/s) based upon an equivalent point source distance `r_ps`
 - `Af` is the vector of fas amplitudes to be filled (m/s)
@@ -269,7 +269,7 @@ Fourier acceleration spectrum (m/s) based upon an equivalent point source distan
 - `r_ps` is the equivalent point source distance including saturation effects (km)
 - `fas` are the Fourier spectral parameters `FourierParameters`
 """
-function fourier_spectrum!(Af::Vector{U}, f::Vector{S}, m::S, r_ps::T, fas::FourierParameters) where {S<:Float64,T<:Real,U<:Real}
+function fourier_spectrum!(Af::Vector{U}, f::Vector{V}, m::S, r_ps::T, fas::FourierParameters) where {S<:Real,T<:Real,U<:Real,V<:Float64}
 	numf = length(f)
 	numAf = length(Af)
 	numf == numAf || error("length of `f` and `Af` must be equal")
@@ -310,7 +310,7 @@ end
 
 
 """
-	squared_fourier_spectrum!(Afsq::Vector{U}, f::Vector{S}, m::S, r_ps::T, fas::FourierParameters) where {S<:Float64,T<:Real,U<:Real}
+	squared_fourier_spectrum!(Afsq::Vector{U}, f::Vector{V}, m::S, r_ps::T, fas::FourierParameters) where {S<:Real,T<:Real,U<:Real,V<:Float64}
 
 Fourier acceleration spectrum (m/s) based upon an equivalent point source distance `r_ps`
 - `Afsq` is the vector of squared fas amplitudes to be filled (m^2/s^2)
@@ -319,7 +319,7 @@ Fourier acceleration spectrum (m/s) based upon an equivalent point source distan
 - `r_ps` is the equivalent point source distance including saturation effects (km)
 - `fas` are the Fourier spectral parameters `FourierParameters`
 """
-function squared_fourier_spectrum!(Afsq::Vector{U}, f::Vector{S}, m::S, r_ps::T, fas::FourierParameters) where {S<:Float64,T<:Real,U<:Real}
+function squared_fourier_spectrum!(Afsq::Vector{U}, f::Vector{V}, m::S, r_ps::T, fas::FourierParameters) where {S<:Real,T<:Real,U<:Real,V<:Float64}
 	numf = length(f)
 	numAfsq = length(Afsq)
 	numf == numAfsq || error("length of `f` and `Afsq` must be equal")
