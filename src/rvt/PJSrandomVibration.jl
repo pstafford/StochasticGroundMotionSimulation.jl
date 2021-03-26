@@ -2,9 +2,16 @@
 
 function spectral_moment(order::Int, m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; nodes::Int=31, control_freqs::Vector{Float64}=[1e-3, 1e-1, 1.0, 10.0, 100.0, 300.0] ) where {S<:Real,T<:Real}
 	# pre-allocate for squared fourier amplitude spectrum
-	U = get_parametric_type(fas)
-	Af2 = Vector{U}(undef, nodes)
-	Hf2 = Vector{U}(undef, nodes)
+	if S <: Dual
+		Af2 = Vector{S}(undef, nodes)
+		Hf2 = Vector{S}(undef, nodes)
+		int_sum = zero(S)
+	else
+		U = get_parametric_type(fas)
+		Af2 = Vector{U}(undef, nodes)
+		Hf2 = Vector{U}(undef, nodes)
+		int_sum = zero(U)
+	end
 	# partition the integration domain to make sure the integral captures the key change in the integrand
 	f_n = sdof.f_n
 	# note that we start slightly above zero to avoid a numerical issue with the frequency dependent Q(f) gradients
@@ -16,7 +23,6 @@ function spectral_moment(order::Int, m::S, r_ps::T, fas::FourierParameters, sdof
 	# compute the Gauss Legendre nodes and weights
 	xi, wi = gausslegendre(nodes)
 
-	int_sum = zero(U)
 	for i in 2:length(lnflims)
 		@inbounds dfac = (lnflims[i]-lnflims[i-1])/2
 		@inbounds pfac = (lnflims[i]+lnflims[i-1])/2
@@ -35,9 +41,16 @@ end
 
 function spectral_moments(order::Vector{Int}, m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; nodes::Int=31, control_freqs::Vector{Float64}=[1e-3, 1e-1, 1.0, 10.0, 100.0, 300.0] ) where {S<:Real,T<:Real}
 	# pre-allocate for squared fourier amplitude spectrum
-	U = get_parametric_type(fas)
-	Af2 = Vector{U}(undef, nodes)
-	Hf2 = Vector{U}(undef, nodes)
+	if S <: Dual
+		Af2 = Vector{S}(undef, nodes)
+		Hf2 = Vector{S}(undef, nodes)
+		int_sumi = zeros(S, length(order))
+	else
+		U = get_parametric_type(fas)
+		Af2 = Vector{U}(undef, nodes)
+		Hf2 = Vector{U}(undef, nodes)
+		int_sumi = zeros(U, length(order))
+	end
 	# partition the integration domain to make sure the integral captures the key change in the integrand
 	f_n = sdof.f_n
  	# note that we start slightly above zero to avoid a numerical issue with the frequency dependent Q(f) gradients
@@ -53,7 +66,6 @@ function spectral_moments(order::Vector{Int}, m::S, r_ps::T, fas::FourierParamet
 	sort!(order)
 	dorder = diff(order)
 
-	int_sumi = zeros(U, length(order))
 	for i in 2:length(lnflims)
 		@inbounds dfac = (lnflims[i]-lnflims[i-1])/2
 		@inbounds pfac = (lnflims[i]+lnflims[i-1])/2
@@ -136,8 +148,12 @@ end
 
 
 function rvt_response_spectrum(period::Vector{U}, m::S, r_ps::T, fas::FourierParameters, rvt::RandomVibrationParameters) where {S<:Real,T<:Real,U<:Float64}
-	V = get_parametric_type(fas)
-	Sa = zeros(V,length(period))
+	if S <: Dual
+		Sa = zeros(S,length(period))
+	else
+		V = get_parametric_type(fas)
+		Sa = zeros(V,length(period))
+	end
 	for i in 1:length(period)
 		@inbounds Sa[i] = rvt_response_spectral_ordinate(period[i], m, r_ps, fas, rvt)
   	end

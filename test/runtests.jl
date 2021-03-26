@@ -5,7 +5,7 @@ using ForwardDiff: Dual
 using FastGaussQuadrature
 using QuadGK
 using LinearAlgebra
-using Plots
+
 
 @testset "StochasticGroundMotionSimulation.jl" begin
 
@@ -26,14 +26,14 @@ using Plots
 
 
         sdof = Oscillator(1.0)
-        @trace Oscillator(1.0)
+        # @trace Oscillator(1.0)
         @code_warntype Oscillator(1.0)
         @code_warntype period(sdof)
         @code_warntype transfer(1.0, sdof)
 
-        @trace rvt_response_spectral_ordinate(Ti[1], m, r, fas, rvt)
+        # @trace rvt_response_spectral_ordinate(Ti[1], m, r, fas, rvt)
         @code_warntype rvt_response_spectral_ordinate(Ti[1], m, r, fas, rvt)
-        @code_warntype Sai = rvt_response_spectrum(Ti, m, r, fas, rvt)
+        @code_warntype rvt_response_spectrum(Ti, m, r, fas, rvt)
         @time Sai = rvt_response_spectrum(Ti, m, r, fas, rvt)
         # @btime Sai = rvt_response_spectrum(Ti, m, r, fas)
         # @btime rvt_response_spectrum_cy!(Sai, Ti, m, r, fas)
@@ -58,6 +58,10 @@ using Plots
 
         @code_warntype corner_frequency(m, srcf)
         @code_warntype corner_frequency(m, srcd)
+        @code_warntype corner_frequency(Dual(m), srcf)
+        @code_warntype corner_frequency(Dual(m), srcd)
+
+        # get_parametric_type(srcd)
 
         # @trace corner_frequency(m, srcf)
         # @trace corner_frequency(m, srcd)
@@ -115,8 +119,8 @@ using Plots
         @code_warntype geometric_spreading(r, geof)
         @code_warntype geometric_spreading(r, geod)
 
-        @time geometric_spreading(r, geof)
-        @time geometric_spreading(r, geod)
+        @time geometric_spreading(r, m, geof, sat)
+        @time geometric_spreading(r, m, geod, sat)
 
         f = 1.0
         r = 100.0
@@ -261,6 +265,24 @@ using Plots
         Ds = 0.5 * ( 1.0 / fa + 1.0 / fb )
         @test boore_thompson_2014(m, 0.0, srcAS) ≈ Ds
 
+
+        h = 0.1
+        m1 = 8.0
+        m2 = m1 + h
+        r_ps1 = 1.0 + near_source_saturation(m1, fasf)
+        r_ps2 = 1.0 + near_source_saturation(m2, fasf)
+
+        Dex1 = boore_thompson_2014(m1, r_ps1, fasf)
+        Dex2 = boore_thompson_2014(m2, r_ps2, fasf)
+
+        log(Dex2/Dex1)/h
+
+        using ForwardDiff
+        d(x) = log(boore_thompson_2014(x[1], 1.0 + near_source_saturation(x[1], fasf), fasf))
+        gd(x) = ForwardDiff.gradient(d, x)
+        gd([8.0])[1]
+
+
         rvt = RandomVibrationParameters(:BT14)
         @code_warntype excitation_duration(m, r, fasf, rvt)
         @code_warntype excitation_duration(m, r, fasd, rvt)
@@ -273,9 +295,11 @@ using Plots
 
         @time c = boore_thompson_2012_coefs(1, 1)
 
+        m = 8.0
+        r = 1.0
         Dex = boore_thompson_2014(m, r, srcf)
         # get the oscillator period
-        sdof = Oscillator(1.0)
+        sdof = Oscillator(100.0)
         T_n = period(sdof)
         ζ = sdof.ζ_n
         # define the η parameter as T_n/Dex
@@ -297,7 +321,7 @@ using Plots
 
         @time boore_thompson_2012(m, r, srcf, sdof, rvt)
         @code_warntype boore_thompson_2012(m, r, srcf, sdof, rvt)
-        @trace boore_thompson_2012(m, r, srcf, sdof, rvt)
+        # @trace boore_thompson_2012(m, r, srcf, sdof, rvt)
 
         @time boore_thompson_2012(m, r, srcd, sdof, rvt)
         @code_warntype boore_thompson_2012(m, r, srcd, sdof, rvt)
@@ -510,11 +534,11 @@ using Plots
 
 
             Δσf = 100.0
-            γ1f = 1.0
+            γ1f = 1.158
             γ2f = 0.5
-            Q0f = 200.0
-            ηf = 0.4
-            κ0f = 0.039
+            Q0f = 212.5
+            ηf = 0.65
+            κ0f = 0.038
 
             Δσd = Dual{Float64}(Δσf)
             γ1d = Dual{Float64}(γ1f)
@@ -541,20 +565,20 @@ using Plots
             pathd = PathParameters(geod, sat, aned)
             pathm = PathParameters(geom, sat, anem)
 
-            sitef = SiteParameters(κ0f)
-            sited = SiteParameters(κ0d)
+            sitef = SiteParameters(κ0f, :Boore2016)
+            sited = SiteParameters(κ0d, :Boore2016)
 
             fasf = FourierParameters(srcf, pathf, sitef)
             fasd = FourierParameters(srcd, pathd, sited)
             fasm = FourierParameters(srcf, pathm, sited)
 
-            m = 6.0
-            r = 10.0
+            m = 5.5
+            r = 10.88
             r_psf = equivalent_point_source_distance(r, m, fasf)
             r_psd = equivalent_point_source_distance(r, m, fasd)
             r_psm = equivalent_point_source_distance(r, m, fasm)
 
-            sdof = Oscillator(0.1)
+            sdof = Oscillator(100.0)
 
 
             function gauss_interval(n, fmin, fmax, integrand::Function)
@@ -587,6 +611,47 @@ using Plots
             end
 
 
+            # Boore comparison (assume his are cgs units)
+            # ps2db(f) = ( (2π * sdof.f_n) / ( (2π * f)^2 ) )^2 * 1e-4
+            # ps2db(f) = ( 1.0 / ( 2π * f^2 * sdof.f_n ) )^2
+            ps2db(f) = ( 1.0 / ( 2π*sdof.f_n ) )^2 * 1e4
+
+            dbm0_integrand(f) = squared_fourier_spectral_ordinate(f, m, r_psf, fasf) * squared_transfer(f, sdof) * ps2db(f)
+            dbm0ln_integrand(lnf) = exp(lnf) * squared_fourier_spectral_ordinate(exp(lnf), m, r_psf, fasf) * squared_transfer(exp(lnf), sdof) * ps2db(exp(lnf))
+
+            dbm1_integrand(f) = (2π*f) * squared_fourier_spectral_ordinate(f, m, r_psf, fasf) * squared_transfer(f, sdof) * ps2db(f)
+            dbm1ln_integrand(lnf) = exp(lnf) * (2π*exp(lnf)) * squared_fourier_spectral_ordinate(exp(lnf), m, r_psf, fasf) * squared_transfer(exp(lnf), sdof) * ps2db(exp(lnf))
+
+            dbm2_integrand(f) = (2π*f)^2 * squared_fourier_spectral_ordinate(f, m, r_psf, fasf) * squared_transfer(f, sdof) * ps2db(f)
+            dbm2ln_integrand(lnf) = exp(lnf) * (2π*exp(lnf))^2  * squared_fourier_spectral_ordinate(exp(lnf), m, r_psf, fasf) * squared_transfer(exp(lnf), sdof) * ps2db(exp(lnf))
+
+            dbm4_integrand(f) = (2π*f)^4 * squared_fourier_spectral_ordinate(f, m, r_psf, fasf) * squared_transfer(f, sdof) * ps2db(f)
+            dbm4ln_integrand(lnf) = exp(lnf) * (2π*exp(lnf))^4 * squared_fourier_spectral_ordinate(exp(lnf), m, r_psf, fasf) * squared_transfer(exp(lnf), sdof) * ps2db(exp(lnf))
+
+            @time igk = 2*quadgk(dbm0_integrand, 0.0, Inf)[1]
+            @time igk = 2*quadgk(dbm0_integrand, exp(-7.0), exp(7.0))[1]
+            @time iglelnm = 2*gauss_intervals(dbm0ln_integrand, 250, -7.0, log(sdof.f_n), 7.0)
+
+            @time igk = 2*quadgk(dbm1_integrand, exp(-7.0), exp(7.0))[1]
+            @time iglelnm = 2*gauss_intervals(dbm1ln_integrand, 250, -7.0, log(sdof.f_n), 7.0)
+
+            @time igk = 2*quadgk(dbm2_integrand, exp(-7.0), exp(7.0))[1]
+            @time iglelnm = 2*gauss_intervals(dbm2ln_integrand, 250, -7.0, log(sdof.f_n), 7.0)
+
+            @time igk = 2*quadgk(dbm4_integrand, exp(-7.0), exp(7.0))[1]
+            @time iglelnm = 2*gauss_intervals(dbm4ln_integrand, 250, -7.0, log(sdof.f_n), 7.0)
+
+
+            # using DifferentialEquations
+            #
+            # u0 = 0.0
+            # tspan = (0.0, 300.0)
+            # f0(u,p,t) = dbm0_integrand(t)
+            # prob = ODEProblem(f0, u0, tspan)
+            # sol = solve(prob, RK4())
+            # 2*sol.u[end]
+
+
             m0_integrand(f) = squared_fourier_spectral_ordinate(f, m, r_psf, fasf) * squared_transfer(f, sdof)
             m0ln_integrand(lnf) = exp(lnf) * squared_fourier_spectral_ordinate(exp(lnf), m, r_psf, fasf) * squared_transfer(exp(lnf), sdof)
 
@@ -608,8 +673,10 @@ using Plots
 
             # @test igk ≈ igle rtol=1e-2
             @test igk ≈ igleln rtol=1e-4
-            @test igk ≈ iglelnm rtol=1e-5
+            @test igk ≈ iglelnm rtol=1e-4
 
+            lnfi = log.([ 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3, sdof.f_n ])
+            sort!(lnfi)
 
             @time igk = quadgk(m1_integrand, exp(-7.0), exp(7.0))[1]
             @time igle = gauss_interval(1500, 0.0, 300.0, m1_integrand)
@@ -621,24 +688,22 @@ using Plots
             @time itr = trapezoidal(m1ln_integrand, 60, lnfi...)
 
             # @test igk ≈ igle rtol=1e-2
-            @test igk ≈ iglelnm rtol=1e-6
+            @test igk ≈ iglelnm rtol=1e-5
             @test igk ≈ itr rtol=1e-3
 
-            lnfi = log.([ 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3, sdof.f_n ])
-            sort!(lnfi)
 
             @time igk = quadgk(m2_integrand, exp(-7.0), exp(7.0))[1]
             @time iglelnm = gauss_intervals(m2ln_integrand, 30, lnfi...)
             @time itr = trapezoidal(m2ln_integrand, 60, lnfi...)
 
-            @test igk ≈ iglelnm rtol=1e-6
+            @test igk ≈ iglelnm rtol=1e-5
             @test igk ≈ itr rtol=1e-3
 
             @time igk = quadgk(m4_integrand, exp(-7.0), exp(7.0))[1]
             @time iglelnm = gauss_intervals(m4ln_integrand, 30, lnfi...)
             @time itr = trapezoidal(m4ln_integrand, 60, lnfi...)
 
-            @test igk ≈ iglelnm rtol=1e-6
+            @test igk ≈ iglelnm rtol=1e-4
             @test igk ≈ itr rtol=1e-3
 
 
@@ -663,7 +728,13 @@ using Plots
 
             m = 6.0
             r = 100.0
-            fas = FourierParameters(100.0, [1.0, 50.0, Inf], [1.0, 0.5], 200.0, 0.4, 0.039)
+            src = SourceParameters(100.0)
+            geo = GeometricSpreadingParameters([1.0, 50.0, Inf], [1.0, 0.5])
+            sat = NearSourceSaturationParameters(:BT15)
+            ane = AnelasticAttenuationParameters(200.0, 0.4, :Rrup)
+            path = PathParameters(geo, sat, ane)
+            site = SiteParameters(0.039)
+            fas = FourierParameters(src, path, site)
             sdof = Oscillator(1.0)
 
             integrand(f) = squared_transfer(f, sdof) * fourier_spectral_ordinate(f, m, r, fas)^2
@@ -934,6 +1005,97 @@ using Plots
             @code_warntype rvt_response_spectrum(Ti, m, r_psf, fasf, rvt)
             @code_warntype rvt_response_spectrum(Ti, m, r_psd, fasd, rvt)
             @code_warntype rvt_response_spectrum(Ti, m, r_psm, fasm, rvt)
+
+
+            function spectral_slope_rtp(x::Vector, r_rup, T, par::Vector)
+                src = SourceParameters(exp(par[1]))
+                geo = GeometricSpreadingParameters([1.0, 50.0, Inf], [ par[2], 0.5 ], :CY14mod)
+                heff = par[3] * exp( par[4]*m )
+                sat = NearSourceSaturationParameters(heff, 1)
+                ane = AnelasticAttenuationParameters(par[5], par[6], :Rrup)
+                path = PathParameters(geo, sat, ane)
+                site = SiteParameters(0.039)
+                fas = FourierParameters(src, path, site)
+                rvt = RandomVibrationParameters()
+
+                r_ps = equivalent_point_source_distance(r_rup, x[1], fas)
+
+                return log(rvt_response_spectral_ordinate(T, x[1], r_ps, fas, rvt))
+            end
+
+            r_rup = 1.0
+            T = 0.01
+            hα = 0.023
+            hβ = 0.4
+            γ = 1.2
+            γ*hβ
+            par = [ 5.25, γ, hα, hβ, 185.0, 0.66 ]
+
+
+            x = [ 7.8 ]
+            h = hα * exp( hβ * x[1] )
+            r_ps = r_rup + h
+
+            spectral_slope(x) = spectral_slope_rtp(x, r_rup, T, par)
+            exp(spectral_slope(x))
+            gspectral_slope(x) = ForwardDiff.gradient(spectral_slope, x)
+            gspectral_slope(x)[1]
+
+            lnSa1 = spectral_slope([7.0])
+            lnSa2 = spectral_slope([8.40])
+            (lnSa2 - lnSa1)/1.4
+
+
+
+            r_rup = 1.0
+            T = 0.01
+            hα = 0.023
+            hβ = 0.88
+            γ = 1.2
+            par = [ 5.25, γ, hα, hβ, 185.0, 0.66 ]
+
+            m = 8.4
+
+            src = SourceParameters(exp(par[1]))
+            geo = GeometricSpreadingParameters([1.0, 50.0, Inf], [ par[2], 0.5 ], :CY14mod)
+            heff = hα * exp( hβ * m )
+            sat = NearSourceSaturationParameters(heff, 1)
+            ane = AnelasticAttenuationParameters(par[5], par[6], :Rrup)
+            path = PathParameters(geo, sat, ane)
+            fas = FourierParameters(src, path, site)
+            # equivalent_point_source_distance(r_rup, m, fas)
+            r_ps = r_rup + heff
+            site = SiteParameters(0.039)
+            rvt = RandomVibrationParameters()
+            sdof = Oscillator(1.0/T)
+
+            rvt_response_spectral_ordinate(T, m, r_ps, fas, rvt)
+
+            fc, fb, fe = corner_frequency(m, fas)
+            fk = combined_kappa_frequency(r_rup, ane, site)
+
+            m0 = spectral_moment(0, m, r_ps, fas, sdof)
+
+            Afc = fourier_spectral_ordinate(fc*1.5, m, r_ps, fas)
+            Afk = fourier_spectral_ordinate(fk, m, r_ps, fas)
+
+            fn = 100.0
+            transfer(fn/3, Oscillator(fn))
+
+
+            mi = collect(range(7.0, stop=8.5, step=0.1))
+            pfi = zeros(length(mi))
+            for i in 1:length(mi)
+                heff = hα * exp( hβ * mi[i] )
+                sat = NearSourceSaturationParameters(heff, 1)
+                ane = AnelasticAttenuationParameters(par[5], par[6], :Rrup)
+                path = PathParameters(geo, sat, ane)
+                fas = FourierParameters(src, path, site)
+                r_ps = r_rup + heff
+                pfi[i] = peak_factor(mi[i], r_ps, fas, sdof, rvt)
+            end
+
+            [ mi pfi ]
 
         end
 

@@ -1,10 +1,10 @@
 
 """
-	geometric_spreading(r_ps::T, m::S, geo::GeometricSpreadingParameters, sat::NearSourceSaturationParameters) where {S<:Float64, T<:Real}
+	geometric_spreading(r_ps::T, m::S, geo::GeometricSpreadingParameters, sat::NearSourceSaturationParameters) where {S<:Real, T<:Real}
 
 Geometric spreading function, switches between different approaches on `path.geo_model`.
 """
-function geometric_spreading(r_ps::T, m::S, geo::GeometricSpreadingParameters, sat::NearSourceSaturationParameters) where {S<:Float64, T<:Real}
+function geometric_spreading(r_ps::T, m::S, geo::GeometricSpreadingParameters, sat::NearSourceSaturationParameters) where {S<:Real, T<:Real}
 	if geo.model == :Piecewise
 		return geometric_spreading_piecewise(r_ps, geo)
 	elseif geo.model == :CY14
@@ -16,8 +16,8 @@ function geometric_spreading(r_ps::T, m::S, geo::GeometricSpreadingParameters, s
 	end
 end
 
-geometric_spreading(r_ps::T, m::S, path::PathParameters) where {S<:Float64, T<:Real} = geometric_spreading(r_ps, m, path.geometric, path.saturation)
-geometric_spreading(r_ps::T, m::S, fas::FourierParameters) where {S<:Float64, T<:Real} = geometric_spreading(r_ps, m, fas.path)
+geometric_spreading(r_ps::T, m::S, path::PathParameters) where {S<:Real, T<:Real} = geometric_spreading(r_ps, m, path.geometric, path.saturation)
+geometric_spreading(r_ps::T, m::S, fas::FourierParameters) where {S<:Real, T<:Real} = geometric_spreading(r_ps, m, fas.path)
 # special variants that don't require a magnitude input
 geometric_spreading(r_ps::T, path::PathParameters) where T<:Real = geometric_spreading(r_ps, NaN, path.geometric, path.saturation)
 geometric_spreading(r_ps::T, fas::FourierParameters) where T<:Real = geometric_spreading(r_ps, fas.path)
@@ -118,13 +118,13 @@ geometric_spreading_cy14(r_ps, fas::FourierParameters) = geometric_spreading_cy1
 
 
 """
-	geometric_spreading_cy14mod(r_ps::V, m::S, geo::GeometricSpreadingParameters{S,T,U}, sat::NearSourceSaturationParameters) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}, V<:Real}
+	geometric_spreading_cy14mod(r_ps::V, m::S, geo::GeometricSpreadingParameters{S,T,U}, sat::NearSourceSaturationParameters) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}, V<:Real, W<:Real}
 
 Geometric spreading function from Chiou & Youngs (2014).
 Modified to make use of both `r_ps` and `r_rup` so that only the first saturation term contaminates the source amplitudes.
 Defines a smooth transition from one rate `γi[1]` to another `γi[2]`, with a spreading bandwidth of `Rrefi[2]` km.
 """
-function geometric_spreading_cy14mod(r_ps::V, m::S, geo::GeometricSpreadingParameters{S,T,U}, sat::NearSourceSaturationParameters) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}, V<:Real}
+function geometric_spreading_cy14mod(r_ps::V, m::W, geo::GeometricSpreadingParameters{S,T,U}, sat::NearSourceSaturationParameters) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}, V<:Real, W<:Real}
 	unit = oneunit(T)
 	j = 1
 	k = 1

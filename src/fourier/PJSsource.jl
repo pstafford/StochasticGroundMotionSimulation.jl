@@ -78,13 +78,18 @@ Computes a 3-tuple of corner frequency components depending upon source spectrum
 ```
 """
 function corner_frequency(m::U, src::SourceParameters{S,T}) where {S<:Float64, T<:Real, U<:Real}
-    if src.model == :Brune
-        return corner_frequency_brune(m, src.Δσ, src.β), T(NaN), T(NaN)
-    elseif src.model == :Atkinson_Silva_2000
+    if src.model == :Atkinson_Silva_2000
         fa, fb, ε = corner_frequency_atkinson_silva_2000(m)
-		return T(fa), T(fb), T(ε)
+		if T <: Dual
+			return T(fa), T(fb), T(ε)
+		else
+			return fa, fb, ε
+		end
     else
-        return T(NaN), T(NaN), T(NaN)
+		# default to Brune
+		fc = corner_frequency_brune(m, src.Δσ, src.β)
+		V = typeof(fc)
+		return fc, V(NaN), V(NaN)
     end
 end
 

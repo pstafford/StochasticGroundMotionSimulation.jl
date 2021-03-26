@@ -2,7 +2,7 @@
 
 
 # function to compute the peak over rms ratio, a.k.a. peak factor
-function peak_factor_cl56(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; nodes::Int=35) where {S<:Float64,T<:Real}
+function peak_factor_cl56(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; nodes::Int=35) where {S<:Real,T<:Real}
 	# get the numbers of zero crossing and extrema
 	rvt = RandomVibrationParameters(:CL56)
 	n_z, n_e = zeros_extrema_numbers(m, r_ps, fas, sdof, rvt)
@@ -30,7 +30,7 @@ function peak_factor_cl56(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillato
 end
 
 
-function peak_factor_cl56(m::S, r_ps::T, Dex::U, m0::V, fas::FourierParameters, sdof::Oscillator; nodes::Int=35) where {S<:Float64,T<:Real,U<:Real,V<:Real}
+function peak_factor_cl56(m::S, r_ps::T, Dex::U, m0::V, fas::FourierParameters, sdof::Oscillator; nodes::Int=35) where {S<:Real,T<:Real,U<:Real,V<:Real}
 	# get all necessary spectral moments
 	mi = spectral_moments([2, 4], m, r_ps, fas, sdof)
 	m2 = mi[1]
@@ -88,7 +88,7 @@ function peak_factor_cl56(n_z::T, n_e::T; nodes::Int=35) where T<:Real
 end
 
 
-function peak_factor_cl56_gk(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator) where {S<:Float64,T<:Real}
+function peak_factor_cl56_gk(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator) where {S<:Real,T<:Real}
 	# get the numbers of zero crossing and extrema
 	rvt = RandomVibrationParameters(:CL56)
 	n_z, n_e = zeros_extrema_numbers(m, r_ps, fas, sdof, rvt)
@@ -124,7 +124,7 @@ function vanmarcke_ccdf(x, n_z::T, δeff::T) where T<:Real
 	return 1.0 - vanmarcke_cdf(x, n_z, δeff)
 end
 
-function peak_factor_dk80(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; nodes::Int=30) where {S<:Float64,T<:Real}
+function peak_factor_dk80(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; nodes::Int=30) where {S<:Real,T<:Real}
 	# compute first three spectral moments
 	mi = spectral_moments([0, 1, 2], m, r_ps, fas, sdof)
 	m0 = mi[1]
@@ -157,7 +157,7 @@ function peak_factor_dk80(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillato
 end
 
 
-function peak_factor_dk80(m::S, r_ps::T, Dex::U, m0::V, fas::FourierParameters, sdof::Oscillator; nodes::Int=30) where {S<:Float64,T<:Real,U<:Real,V<:Real}
+function peak_factor_dk80(m::S, r_ps::T, Dex::U, m0::V, fas::FourierParameters, sdof::Oscillator; nodes::Int=30) where {S<:Real,T<:Real,U<:Real,V<:Real}
 	# compute first three spectral moments
 	mi = spectral_moments([1, 2], m, r_ps, fas, sdof)
 	m1 = mi[1]
@@ -213,7 +213,7 @@ end
 
 
 """
-	peak_factor(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; pf_method::Symbol=:DK80) where {S<:Float64,T<:Real}
+	peak_factor(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; pf_method::Symbol=:DK80) where {S<:Real,T<:Real}
 
 Peak factor u_max / u_rms with a switch of `pf_method` to determine the approach adopted.
 `pf_method` can currently be one of:
@@ -222,7 +222,7 @@ Peak factor u_max / u_rms with a switch of `pf_method` to determine the approach
 
 Defaults to `:DK80`.
 """
-function peak_factor(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
+function peak_factor(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Real,T<:Real}
 	if rvt.pf_method == :CL56
 		return peak_factor_cl56(m, r_ps, fas, sdof)
 	elseif rvt.pf_method == :DK80
@@ -235,7 +235,7 @@ end
 
 
 """
-	peak_factor(m::T, r::T, fas::FourierParameters, sdof::Oscillator; pf_method::Symbol=:DK80) where T<:Float64
+	peak_factor(m::S, r_ps::T, Dex::U, m0::V, fas::FourierParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Real,T<:Real,U<:Real,V<:Real}
 
 Peak factor u_max / u_rms with a switch of `pf_method` to determine the approach adopted.
 `pf_method` can currently be one of:
@@ -244,13 +244,15 @@ Peak factor u_max / u_rms with a switch of `pf_method` to determine the approach
 
 Defaults to `:DK80`.
 """
-function peak_factor(m::S, r_ps::T, Dex::U, m0::V, fas::FourierParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real,U<:Real,V<:Real}
+function peak_factor(m::S, r_ps::T, Dex::U, m0::V, fas::FourierParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Real,T<:Real,U<:Real,V<:Real}
 	if rvt.pf_method == :CL56
 		return peak_factor_cl56(m, r_ps, Dex, m0, fas, sdof)
 	elseif rvt.pf_method == :DK80
 		return peak_factor_dk80(m, r_ps, Dex, m0, fas, sdof)
 	else
-		if U <: Float64
+		if S <: Dual
+			return S(NaN)
+		elseif V <: Dual
 			return V(NaN)
 		else
 			return U(NaN)

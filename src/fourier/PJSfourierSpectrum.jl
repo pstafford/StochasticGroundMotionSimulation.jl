@@ -218,8 +218,15 @@ Fourier acceleration spectrum (m/s) based upon an equivalent point source distan
 function fourier_spectrum(f::Vector{U}, m::S, r_ps::T, fas::FourierParameters) where {S<:Real,T<:Real,U<:Float64}
 	numf = length(f)
 	V = get_parametric_type(fas)
+	if V <: Dual
+		W = V
+	elseif S <: Dual
+		W = S
+	else
+		W = U
+	end
 	if numf == 0
-		return Vector{V}()
+		return Vector{W}()
 	else
 		# define all frequency independent terms here
 	  	C = fourier_constant(fas)
@@ -233,7 +240,7 @@ function fourier_spectrum(f::Vector{U}, m::S, r_ps::T, fas::FourierParameters) w
 			r_rup = rupture_distance_from_equivalent_point_source_distance(r_ps, m, fas)
 		end
 
-		Af = Vector{U}(undef, numf)
+		Af = Vector{W}(undef, numf)
 	  	for i in 1:numf
 			@inbounds fi = f[i]
 		  	# source term
@@ -370,7 +377,8 @@ function combined_kappa_frequency(r::T, ane::AnelasticAttenuationParameters, sit
   	else
 		g(f) = 0.5 - (fourier_attenuation(f, r, ane, site)^2)
 		f_0 = find_zero(g, (0.01,100.0), Bisection(); xatol=1e-2)
-		fk = min(max(f_0, 0.2), 1.0)
+		# fk = min(max(f_0, 0.2), 1.0)
+		fk = max(f_0, 0.2)
 		U = get_parametric_type(ane)
 		V = get_parametric_type(site)
 		if T <: Float64
