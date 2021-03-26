@@ -83,6 +83,7 @@ Holds fields:
 - `model` is a symbol defining the type of saturation model:
 	- `:BT15` is Boore & Thompson (2015)
 	- `:YA15` is Yenier & Atkinson (2015)
+	- `:CY14` is average Chiou & Youngs (2014)
 	- `:None` returns zero saturation length
 	- `:ConstantConstrained` is a fixed saturation length not subject to AD operations
 	- `:ConstantVariable` is a fixed saturation length that is subject to AD operations (i.e., is a `<:Dual`)
@@ -97,6 +98,7 @@ struct NearSourceSaturationParameters{S<:Real,T<:Real,U<:AbstractVector{Bool}}
 end
 
 NearSourceSaturationParameters(model::Symbol) = NearSourceSaturationParameters(Vector{Float64}(), Vector{Float64}(), Vector{Float64}(), BitVector(), 2, model)
+NearSourceSaturationParameters(exponent::Int, model::Symbol) = NearSourceSaturationParameters(Vector{Float64}(), Vector{Float64}(), Vector{Float64}(), BitVector(), exponent, model)
 NearSourceSaturationParameters{T,T,U}(mRefi::Vector{T}, hconi::Vector{T}, model::Symbol) where {T,U} = NearSourceSaturationParameters(mRefi, hconi, Vector{T}(), BitVector(undef, length(hconi)), 2, model)
 NearSourceSaturationParameters{S,T,U}(mRefi::Vector{S}, hvari::Vector{T}, model::Symbol) where {S,T,U} = NearSourceSaturationParameters(mRefi, Vector{S}(), hvari, BitVector(ones(length(hvari))), 2, model)
 
