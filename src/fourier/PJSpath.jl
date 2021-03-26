@@ -155,11 +155,25 @@ geometric_spreading_cy14mod(r_ps, m, fas::FourierParameters) = geometric_spreadi
 
 
 """
-	near_source_saturation(m::Float64, sat::NearSourceSaturationParameters)
+	near_source_saturation(m, sat::NearSourceSaturationParameters)
 
-Near-source saturation term. Used to create equivalent point-source distance. Switches methods based upon `sat.model`.
+Near-source saturation term. Used to create equivalent point-source distance.
+Switches methods based upon `sat.model`.
+
+# Arguments
+Options for `sat.model` are:
+- `:BT15` for Boore & Thompson (2015) finite fault factor
+- `:YA15` for Yenier & Atkinson (2014) finite fault factor
+- `:CY14` for a model fitted to the Chiou & Youngs (2014) saturation lengths (over all periods)
+- `:None` for zero saturation length
+- `:ConstantConstrained` for a constant value, `sat.hconi[1]`, not subject to AD operations
+- `:ConstantVariable` for a constant value, `sat.hvari[1]`, that is subject to AD operations
+
+Any other symbol passed will return `NaN`.
+
+See also: [`near_source_saturation`](@ref)
 """
-function near_source_saturation(m::Float64, sat::NearSourceSaturationParameters)
+function near_source_saturation(m, sat::NearSourceSaturationParameters)
 	unit = oneunit(get_parametric_type(sat))
 	if sat.model == :BT15
 		# use the Boore & Thompson (2015) finite fault factor
@@ -167,6 +181,9 @@ function near_source_saturation(m::Float64, sat::NearSourceSaturationParameters)
 	elseif sat.model == :YA15
 		# use the Yenier & Atkinson (2015) finite fault factor
 		return finite_fault_factor_ya15(m) * unit
+	elseif sat.model == :CY14
+		# use the fitted model averaging over Chiou & Youngs (2014)
+		return finite_fault_factor_cy14(m) * unit
 	elseif sat.model == :None
 		return zero(get_parametric_type(sat))
 	elseif sat.model == :ConstantConstrained
@@ -178,17 +195,34 @@ function near_source_saturation(m::Float64, sat::NearSourceSaturationParameters)
 	end
 end
 
-near_source_saturation(m::Float64, path::PathParameters) = near_source_saturation(m, path.saturation)
-near_source_saturation(m::Float64, fas::FourierParameters) = near_source_saturation(m, fas.path)
+"""
+	near_source_saturation(m, path::PathParameters)
+
+Near-source saturation term taking a `PathParameters` struct.
+
+See also: [`near_source_saturation`](@ref)
+"""
+near_source_saturation(m, path::PathParameters) = near_source_saturation(m, path.saturation)
+
+"""
+	near_source_saturation(m, fas::FourierParameters)
+
+Near-source saturation term taking a `FourierParameters` struct.
+
+See also: [`near_source_saturation`](@ref)
+"""
+near_source_saturation(m, fas::FourierParameters) = near_source_saturation(m, fas.path)
 
 
 
 """
-	finite_fault_factor_bt15(m::Float64)
+	finite_fault_factor_bt15(m::T) where T<:Real
 
 Finite fault factor from Boore & Thompson (2015) used to create equivalent point-source distance.
+
+See also: [`near_source_saturation`](@ref), [`finite_fault_factor_ya15`](@ref), [`finite_fault_factor_cy14`](@ref)
 """
-function finite_fault_factor_bt15(m::Float64)
+function finite_fault_factor_bt15(m::T) where T<:Real
 	Mt1 = 5.744
 	Mt2 = 7.744
 	if m <= Mt1
@@ -210,12 +244,30 @@ function finite_fault_factor_bt15(m::Float64)
 end
 
 """
-	finite_fault_factor_ya15(m::Float64)
+	finite_fault_factor_ya15(m::T) where T<:Real
 
 Finite fault factor from Yenier & Atkinson (2015) used to create equivalent point-source distance.
+
+See also: [`near_source_saturation`](@ref), [`finite_fault_factor_bt15`](@ref), [`finite_fault_factor_cy14`](@ref)
 """
-function finite_fault_factor_ya15(m::Float64)
+function finite_fault_factor_ya15(m::T) where T<:Real
 	return 10.0^(-0.405 + 0.235*m)
+end
+
+
+"""
+	finite_fault_factor_cy14(m::T) where T<:Real
+
+Finite fault factor for Chiou & Youngs (2014) used to create equivalent point-source distance.
+This is a model developed to match the average saturation length over the full period range.
+
+See also: [`near_source_saturation`](@ref), [`finite_fault_factor_bt15`](@ref), [`finite_fault_factor_ya15`](@ref)
+"""
+function finite_fault_factor_cy14(m::T) where T<:Real
+	hα = 7.308
+	hβ = 0.4792
+	hγ = 3.556
+	return hα * cosh( hβ * max( m - hγ, 0.0 ) )
 end
 
 
@@ -226,6 +278,8 @@ Compute equivalent point source distance
 - `r` is r_hyp or r_rup (depending upon the size of the event -- but is nominally r_rup)
 - `m` is magnitude
 - `sat` contains the `NearSourceSaturationParameters`
+
+See also: [`near_source_saturation`](@ref)
 """
 function equivalent_point_source_distance(r, m, sat::NearSourceSaturationParameters)
 	h = near_source_saturation(m, sat)
