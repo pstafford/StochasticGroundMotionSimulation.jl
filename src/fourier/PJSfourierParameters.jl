@@ -77,7 +77,7 @@ Struct for near-source saturation parameters. Mimic structure of the `GeometricS
 Holds fields:
 - `mRefi` reference magnitudes
 - `hconi` constrained coefficients, not free for AD purposes
-- `hvari` variable coefficeints, free for AD purposes
+- `hvari` variable coefficients, free for AD purposes
 - `hfree` is a vector of `Bool` instances, or a `BitVector` indicating which parameters are constant or variable
 - `exponent` is the exponent used within equivalent point-source distance calculations r_ps = (r_rup^n + h_m^n)^(1/n)
 - `model` is a symbol defining the type of saturation model:
