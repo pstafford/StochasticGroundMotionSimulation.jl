@@ -52,7 +52,7 @@ jobs:
         runs-on: ubuntu-latest
         steps:
           - uses: actions/checkout@v2
-          - uses: julia-actions/setup-julia@latest
+          - uses: julia-actions/setup-julia@v1
           with:
             version: '1.5'
           - name: Install dependencies
@@ -63,7 +63,7 @@ jobs:
               DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }} # For authentication with SSH deploy key
             run: julia --project=docs/ docs/make.jl
 
-        
+
     # runs-on: ubuntu-latest
     # steps:
     #   - uses: actions/checkout@v2
