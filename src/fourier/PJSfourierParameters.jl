@@ -262,14 +262,3 @@ function get_parametric_type(fas::FourierParameters)
 		return T
 	end
 end
-
-# simplified constructor that takes just values of the Δσ and κ0
-# FourierParameters(Δσ, κ0) = FourierParameters(SourceParameters(Δσ), PathParameters([1.0, 50.0, Inf], [1.0, 0.5], 150.0, 0.4), SiteParameters(κ0))
-# # simplified constructor that takes values of Δσ, Q0 and κ0
-# FourierParameters(Δσ, Q0, κ0) = FourierParameters(SourceParameters(Δσ), PathParameters([1.0, 50.0, Inf], [1.0, 0.5], Q0), SiteParameters(κ0))
-# # simplified constructor that takes values of Δσ, Q0, η and κ0
-# FourierParameters(Δσ, Q0, η, κ0) = FourierParameters(SourceParameters(Δσ), PathParameters([1.0, 50.0, Inf], [1.0, 0.5], Q0, η), SiteParameters(κ0))
-# # simplified constructor that takes values of Δσ, Rrefi, γi, Q0 and κ0
-# FourierParameters(Δσ, Rrefi, γi, Q0, κ0) = FourierParameters(SourceParameters(Δσ), PathParameters(Rrefi, γi, Q0), SiteParameters(κ0))
-# # simplified constructor that takes values of Δσ, Rrefi, γi, Q0, η and κ0
-# FourierParameters(Δσ, Rrefi, γi, Q0, η, κ0) = FourierParameters(SourceParameters(Δσ), PathParameters(Rrefi, γi, Q0, η), SiteParameters(κ0))
