@@ -31,5 +31,5 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/pstafford/StochasticGroundMotionSimulation.jl",
+    repo="github.com/pstafford/StochasticGroundMotionSimulation.jl.git",
 )
