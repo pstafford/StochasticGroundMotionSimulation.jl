@@ -4,6 +4,7 @@
 
 Define the constant source term for the Fourier Amplitude Spectrum.
 Constant set to permit distances to be passed in km, densities in t/m^3, and velocities in km/s
+The reference distance is set to 1.0 km (and interpreted to be a rupture distance).
 """
 function fourier_constant(src::SourceParameters)
 	# note that the 1e-20 factor allows one to pass in distances in km, density in t/m^3, velocity in km/s
@@ -34,9 +35,24 @@ function fourier_source_shape(f::T, m::S, src::SourceParameters) where {S<:Real,
 	end
 end
 
+"""
+	fourier_source_shape(f, m, fas::FourierParameters)
+
+Source shape of the Fourier amplitude spectrum of _displacement_, without the constant term or seismic moment.
+Defined using a `FourierParameters` instance for the source model.
+
+See also: [`fourier_source_shape`](@ref)
+"""
 fourier_source_shape(f, m, fas::FourierParameters) = fourier_source_shape(f, m, fas.source)
 
 
+"""
+	fourier_source_shape(f::Float64, fa::T, fb::T, ε::T, model::Symbol) where T<:Real
+
+Fourier amplitude spectral shape for _displacement_ defined by corner frequencies.
+
+See also: [`fourier_source_shape`](@ref)
+"""
 function fourier_source_shape(f::Float64, fa::T, fb::T, ε::T, model::Symbol) where T<:Real
 	if model == :Brune
 		# use single corner, with fa=fc
@@ -57,18 +73,35 @@ end
 
 Source Fourier Amplitude Spectrum of displacement, without the constant term.
 This simply includes the seismic moment and the source spectral shape.
+
+See also: [`fourier_source_shape`](@ref)
 """
 function fourier_source(f::T, m::S, src::SourceParameters) where {S<:Real,T<:Float64}
 	Mo = magnitude_to_moment(m)
 	return Mo * fourier_source_shape(f, m, src)
 end
 
-fourier_source(f, m, fas::FourierParameters) where T = fourier_source(f, m, fas.source)
+"""
+	fourier_source(f, m, fas::FourierParameters)
+
+Source Fourier Amplitude Spectrum of displacement, without the constant term.
+This simply includes the seismic moment and the source spectral shape.
+Defined using a `FourierParameters` instance for the source model.
+
+See also: [`fourier_source_shape`](@ref)
+"""
+fourier_source(f, m, fas::FourierParameters) = fourier_source(f, m, fas.source)
 
 
 
 
+"""
+	fourier_path(f::U, r_ps::T, m::S, geo::GeometricSpreadingParameters, sat::NearSourceSaturationParameters, ane::AnelasticAttenuationParameters) where {S<:Real,T<:Real,U<:Float64}
 
+Path scaling of Fourier spectral model -- combination of geometric spreading and anelastic attenuation.
+
+See also: [`geometric_spreading`](@ref), [`anelastic_attenuation`](@ref)
+"""
 function fourier_path(f::U, r_ps::T, m::S, geo::GeometricSpreadingParameters, sat::NearSourceSaturationParameters, ane::AnelasticAttenuationParameters) where {S<:Real,T<:Real,U<:Float64}
 	Zr = geometric_spreading(r_ps, m, geo, sat)
 	if ane.rmetric == :Rrup
@@ -136,6 +169,8 @@ Fourier acceleration spectral ordinate (m/s) based upon an equivalent point sour
 - `sat` are the near source saturation parameters `NearSourceSaturationParameters`
 - `ane` are the anelastic attenuation parameters `AnelasticAttenuationParameters`
 - `site` are the site parameters `SiteParameters`
+
+See also: [`fourier_spectrum`](@ref), [`fourier_spectrum!`](@ref)
 """
 function fourier_spectral_ordinate(f::U, m::S, r_ps::T, src::SourceParameters, geo::GeometricSpreadingParameters, sat::NearSourceSaturationParameters, ane::AnelasticAttenuationParameters, site::SiteParameters) where {S<:Real,T<:Real,U<:Float64}
 	# define all constant terms here
@@ -196,6 +231,8 @@ Squared Fourier acceleration spectral ordinate (m^2/s^2) based upon an equivalen
 - `sat` are the near source saturation parameters `NearSourceSaturationParameters`
 - `ane` are the anelastic attenuation parameters `AnelasticAttenuationParameters`
 - `site` are the site parameters `SiteParameters`
+
+See also: [`fourier_spectral_ordinate`](@ref), [`squared_fourier_spectrum`](@ref)
 """
 function squared_fourier_spectral_ordinate(f::S, m::S, r_ps::T, src::SourceParameters, geo::GeometricSpreadingParameters, sat::NearSourceSaturationParameters, ane::AnelasticAttenuationParameters, site::SiteParameters) where {S<:Real,T<:Real,U<:Float64}
 	return fourier_spectral_ordinate(f, m, r_ps, src, geo, sat, ane, site)^2
@@ -214,6 +251,8 @@ Fourier acceleration spectrum (m/s) based upon an equivalent point source distan
 - `m` is magnitude
 - `r_ps` is the equivalent point source distance including saturation effects (km)
 - `fas` are the Fourier spectral parameters `FourierParameters`
+
+See also: [`fourier_spectral_ordinate`](@ref)
 """
 function fourier_spectrum(f::Vector{U}, m::S, r_ps::T, fas::FourierParameters) where {S<:Real,T<:Real,U<:Float64}
 	numf = length(f)
@@ -260,6 +299,13 @@ function fourier_spectrum(f::Vector{U}, m::S, r_ps::T, fas::FourierParameters) w
 	end
 end
 
+"""
+	squared_fourier_spectrum(f::Vector{U}, m::S, r_ps::T, fas::FourierParameters) where {S<:Real,T<:Real,U<:Float64}
+
+Squared Fourier amplitude spectrum. Useful within spectral moment calculations.
+
+See also: [`fourier_spectrum`](@ref), [`squared_fourier_spectral_ordinate`](@ref)
+"""
 function squared_fourier_spectrum(f::Vector{U}, m::S, r_ps::T, fas::FourierParameters) where {S<:Real,T<:Real,U<:Float64}
 	Af = fourier_spectrum(f, m, r_ps, fas)
 	return Af.^2
@@ -275,6 +321,8 @@ Fourier acceleration spectrum (m/s) based upon an equivalent point source distan
 - `m` is magnitude
 - `r_ps` is the equivalent point source distance including saturation effects (km)
 - `fas` are the Fourier spectral parameters `FourierParameters`
+
+See also: [`fourier_spectrum`](@ref)
 """
 function fourier_spectrum!(Af::Vector{U}, f::Vector{V}, m::S, r_ps::T, fas::FourierParameters) where {S<:Real,T<:Real,U<:Real,V<:Float64}
 	numf = length(f)
@@ -325,6 +373,8 @@ Fourier acceleration spectrum (m/s) based upon an equivalent point source distan
 - `m` is magnitude
 - `r_ps` is the equivalent point source distance including saturation effects (km)
 - `fas` are the Fourier spectral parameters `FourierParameters`
+
+See also: [`squared_fourier_spectrum`](@ref), ['squared_fourier_spectral_ordinate'](@ref)
 """
 function squared_fourier_spectrum!(Afsq::Vector{U}, f::Vector{V}, m::S, r_ps::T, fas::FourierParameters) where {S<:Real,T<:Real,U<:Real,V<:Float64}
 	numf = length(f)

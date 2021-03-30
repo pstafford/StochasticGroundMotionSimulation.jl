@@ -49,6 +49,8 @@ This is the default source corner frequency model used by Boore & Thompson (2014
     m = 6.0
     fa, fb, ε = corner_frequency_atkinson_silva_2000(m)
 ```
+
+See also: [`corner_frequency`](@ref)
 """
 function corner_frequency_atkinson_silva_2000(m::T) where T<:Real
 	fa = 10.0^( 2.181 - 0.496*m )
@@ -61,7 +63,9 @@ end
 """
     corner_frequency(m::U, src::SourceParameters{S,T}) where {S<:Float64, T<:Real, U<:Real}
 
-Computes a 3-tuple of corner frequency components depending upon source spectrum type. By default the single-corner Brune spectrum is considered, but it `fc_fun` equals `"Atkinson_Silva_2000"` then the components of the double-corner spectrum are returned. If some other string is passed then a 3-tuple of NaN::Float64 values is returned.
+Computes a 3-tuple of corner frequency components, depending upon source spectrum type.
+By default the single-corner Brune spectrum is considered, but if `src.model` equals `:Atkinson_Silva_2000` then the components of the double-corner spectrum are returned.
+If some other symbol is passed then the Brune model is returned.
 
 # Examples
 ```julia-repl
