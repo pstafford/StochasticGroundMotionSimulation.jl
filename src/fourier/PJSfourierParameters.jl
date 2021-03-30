@@ -46,7 +46,7 @@ Holds fields:
 - `γconi` are constant spreading rates, meaning that they will not be free for AD purposes
 - `γvari` are variable spreading rates, meaning that they can be represented as `Dual` numbers for AD
 - `γfree` is a vector of `Bool` instances, or a `BitVector` that indicates which segments are constant or variable. Variable spreading rates are given `1` or `true`
-- `model` is a symbol defining the type of spreading model `:Piecewise` or `:CY14`
+- `model` is a symbol defining the type of spreading model `:Piecewise`, `:CY14`, `:CY14mod`
 """
 struct GeometricSpreadingParameters{S<:Real,T<:Real,U<:AbstractVector{Bool}}
 	Rrefi::Vector{S}
@@ -79,7 +79,7 @@ Holds fields:
 - `hconi` constrained coefficients, not free for AD purposes
 - `hvari` variable coefficients, free for AD purposes
 - `hfree` is a vector of `Bool` instances, or a `BitVector` indicating which parameters are constant or variable
-- `exponent` is the exponent used within equivalent point-source distance calculations r_ps = (r_rup^n + h_m^n)^(1/n)
+- `exponent` is the exponent used within equivalent point-source distance calculations: ``r_{ps} = \\left[r_{rup}^n + h(m)^n\\right]^{1/n}``
 - `model` is a symbol defining the type of saturation model:
 	- `:BT15` is Boore & Thompson (2015)
 	- `:YA15` is Yenier & Atkinson (2015)
