@@ -100,7 +100,6 @@ using LinearAlgebra
         T = StochasticGroundMotionSimulation.get_parametric_type(geod)
         @test T <: Dual
 
-
         sat = NearSourceSaturationParameters(:BT15)
 
         T = StochasticGroundMotionSimulation.get_parametric_type(sat)
@@ -126,6 +125,44 @@ using LinearAlgebra
         r = 10.0
         m = 6.0
 
+        geo_cy14 = GeometricSpreadingParameters([1.0, 50.0, Inf], [1.0, 0.5], :CY14)
+        geo_cy14mod = GeometricSpreadingParameters([1.0, 50.0, Inf], [1.0, 0.5], :CY14mod)
+        geo_null = GeometricSpreadingParameters([1.0, 50.0, Inf], [1.0, 0.5], :Null)
+
+        sat = NearSourceSaturationParameters(:BT15)
+        r_ps = equivalent_point_source_distance(r, m, sat)
+
+        gr_cy14 = geometric_spreading(r_ps, m, geo_cy14, sat)
+        gr_cy14mod = geometric_spreading(r_ps, m, geo_cy14mod, sat)
+        @test gr_cy14mod < gr_cy14
+        @test isnan(geometric_spreading(r_ps, m, geo_null, sat))
+
+        grp = geometric_spreading(r_ps, pathf)
+        fasf = FourierParameters(SourceParameters(50.0), pathf)
+        grf = geometric_spreading(r_ps, fasf)
+        @test grp == grf
+
+        geop = GeometricSpreadingParameters([1.0, Inf], [1.0], Vector{Float64}(), BitVector(undef,0), :Piecewise )
+        @test StochasticGroundMotionSimulation.geometric_spreading_piecewise(r_ps, geop) == 1.0
+        @test StochasticGroundMotionSimulation.geometric_spreading_piecewise(Dual(r_ps), geop) == 1.0
+        fasp = FourierParameters(SourceParameters(50.0), PathParameters(geop, sat, anef))
+        @test StochasticGroundMotionSimulation.geometric_spreading_piecewise(r_ps, fasp) == 1.0
+        @test StochasticGroundMotionSimulation.geometric_spreading_piecewise(Dual(r_ps), fasp) == 1.0
+
+        geo_cy14d = GeometricSpreadingParameters([1.0, 50.0, Inf], [Dual(1.0), Dual(1.0)], :CY14)
+        sat = NearSourceSaturationParameters(:None)
+        r_ps = equivalent_point_source_distance(1.0, -5.0, sat)
+        fas_cy14d = FourierParameters(SourceParameters(50.0), PathParameters(geo_cy14d, sat, anef))
+
+        @test StochasticGroundMotionSimulation.geometric_spreading_cy14(r_ps, fas_cy14d).value ≈ 1.0
+
+        geo_cy14d = GeometricSpreadingParameters([1.0, 50.0, Inf], [Dual(1.0), Dual(1.0)], :CY14mod)
+        sat = NearSourceSaturationParameters(:None)
+        r_ps = equivalent_point_source_distance(1.0, -5.0, sat)
+        fas_cy14d = FourierParameters(SourceParameters(50.0), PathParameters(geo_cy14d, sat, anef))
+
+        @test StochasticGroundMotionSimulation.geometric_spreading_cy14mod(r_ps, -5.0, fas_cy14d).value ≈ 1.0
+
         # @code_warntype near_source_saturation(m, pathf.saturation)
         # @code_warntype near_source_saturation(m, pathd.saturation)
         hf = near_source_saturation(m, pathf.saturation)
@@ -135,6 +172,30 @@ using LinearAlgebra
         else
             @test hf == hd
         end
+
+        src = SourceParameters(100.0)
+        geo = GeometricSpreadingParameters([1.0, Inf], [ 1.0 ])
+        ane = AnelasticAttenuationParameters(200.0, 0.5)
+        sat_ya = NearSourceSaturationParameters(:YA15)
+        sat_cy = NearSourceSaturationParameters(:CY14)
+        sat_none = NearSourceSaturationParameters(:None)
+        sat_con = NearSourceSaturationParameters(5.0)
+        sat_var = NearSourceSaturationParameters(Dual(5.0))
+        sat_null = NearSourceSaturationParameters(:Null)
+
+        path_ya = PathParameters(geo, sat_ya, ane)
+        path_cy = PathParameters(geo, sat_cy, ane)
+        path_none = PathParameters(geo, sat_none, ane)
+        path_con = PathParameters(geo, sat_con, ane)
+        path_var = PathParameters(geo, sat_var, ane)
+        path_null = PathParameters(geo, sat_null, ane)
+
+        h_ya = near_source_saturation(5.0, sat_ya)
+        h_cy = near_source_saturation(5.0, sat_cy)
+        h_none = near_source_saturation(5.0, sat_none)
+        h_con = near_source_saturation(5.0, sat_con)
+        h_var = near_source_saturation(5.0, sat_var)
+        h_null = near_source_saturation(5.0, sat_null)
 
         # @code_warntype near_source_saturation(m, pathf)
         # @code_warntype near_source_saturation(m, pathd)
@@ -208,6 +269,8 @@ using LinearAlgebra
         fas = FourierParameters(SourceParameters(100.0), path)
         @test fas.site.model == :Unit
 
+        q_r = anelastic_attenuation(1.0, 10.0, fas)
+        
     end
 
     @testset "Site" begin
@@ -271,6 +334,40 @@ using LinearAlgebra
         Kff = kappa_filter(f, siteAf)
         Kfd = kappa_filter(f, siteAd)
         @test Kff == Kfd.value
+
+
+        @test StochasticGroundMotionSimulation.boore_2016_generic_amplification(0.015) == 1.01
+        @test isnan(StochasticGroundMotionSimulation.boore_2016_generic_amplification(NaN))
+
+        numf = length(StochasticGroundMotionSimulation.fii_b16)
+        for i in 1:numf
+            fi = StochasticGroundMotionSimulation.fii_b16[i]
+            @test StochasticGroundMotionSimulation.boore_2016_generic_amplification(fi) == StochasticGroundMotionSimulation.Aii_b16[i]
+        end
+
+        @test isnan(StochasticGroundMotionSimulation.alatik_2021_cy14_inverted_amplification_seg(NaN))
+
+        numf = length(StochasticGroundMotionSimulation.fii_aa21_cy14)
+        for i in 1:numf
+            fi = StochasticGroundMotionSimulation.fii_aa21_cy14[i]
+            @test StochasticGroundMotionSimulation.alatik_2021_cy14_inverted_amplification_seg(fi) == StochasticGroundMotionSimulation.Aii_aa21_cy14[i]
+        end
+
+        @test isnan(StochasticGroundMotionSimulation.alatik_2021_cy14_inverted_amplification(NaN))
+
+        numf = length(StochasticGroundMotionSimulation.fii_aa21_cy14)
+        for i in 1:numf
+            fi = StochasticGroundMotionSimulation.fii_aa21_cy14[i]
+            @test StochasticGroundMotionSimulation.alatik_2021_cy14_inverted_amplification(fi) == StochasticGroundMotionSimulation.Aii_aa21_cy14[i]
+        end
+
+        numf = length(StochasticGroundMotionSimulation.fii_b16)
+        for i in 1:numf
+            fi = StochasticGroundMotionSimulation.fii_b16[i]
+            Afi_all = StochasticGroundMotionSimulation.alatik_2021_cy14_inverted_amplification(fi)
+            Afi_seg = StochasticGroundMotionSimulation.alatik_2021_cy14_inverted_amplification_seg(fi)
+            @test Afi_all ≈ Afi_seg
+        end
 
     end
 
