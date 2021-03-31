@@ -13,9 +13,23 @@ makedocs(;
     ),
     pages=[
         "Home" => "index.md",
+        "Model Components" => [
+            "Fourier Spectral Parameters" => "fourier_parameters.md",
+            "Oscillator Parameters" => "sdof_parameters.md",
+            "Random Vibration Parameters" => "random_vibration_parameters.md",
+        ],
+        "Module Functionality" => [
+            "Fourier Components" => [
+                "Fourier Amplitude Spectrum" => "fourier_spectrum.md",
+                "Source spectrum" => "source_spectrum.md",
+                "Path scaling" => "path_scaling.md",
+                "Site scaling" => "site_scaling.md",
+            ]
+        ]
+
     ],
 )
 
 deploydocs(;
-    repo="github.com/pstafford/StochasticGroundMotionSimulation.jl",
+    repo="github.com/pstafford/StochasticGroundMotionSimulation.jl.git",
 )
