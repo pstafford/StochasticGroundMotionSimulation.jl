@@ -26,13 +26,13 @@ using LinearAlgebra
 
 
         sdof = Oscillator(1.0)
-        @code_warntype Oscillator(1.0)
-        @code_warntype period(sdof)
-        @code_warntype transfer(1.0, sdof)
+        # @code_warntype Oscillator(1.0)
+        # @code_warntype period(sdof)
+        # @code_warntype transfer(1.0, sdof)
 
-        @code_warntype rvt_response_spectral_ordinate(Ti[1], m, r, fas, rvt)
-        @code_warntype rvt_response_spectrum(Ti, m, r, fas, rvt)
-        @time Sai = rvt_response_spectrum(Ti, m, r, fas, rvt)
+        # @code_warntype rvt_response_spectral_ordinate(Ti[1], m, r, fas, rvt)
+        # @code_warntype rvt_response_spectrum(Ti, m, r, fas, rvt)
+        # @time Sai = rvt_response_spectrum(Ti, m, r, fas, rvt)
 
     end
 
@@ -42,19 +42,19 @@ using LinearAlgebra
         Δσ = 100.0
         β = 3.5
 
-        @code_warntype magnitude_to_moment(m)
-
-        @code_warntype corner_frequency_brune(m, Δσ)
-        @code_warntype corner_frequency_brune(m, Δσ, β)
-        @code_warntype corner_frequency_atkinson_silva_2000(m)
+        # @code_warntype magnitude_to_moment(m)
+        #
+        # @code_warntype corner_frequency_brune(m, Δσ)
+        # @code_warntype corner_frequency_brune(m, Δσ, β)
+        # @code_warntype corner_frequency_atkinson_silva_2000(m)
 
         srcf = SourceParameters(Δσ)
         srcd = SourceParameters(Dual{Float64}(Δσ))
 
-        @code_warntype corner_frequency(m, srcf)
-        @code_warntype corner_frequency(m, srcd)
-        @code_warntype corner_frequency(Dual(m), srcf)
-        @code_warntype corner_frequency(Dual(m), srcd)
+        # @code_warntype corner_frequency(m, srcf)
+        # @code_warntype corner_frequency(m, srcd)
+        # @code_warntype corner_frequency(Dual(m), srcf)
+        # @code_warntype corner_frequency(Dual(m), srcd)
 
         T = get_parametric_type(srcf)
         @test T == Float64
@@ -62,16 +62,20 @@ using LinearAlgebra
         @test T <: Dual
 
 
-        @time faf, fbf, fεf = corner_frequency(m, srcf)
-        @time fad, fbd, fεd = corner_frequency(m, srcd)
+        faf, fbf, fεf = corner_frequency(m, srcf)
+        fad, fbd, fεd = corner_frequency(m, srcd)
+        # @time faf, fbf, fεf = corner_frequency(m, srcf)
+        # @time fad, fbd, fεd = corner_frequency(m, srcd)
 
         @test faf == fad.value
 
         srcf = SourceParameters(Δσ, :Atkinson_Silva_2000)
         srcd = SourceParameters(Dual{Float64}(Δσ), :Atkinson_Silva_2000)
 
-        @time faf, fbf, fεf = corner_frequency(m, srcf)
-        @time fad, fbd, fεd = corner_frequency(m, srcd)
+        faf, fbf, fεf = corner_frequency(m, srcf)
+        fad, fbd, fεd = corner_frequency(m, srcd)
+        # @time faf, fbf, fεf = corner_frequency(m, srcf)
+        # @time fad, fbd, fεd = corner_frequency(m, srcd)
 
         @test faf == fad.value
         @test fbf == fbd.value
@@ -195,22 +199,22 @@ using LinearAlgebra
         Sfd = site_amplification(f, site0d)
         @test Sff == Sfd
 
-        @time Af0f = site_amplification(f, site0f)
-        @time Af1f = site_amplification(f, siteAf)
-        @time Af2f = site_amplification(f, siteBf)
-        @time Af3f = site_amplification(f, siteUf)
-        @time Af4f = site_amplification(f, siteNf)
+        Af0f = site_amplification(f, site0f)
+        Af1f = site_amplification(f, siteAf)
+        Af2f = site_amplification(f, siteBf)
+        Af3f = site_amplification(f, siteUf)
+        Af4f = site_amplification(f, siteNf)
 
         @test Af0f == Af1f
         @test Af3f == 1.0
         @test Af2f < Af1f
         @test isnan(Af4f)
 
-        @time Af0d = site_amplification(f, site0d)
-        @time Af1d = site_amplification(f, siteAd)
-        @time Af2d = site_amplification(f, siteBd)
-        @time Af3d = site_amplification(f, siteUd)
-        @time Af4d = site_amplification(f, siteNd)
+        Af0d = site_amplification(f, site0d)
+        Af1d = site_amplification(f, siteAd)
+        Af2d = site_amplification(f, siteBd)
+        Af3d = site_amplification(f, siteUd)
+        Af4d = site_amplification(f, siteNd)
 
         @test Af0d == Af1d
         @test Af3d == 1.0
@@ -229,8 +233,8 @@ using LinearAlgebra
         f = 10.0
         # @code_warntype kappa_filter(f, siteAf)
         # @code_warntype kappa_filter(f, siteAd)
-        @time Kff = kappa_filter(f, siteAf)
-        @time Kfd = kappa_filter(f, siteAd)
+        Kff = kappa_filter(f, siteAf)
+        Kfd = kappa_filter(f, siteAd)
         @test Kff == Kfd.value
 
     end
@@ -246,7 +250,7 @@ using LinearAlgebra
 
         fi = [ 0.5, 1.0, 2.0 ]
 
-        @code_warntype transfer(fi, sdof)
+        # @code_warntype transfer(fi, sdof)
 
         @time Hfi = transfer(fi, sdof)
         tfi = 2 * fi
@@ -381,8 +385,10 @@ using LinearAlgebra
         # @code_warntype rms_duration(m, r, fasf, sdof, rvt)
         # @code_warntype rms_duration(m, r, fasd, sdof, rvt)
 
-        @time Drmsf, Dexf, Dratiof = rms_duration(m, r, fasf, sdof, rvt)
-        @time Drmsd, Dexd, Dratiod = rms_duration(m, r, fasd, sdof, rvt)
+        # @time Drmsf, Dexf, Dratiof = rms_duration(m, r, fasf, sdof, rvt)
+        # @time Drmsd, Dexd, Dratiod = rms_duration(m, r, fasd, sdof, rvt)
+        Drmsf, Dexf, Dratiof = rms_duration(m, r, fasf, sdof, rvt)
+        Drmsd, Dexd, Dratiod = rms_duration(m, r, fasd, sdof, rvt)
 
         @test Drmsf == Drmsd.value
         @test Dexf == Dexd.value
@@ -449,26 +455,34 @@ using LinearAlgebra
         Cffd = fourier_constant(fasd)
         @test Cfsd == Cffd
 
-        f = 1.0
+        f = 0.001
         m = 6.0
 
-        @code_warntype fourier_source_shape(f, m, srcf)
-        @code_warntype fourier_source_shape(f, m, srcd)
-        @time fourier_source_shape(f, m, srcf)
-        @time fourier_source_shape(f, m, fasf)
-        @time fourier_source_shape(f, m, srcd)
-        @time fourier_source_shape(f, m, fasd)
+        # @code_warntype fourier_source_shape(f, m, srcf)
+        # @code_warntype fourier_source_shape(f, m, srcd)
+        Affs = fourier_source_shape(f, m, srcf)
+        Afff = fourier_source_shape(f, m, fasf)
+        Afds = fourier_source_shape(f, m, srcd)
+        Afdf = fourier_source_shape(f, m, fasd)
+        @test Affs == Afds.value
+        @test Afff == Afdf.value
+        @test Affs == Afff
+        @test Afds == Afdf
+
+        @test Afff ≈ 1.0 atol=1e-3
 
         fa, fb, ε = corner_frequency(m, srcf)
-        @code_warntype fourier_source_shape(f, fa, fb, ε, srcf.model)
-        @time fourier_source_shape(f, fa, fb, ε, srcf.model)
+        # @code_warntype fourier_source_shape(f, fa, fb, ε, srcf.model)
+        Afc = fourier_source_shape(f, fa, fb, ε, srcf.model)
+        @test Afc ≈ 1.0 atol=1e-3
 
         fa, fb, ε = corner_frequency(m, srcd)
-        @code_warntype fourier_source_shape(f, fa, fb, ε, srcd.model)
-        @time fourier_source_shape(f, fa, fb, ε, srcd.model)
+        # @code_warntype fourier_source_shape(f, fa, fb, ε, srcd.model)
+        Afcd = fourier_source_shape(f, fa, fb, ε, srcd.model)
+        @test Afcd ≈ 1.0 atol=1e-3
 
-        @code_warntype fourier_source(f, m, srcf)
-        @code_warntype fourier_source(f, m, srcd)
+        # @code_warntype fourier_source(f, m, srcf)
+        # @code_warntype fourier_source(f, m, srcd)
         @time fourier_source(f, m, srcf)
         @time fourier_source(f, m, fasf)
         @time fourier_source(f, m, srcd)
@@ -477,44 +491,50 @@ using LinearAlgebra
         f = 10.0
         r = 100.0
 
-        @code_warntype fourier_path(f, r, geof, anef)
-        @code_warntype fourier_path(f, r, geod, aned)
-        @code_warntype fourier_path(f, r, geom, anef)
-        @code_warntype fourier_path(f, r, pathf)
-        @code_warntype fourier_path(f, r, pathd)
-        @code_warntype fourier_path(f, r, pathm)
-        @code_warntype fourier_path(f, r, fasf)
-        @code_warntype fourier_path(f, r, fasd)
-        @code_warntype fourier_path(f, r, fasm)
+        # @code_warntype fourier_path(f, r, geof, anef)
+        # @code_warntype fourier_path(f, r, geod, aned)
+        # @code_warntype fourier_path(f, r, geom, anef)
+        # @code_warntype fourier_path(f, r, pathf)
+        # @code_warntype fourier_path(f, r, pathd)
+        # @code_warntype fourier_path(f, r, pathm)
+        # @code_warntype fourier_path(f, r, fasf)
+        # @code_warntype fourier_path(f, r, fasd)
+        # @code_warntype fourier_path(f, r, fasm)
 
-        @time fourier_path(f, r, fasf)
-        @time fourier_path(f, r, fasd)
-        @time fourier_path(f, r, fasm)
+        Pf = fourier_path(f, r, fasf)
+        Pd = fourier_path(f, r, fasd)
+        Pm = fourier_path(f, r, fasm)
+        @test Pf == Pd.value
+        @test Pd == Pm
 
 
         f = 10.0
-        @code_warntype fourier_attenuation(f, r, anef, sitef)
-        @code_warntype fourier_attenuation(f, r, aned, sited)
-        @code_warntype fourier_attenuation(f, r, anef, sited)
-        @code_warntype fourier_attenuation(f, r, pathf, sitef)
-        @code_warntype fourier_attenuation(f, r, pathd, sited)
-        @code_warntype fourier_attenuation(f, r, pathm, sited)
-        @code_warntype fourier_attenuation(f, r, fasf)
-        @code_warntype fourier_attenuation(f, r, fasd)
-        @code_warntype fourier_attenuation(f, r, fasm)
+        # @code_warntype fourier_attenuation(f, r, anef, sitef)
+        # @code_warntype fourier_attenuation(f, r, aned, sited)
+        # @code_warntype fourier_attenuation(f, r, anef, sited)
+        # @code_warntype fourier_attenuation(f, r, pathf, sitef)
+        # @code_warntype fourier_attenuation(f, r, pathd, sited)
+        # @code_warntype fourier_attenuation(f, r, pathm, sited)
+        # @code_warntype fourier_attenuation(f, r, fasf)
+        # @code_warntype fourier_attenuation(f, r, fasd)
+        # @code_warntype fourier_attenuation(f, r, fasm)
 
-        @time fourier_attenuation(f, r, fasf)
-        @time fourier_attenuation(f, r, fasd)
-        @time fourier_attenuation(f, r, fasm)
+        Qf = fourier_attenuation(f, r, fasf)
+        Qd = fourier_attenuation(f, r, fasd)
+        Qm = fourier_attenuation(f, r, fasm)
+        @test Qf == Qd.value
+        @test Qd == Qm
 
-        @code_warntype fourier_site(f, sitef)
-        @code_warntype fourier_site(f, sited)
-        @time fourier_site(f, sitef)
-        @time fourier_site(f, sited)
+        # @code_warntype fourier_site(f, sitef)
+        # @code_warntype fourier_site(f, sited)
+        # @time fourier_site(f, sitef)
+        # @time fourier_site(f, sited)
 
-        @time fourier_site(f, fasf)
-        @time fourier_site(f, fasd)
-        @time fourier_site(f, fasm)
+        Sf = fourier_site(f, fasf)
+        Sd = fourier_site(f, fasd)
+        Sm = fourier_site(f, fasm)
+        @test Sf == Sd.value
+        @test Sd == Sm
 
         f = 1.0
         m = 6.0
@@ -523,51 +543,60 @@ using LinearAlgebra
         r_psd = equivalent_point_source_distance(r, m, fasd)
         r_psm = equivalent_point_source_distance(r, m, fasm)
 
-        @code_warntype fourier_spectral_ordinate(f, m, r_psf, fasf)
-        @code_warntype fourier_spectral_ordinate(f, m, r_psd, fasd)
-        @code_warntype fourier_spectral_ordinate(f, m, r_psm, fasm)
+        # @code_warntype fourier_spectral_ordinate(f, m, r_psf, fasf)
+        # @code_warntype fourier_spectral_ordinate(f, m, r_psd, fasd)
+        # @code_warntype fourier_spectral_ordinate(f, m, r_psm, fasm)
 
-        @time fourier_spectral_ordinate(f, m, r_psf, fasf)
-        @time fourier_spectral_ordinate(f, m, r_psd, fasd)
-        @time fourier_spectral_ordinate(f, m, r_psm, fasm)
+        Af = fourier_spectral_ordinate(f, m, r_psf, fasf)
+        Ad = fourier_spectral_ordinate(f, m, r_psd, fasd)
+        Am = fourier_spectral_ordinate(f, m, r_psm, fasm)
+        @test Af == Ad.value
+        @test Ad == Am
 
         fi = [ 0.01, 0.1, 1.0, 10.0, 100.0 ]
-        size(fi)
-        length(fi)
 
-        get_parametric_type(geof)
-        get_parametric_type(srcf)
-        get_parametric_type(anef)
-        get_parametric_type(aned)
-        get_parametric_type(fasm)
+        # @code_warntype fourier_spectrum(fi, m, r_psf, fasf)
+        # @code_warntype fourier_spectrum(fi, m, r_psf, fasd)
+        # @code_warntype fourier_spectrum(fi, m, r_psd, fasd)
+        # @code_warntype fourier_spectrum(fi, m, r_psd, fasm)
 
-        @code_warntype fourier_spectrum(fi, m, r_psf, fasf)
-        @code_warntype fourier_spectrum(fi, m, r_psf, fasd)
-        @code_warntype fourier_spectrum(fi, m, r_psd, fasd)
-        @code_warntype fourier_spectrum(fi, m, r_psd, fasm)
+        Afif = fourier_spectrum(fi, m, r_psf, fasf)
+        Afid = fourier_spectrum(fi, m, r_psf, fasd)
+        Afim = fourier_spectrum(fi, m, r_psd, fasm)
+        for i in 1:length(fi)
+            @test Afif[i] == Afid[i].value
+        end
+        @test all(isapprox.(Afid, Afim))
 
-        @time Afif = fourier_spectrum(fi, m, r_psf, fasf)
-        @time Afid = fourier_spectrum(fi, m, r_psf, fasd)
-        @time Afim = fourier_spectrum(fi, m, r_psd, fasm)
+        # @code_warntype fourier_spectrum!(Afif, fi, m, r_psf, fasf)
+        # @code_warntype fourier_spectrum!(Afid, fi, m, r_psf, fasd)
+        # @code_warntype fourier_spectrum!(Afim, fi, m, r_psd, fasm)
 
-        @code_warntype fourier_spectrum!(Afif, fi, m, r_psf, fasf)
-        @code_warntype fourier_spectrum!(Afid, fi, m, r_psf, fasd)
-        @code_warntype fourier_spectrum!(Afim, fi, m, r_psd, fasm)
+        fourier_spectrum!(Afif, fi, m, r_psf, fasf)
+        fourier_spectrum!(Afid, fi, m, r_psf, fasd)
+        fourier_spectrum!(Afim, fi, m, r_psd, fasm)
+        for i in 1:length(fi)
+            @test Afif[i] == Afid[i].value
+        end
+        @test all(isapprox.(Afid, Afim))
 
-        @time fourier_spectrum!(Afif, fi, m, r_psf, fasf)
-        @time fourier_spectrum!(Afid, fi, m, r_psf, fasd)
-        @time fourier_spectrum!(Afim, fi, m, r_psd, fasm)
+        # @code_warntype squared_fourier_spectrum!(Afif, fi, m, r_psf, fasf)
+        # @code_warntype squared_fourier_spectrum!(Afid, fi, m, r_psf, fasd)
+        # @code_warntype squared_fourier_spectrum!(Afim, fi, m, r_psd, fasm)
 
-        @code_warntype squared_fourier_spectrum!(Afif, fi, m, r_psf, fasf)
-        @code_warntype squared_fourier_spectrum!(Afid, fi, m, r_psf, fasd)
-        @code_warntype squared_fourier_spectrum!(Afim, fi, m, r_psd, fasm)
+        squared_fourier_spectrum!(Afif, fi, m, r_psf, fasf)
+        squared_fourier_spectrum!(Afid, fi, m, r_psf, fasd)
+        squared_fourier_spectrum!(Afim, fi, m, r_psd, fasm)
+        for i in 1:length(fi)
+            @test Afif[i] == Afid[i].value
+        end
+        @test all(isapprox.(Afid, Afim))
 
-        @time squared_fourier_spectrum!(Afif, fi, m, r_psf, fasf)
-        @time squared_fourier_spectrum!(Afid, fi, m, r_psf, fasd)
-        @time squared_fourier_spectrum!(Afim, fi, m, r_psd, fasm)
-
-        @code_warntype combined_kappa_frequency(r_psf, fasf)
-        @code_warntype combined_kappa_frequency(r_psd, fasd)
+        # @code_warntype combined_kappa_frequency(r_psf, fasf)
+        # @code_warntype combined_kappa_frequency(r_psd, fasd)
+        fkf = combined_kappa_frequency(r_psf, fasf)
+        fkd = combined_kappa_frequency(r_psd, fasd)
+        @test fkf == fkd.value
 
     end
 
@@ -575,11 +604,10 @@ using LinearAlgebra
 
         @testset "Integration" begin
 
-            n = 200
-            @time xi, wi = gausslegendre(n)
-            @time xi, wi = gausslaguerre(n)
-            @time xi, wi = gausslobatto(n)
-
+            # n = 200
+            # @time xi, wi = gausslegendre(n)
+            # @time xi, wi = gausslaguerre(n)
+            # @time xi, wi = gausslobatto(n)
 
             Δσf = 100.0
             γ1f = 1.158
@@ -679,15 +707,19 @@ using LinearAlgebra
             @time igk = 2*quadgk(dbm0_integrand, 0.0, Inf)[1]
             @time igk = 2*quadgk(dbm0_integrand, exp(-7.0), exp(7.0))[1]
             @time iglelnm = 2*gauss_intervals(dbm0ln_integrand, 250, -7.0, log(sdof.f_n), 7.0)
+            @test igk ≈ iglelnm rtol=1e-4
 
             @time igk = 2*quadgk(dbm1_integrand, exp(-7.0), exp(7.0))[1]
             @time iglelnm = 2*gauss_intervals(dbm1ln_integrand, 250, -7.0, log(sdof.f_n), 7.0)
+            @test igk ≈ iglelnm rtol=1e-4
 
             @time igk = 2*quadgk(dbm2_integrand, exp(-7.0), exp(7.0))[1]
             @time iglelnm = 2*gauss_intervals(dbm2ln_integrand, 250, -7.0, log(sdof.f_n), 7.0)
+            @test igk ≈ iglelnm rtol=1e-3
 
             @time igk = 2*quadgk(dbm4_integrand, exp(-7.0), exp(7.0))[1]
             @time iglelnm = 2*gauss_intervals(dbm4ln_integrand, 250, -7.0, log(sdof.f_n), 7.0)
+            @test igk ≈ iglelnm rtol=1e-3
 
 
             # using DifferentialEquations
@@ -892,31 +924,33 @@ using LinearAlgebra
             sdof = Oscillator(0.1)
 
             order = 0
-            @time spectral_moment(order, m, r_psf, fasf, sdof)
-            @time spectral_moment(order, m, r_psd, fasd, sdof)
-            @time spectral_moment(order, m, r_psm, fasm, sdof)
+            m0f = spectral_moment(order, m, r_psf, fasf, sdof)
+            m0d = spectral_moment(order, m, r_psd, fasd, sdof)
+            m0m = spectral_moment(order, m, r_psm, fasm, sdof)
+            @test m0f == m0d.value
+            @test m0d == m0m
 
-            @code_warntype spectral_moment(order, m, r_psf, fasf, sdof)
-            @code_warntype spectral_moment(order, m, r_psd, fasd, sdof)
-            @code_warntype spectral_moment(order, m, r_psm, fasm, sdof)
+            # @code_warntype spectral_moment(order, m, r_psf, fasf, sdof)
+            # @code_warntype spectral_moment(order, m, r_psd, fasd, sdof)
+            # @code_warntype spectral_moment(order, m, r_psm, fasm, sdof)
 
-            @time spectral_moments([0, 1, 2, 4], m, r_psf, fasf, sdof)
-            @time spectral_moments([0, 1, 2, 4], m, r_psd, fasd, sdof)
-            @time spectral_moments([0, 1, 2, 4], m, r_psm, fasm, sdof)
+            # @time spectral_moments([0, 1, 2, 4], m, r_psf, fasf, sdof)
+            # @time spectral_moments([0, 1, 2, 4], m, r_psd, fasd, sdof)
+            # @time spectral_moments([0, 1, 2, 4], m, r_psm, fasm, sdof)
 
-            @code_warntype spectral_moments([0, 1, 2, 4], m, r_psf, fasf, sdof)
-            @code_warntype spectral_moments([0, 1, 2, 4], m, r_psd, fasd, sdof)
-            @code_warntype spectral_moments([0, 1, 2, 4], m, r_psm, fasm, sdof)
+            # @code_warntype spectral_moments([0, 1, 2, 4], m, r_psf, fasf, sdof)
+            # @code_warntype spectral_moments([0, 1, 2, 4], m, r_psd, fasd, sdof)
+            # @code_warntype spectral_moments([0, 1, 2, 4], m, r_psm, fasm, sdof)
 
-            @time smi = spectral_moments([0, 1, 2, 4], m, r_psf, fasf, sdof)
-            @time smigk = spectral_moments_gk([0, 1, 2, 4], m, r_psf, fasf, sdof)
+            smi = spectral_moments([0, 1, 2, 4], m, r_psf, fasf, sdof)
+            smigk = spectral_moments_gk([0, 1, 2, 4], m, r_psf, fasf, sdof)
 
             @test all(isapprox.(smi, smigk, rtol=1e-3))
-            # [ smi smigk ]
+
 
             sdof = Oscillator(1/3)
-            @time smi = spectral_moments([0, 1, 2, 4], m, r_psf, fasf, sdof)
-            @time smigk = spectral_moments_gk([0, 1, 2, 4], m, r_psf, fasf, sdof)
+            smi = spectral_moments([0, 1, 2, 4], m, r_psf, fasf, sdof)
+            smigk = spectral_moments_gk([0, 1, 2, 4], m, r_psf, fasf, sdof)
 
             @test all(isapprox.(smi, smigk, rtol=1e-3))
 
@@ -1044,106 +1078,108 @@ using LinearAlgebra
 
             rvt = RandomVibrationParameters()
 
-            @time Saif = rvt_response_spectrum(Ti, m, r_psf, fasf, rvt)
-            # @btime Saif = rvt_response_spectrum(Ti, m, r_psf, fasf, rvt)
-            @time Said = rvt_response_spectrum(Ti, m, r_psd, fasd, rvt)
-            # @btime Said = rvt_response_spectrum(Ti, m, r_psd, fasd, rvt)
-            @time Saim = rvt_response_spectrum(Ti, m, r_psm, fasm, rvt)
-
-            @code_warntype rvt_response_spectrum(Ti, m, r_psf, fasf, rvt)
-            @code_warntype rvt_response_spectrum(Ti, m, r_psd, fasd, rvt)
-            @code_warntype rvt_response_spectrum(Ti, m, r_psm, fasm, rvt)
-
-
-            function spectral_slope_rtp(x::Vector, r_rup, T, par::Vector)
-                src = SourceParameters(exp(par[1]))
-                geo = GeometricSpreadingParameters([1.0, 50.0, Inf], [ par[2], 0.5 ], :CY14mod)
-                heff = par[3] * exp( par[4]*m )
-                sat = NearSourceSaturationParameters(heff, 1)
-                ane = AnelasticAttenuationParameters(par[5], par[6], :Rrup)
-                path = PathParameters(geo, sat, ane)
-                site = SiteParameters(0.039)
-                fas = FourierParameters(src, path, site)
-                rvt = RandomVibrationParameters()
-
-                r_ps = equivalent_point_source_distance(r_rup, x[1], fas)
-
-                return log(rvt_response_spectral_ordinate(T, x[1], r_ps, fas, rvt))
+            Saif = rvt_response_spectrum(Ti, m, r_psf, fasf, rvt)
+            Said = rvt_response_spectrum(Ti, m, r_psd, fasd, rvt)
+            Saim = rvt_response_spectrum(Ti, m, r_psm, fasm, rvt)
+            for i in 1:length(Ti)
+                @test Saif[i] ≈ Said[i].value
             end
+            @test all(isapprox.(Said, Saim))
 
-            r_rup = 1.0
-            T = 0.01
-            hα = 0.023
-            hβ = 0.4
-            γ = 1.2
-            γ*hβ
-            par = [ 5.25, γ, hα, hβ, 185.0, 0.66 ]
+            # @code_warntype rvt_response_spectrum(Ti, m, r_psf, fasf, rvt)
+            # @code_warntype rvt_response_spectrum(Ti, m, r_psd, fasd, rvt)
+            # @code_warntype rvt_response_spectrum(Ti, m, r_psm, fasm, rvt)
 
 
-            x = [ 7.8 ]
-            h = hα * exp( hβ * x[1] )
-            r_ps = r_rup + h
-
-            spectral_slope(x) = spectral_slope_rtp(x, r_rup, T, par)
-            exp(spectral_slope(x))
-            gspectral_slope(x) = ForwardDiff.gradient(spectral_slope, x)
-            gspectral_slope(x)[1]
-
-            lnSa1 = spectral_slope([7.0])
-            lnSa2 = spectral_slope([8.40])
-            (lnSa2 - lnSa1)/1.4
-
-
-
-            r_rup = 1.0
-            T = 0.01
-            hα = 0.023
-            hβ = 0.88
-            γ = 1.2
-            par = [ 5.25, γ, hα, hβ, 185.0, 0.66 ]
-
-            m = 8.4
-
-            src = SourceParameters(exp(par[1]))
-            geo = GeometricSpreadingParameters([1.0, 50.0, Inf], [ par[2], 0.5 ], :CY14mod)
-            heff = hα * exp( hβ * m )
-            sat = NearSourceSaturationParameters(heff, 1)
-            ane = AnelasticAttenuationParameters(par[5], par[6], :Rrup)
-            path = PathParameters(geo, sat, ane)
-            fas = FourierParameters(src, path, site)
-            # equivalent_point_source_distance(r_rup, m, fas)
-            r_ps = r_rup + heff
-            site = SiteParameters(0.039)
-            rvt = RandomVibrationParameters()
-            sdof = Oscillator(1.0/T)
-
-            rvt_response_spectral_ordinate(T, m, r_ps, fas, rvt)
-
-            fc, fb, fe = corner_frequency(m, fas)
-            fk = combined_kappa_frequency(r_rup, ane, site)
-
-            m0 = spectral_moment(0, m, r_ps, fas, sdof)
-
-            Afc = fourier_spectral_ordinate(fc*1.5, m, r_ps, fas)
-            Afk = fourier_spectral_ordinate(fk, m, r_ps, fas)
-
-            fn = 100.0
-            transfer(fn/3, Oscillator(fn))
+            # function spectral_slope_rtp(x::Vector, r_rup, T, par::Vector)
+            #     src = SourceParameters(exp(par[1]))
+            #     geo = GeometricSpreadingParameters([1.0, 50.0, Inf], [ par[2], 0.5 ], :CY14mod)
+            #     heff = par[3] * exp( par[4]*m )
+            #     sat = NearSourceSaturationParameters(heff, 1)
+            #     ane = AnelasticAttenuationParameters(par[5], par[6], :Rrup)
+            #     path = PathParameters(geo, sat, ane)
+            #     site = SiteParameters(0.039)
+            #     fas = FourierParameters(src, path, site)
+            #     rvt = RandomVibrationParameters()
+            #
+            #     r_ps = equivalent_point_source_distance(r_rup, x[1], fas)
+            #
+            #     return log(rvt_response_spectral_ordinate(T, x[1], r_ps, fas, rvt))
+            # end
+            #
+            # r_rup = 1.0
+            # T = 0.01
+            # hα = 0.023
+            # hβ = 0.4
+            # γ = 1.2
+            # γ*hβ
+            # par = [ 5.25, γ, hα, hβ, 185.0, 0.66 ]
+            #
+            #
+            # x = [ 7.8 ]
+            # h = hα * exp( hβ * x[1] )
+            # r_ps = r_rup + h
+            #
+            # spectral_slope(x) = spectral_slope_rtp(x, r_rup, T, par)
+            # exp(spectral_slope(x))
+            # gspectral_slope(x) = ForwardDiff.gradient(spectral_slope, x)
+            # gspectral_slope(x)[1]
+            #
+            # lnSa1 = spectral_slope([7.0])
+            # lnSa2 = spectral_slope([8.40])
+            # (lnSa2 - lnSa1)/1.4
 
 
-            mi = collect(range(7.0, stop=8.5, step=0.1))
-            pfi = zeros(length(mi))
-            for i in 1:length(mi)
-                heff = hα * exp( hβ * mi[i] )
-                sat = NearSourceSaturationParameters(heff, 1)
-                ane = AnelasticAttenuationParameters(par[5], par[6], :Rrup)
-                path = PathParameters(geo, sat, ane)
-                fas = FourierParameters(src, path, site)
-                r_ps = r_rup + heff
-                pfi[i] = peak_factor(mi[i], r_ps, fas, sdof, rvt)
-            end
 
-            [ mi pfi ]
+            # r_rup = 1.0
+            # T = 0.01
+            # hα = 0.023
+            # hβ = 0.88
+            # γ = 1.2
+            # par = [ 5.25, γ, hα, hβ, 185.0, 0.66 ]
+            #
+            # m = 8.4
+            #
+            # src = SourceParameters(exp(par[1]))
+            # geo = GeometricSpreadingParameters([1.0, 50.0, Inf], [ par[2], 0.5 ], :CY14mod)
+            # heff = hα * exp( hβ * m )
+            # sat = NearSourceSaturationParameters(heff, 1)
+            # ane = AnelasticAttenuationParameters(par[5], par[6], :Rrup)
+            # path = PathParameters(geo, sat, ane)
+            # fas = FourierParameters(src, path, site)
+            # # equivalent_point_source_distance(r_rup, m, fas)
+            # r_ps = r_rup + heff
+            # site = SiteParameters(0.039)
+            # rvt = RandomVibrationParameters()
+            # sdof = Oscillator(1.0/T)
+            #
+            # rvt_response_spectral_ordinate(T, m, r_ps, fas, rvt)
+            #
+            # fc, fb, fe = corner_frequency(m, fas)
+            # fk = combined_kappa_frequency(r_rup, ane, site)
+            #
+            # m0 = spectral_moment(0, m, r_ps, fas, sdof)
+            #
+            # Afc = fourier_spectral_ordinate(fc*1.5, m, r_ps, fas)
+            # Afk = fourier_spectral_ordinate(fk, m, r_ps, fas)
+            #
+            # fn = 100.0
+            # transfer(fn/3, Oscillator(fn))
+            #
+            #
+            # mi = collect(range(7.0, stop=8.5, step=0.1))
+            # pfi = zeros(length(mi))
+            # for i in 1:length(mi)
+            #     heff = hα * exp( hβ * mi[i] )
+            #     sat = NearSourceSaturationParameters(heff, 1)
+            #     ane = AnelasticAttenuationParameters(par[5], par[6], :Rrup)
+            #     path = PathParameters(geo, sat, ane)
+            #     fas = FourierParameters(src, path, site)
+            #     r_ps = r_rup + heff
+            #     pfi[i] = peak_factor(mi[i], r_ps, fas, sdof, rvt)
+            # end
+            #
+            # [ mi pfi ]
 
         end
 
