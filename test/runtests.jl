@@ -394,6 +394,60 @@ using LinearAlgebra
         @test Dexf == Dexd.value
         @test Dratiof == Dratiod.value
 
+        # Boore & Thompson 2014
+        m = 6.0
+        fa, fb, ε = corner_frequency(m, src)
+        Ds = 1.0 / fa
+
+        Dex270 = Ds + 34.2
+        Dex300 = Dex270 + 0.156*30.0
+        @test Dex270 ≈ boore_thompson_2014(m, 270.0, src)
+        @test Dex300 ≈ boore_thompson_2014(m, 300.0, src)
+
+        @test isnan(boore_thompson_2014(m, -1.0, src))
+        @test isnan(boore_thompson_2014(m, -1.0, srcd))
+        @test isnan(boore_thompson_2014(m, Dual(-1.0), src))
+
+        @test isnan(excitation_duration(m, -1.0, src, rvt))
+        @test isnan(excitation_duration(m, -1.0, srcd, rvt))
+        @test isnan(excitation_duration(m, Dual(-1.0), src, rvt))
+
+        c = boore_thompson_2012_coefs(1, 1, region=:ENA)
+        idx = 1
+        @test all(isapprox(c, StochasticGroundMotionSimulation.coefs_ena_bt12[idx,3:9]))
+
+        d1a, d2a, d3a = boore_thompson_2012(6.1234, 2.0, src, sdof, rvt)
+        d1b, d2b, d3b = boore_thompson_2012(6.1234, 2.1234, src, sdof, rvt)
+        d1c, d2c, d3c = boore_thompson_2012(6.0, 2.1234, src, sdof, rvt)
+        @test d1a < d1b
+        @test d2a < d2b
+        @test d3a > d3b
+        @test d1a > d1c
+
+        c = boore_thompson_2015_coefs(1, 1, region=:ENA)
+        idx = 1
+        @test all(isapprox(c, StochasticGroundMotionSimulation.coefs_ena_bt15[idx,3:9]))
+
+        d1a, d2a, d3a = boore_thompson_2015(6.1234, 2.0, src, sdof, rvt)
+        d1b, d2b, d3b = boore_thompson_2015(6.1234, 2.1234, src, sdof, rvt)
+        d1c, d2c, d3c = boore_thompson_2015(6.0, 2.1234, src, sdof, rvt)
+        @test d1a < d1b
+        @test d2a < d2b
+        @test d3a < d3b
+        @test d1a > d1c
+
+        d1as, d2as, d3as = boore_thompson_2015(6.1234, 2.0, src, sdof, rvt)
+        d1af, d2af, d3af = boore_thompson_2015(6.1234, 2.0, fas, sdof, rvt)
+        @test d1as == d1af
+        @test d2as == d2af
+        @test d3as == d3af
+
+        rvt = RandomVibrationParameters(:PS, :PS, :PS, :PS)
+        d1, d2, d3 = rms_duration(6.0, 1.0, fas, sdof, rvt)
+        @test isnan(d1)
+        @test isnan(d2)
+        @test isnan(d3)
+        
     end
 
     @testset "Fourier" begin
@@ -657,36 +711,6 @@ using LinearAlgebra
             sdof = Oscillator(100.0)
 
 
-            function gauss_interval(n, fmin, fmax, integrand::Function)
-                xi, wi = gausslegendre(n)
-                ifi = @. integrand( (fmax-fmin)/2 * xi + (fmin+fmax)/2 )
-                return (fmax-fmin)/2 * dot( wi, ifi )
-            end
-
-            function gauss_intervals(fun::Function, n, flim...)
-                xi, wi = gausslegendre(n)
-                ii = 0.0
-                for i in 2:length(flim)
-                    ii += (flim[i]-flim[i-1])/2 * dot( wi, fun.( (flim[i]-flim[i-1])/2 * xi .+ (flim[i]+flim[i-1])/2 ) )
-                end
-                return ii
-            end
-
-            function trapezoidal_rule(x::Vector, y::Vector)
-                return (x[2] - x[1]) * ( sum(y) - (y[1] + y[end])/2 )
-            end
-
-            function trapezoidal(fun::Function, n, flim...)
-                ii = 0.0
-                for i in 2:length(flim)
-                    xi = collect(range(flim[i-1], stop=flim[i], length=n))
-                    yi = fun.(xi)
-                    ii += trapezoidal_rule(xi, yi)
-                end
-                return ii
-            end
-
-
             # Boore comparison (assume his are cgs units)
             # ps2db(f) = ( (2π * sdof.f_n) / ( (2π * f)^2 ) )^2 * 1e-4
             # ps2db(f) = ( 1.0 / ( 2π * f^2 * sdof.f_n ) )^2
@@ -871,6 +895,9 @@ using LinearAlgebra
 
             @test isr ≈ igk rtol=1e-3
             @test isr ≈ igk atol=1e-6
+
+
+
 
         end
 
