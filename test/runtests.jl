@@ -447,7 +447,7 @@ using LinearAlgebra
         @test isnan(d1)
         @test isnan(d2)
         @test isnan(d3)
-        
+
     end
 
     @testset "Fourier" begin
@@ -981,6 +981,32 @@ using LinearAlgebra
 
             @test all(isapprox.(smi, smigk, rtol=1e-3))
 
+            m = Dual(6.0)
+            smdi = spectral_moments([0, 1, 2, 4], m, r_psf, fasf, sdof)
+            smfi = spectral_moments([0, 1, 2, 4], m.value, r_psf, fasf, sdof)
+            @test any(isapprox.(smdi, smfi))
+
+            m = Dual(6.0)
+            smdi = spectral_moment(0, m, r_psf, fasf, sdof)
+            smfi = spectral_moment(0, m.value, r_psf, fasf, sdof)
+            @test smdi ≈ smfi
+
+            rvt = RandomVibrationParameters()
+            Ti = [ 0.01, 0.1, 1.0 ]
+            m = Dual(6.0)
+            Sadi = rvt_response_spectrum(Ti, m, 10.0, fasf, rvt)
+            Safi = rvt_response_spectrum(Ti, m.value, 10.0, fasf, rvt)
+            for i in 1:length(Ti)
+                @test Sadi[i].value ≈ Safi[i]
+            end
+
+            rvt_response_spectrum!(Sadi, Ti, m, 10.0, fasf, rvt)
+            rvt_response_spectrum!(Safi, Ti, m.value, 10.0, fasf, rvt)
+            for i in 1:length(Ti)
+                @test Sadi[i].value ≈ Safi[i]
+            end
+
+
         end
 
         @testset "Peak Factor" begin
@@ -1048,6 +1074,16 @@ using LinearAlgebra
             @test pfps ≈ pfgk rtol=1e-5
             @test pfpsn ≈ pfgk rtol=1e-5
 
+            @test StochasticGroundMotionSimulation.vanmarcke_cdf(-1.0, 10.0, 0.5) == 0.0
+
+            rvt = RandomVibrationParameters(:CL56)
+            pf = peak_factor(6.0, 10.0, fas, sdof, rvt)
+            rvt = RandomVibrationParameters(:DK80)
+            pf = peak_factor(6.0, 10.0, fas, sdof, rvt)
+            rvt = RandomVibrationParameters(:PS)
+            pf = peak_factor(6.0, 10.0, fas, sdof, rvt)
+            @test isnan(pf)
+            
 
         end
 
