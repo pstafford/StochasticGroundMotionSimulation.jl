@@ -1,68 +1,63 @@
+
 module StochasticGroundMotionSimulation
 
 using Interpolations
 using Roots
 using ForwardDiff
 using ForwardDiff: Dual
+using QuadGK
+using FastGaussQuadrature
+using LinearAlgebra
 
 
 export Oscillator,
-        FASParams,
-        FASParamsGeo,
-        FASParamsQr,
-        FASParamsGeoQr,
-        period,
-        transfer,
-        transfer!,
-        squared_transfer,
-        squared_transfer!,
-        site_amplification,
-	magnitude_to_moment,
-        corner_frequency_brune,
-        corner_frequency_atkinson_silva_2000,
-        corner_frequency,
-        finite_fault_factor,
-    	geometric_spreading,
-    	geometric_spreading_cy,
-    	fourier_constant,
-    	fourier_source,
-    	fourier_source_shape,
-    	fourier_path,
-	fourier_path_cy,
-    	fourier_attenuation,
-    	fourier_site,
-    	fourier_spectral_ordinate,
-    	fourier_spectrum,
-    	fourier_spectrum!,
-    	squared_fourier_spectrum!,
-	squared_fourier_spectrum_cy!,
-    	boore_thompson_2014,
-    	combined_kappa_frequency,
-    	spectral_moment,
-    	spectral_moments,
-	spectral_moments_cy,
-    	zeros_extrema_frequencies,
-    	zeros_extrema_numbers,
-    	boore_thompson_2012_coefs,
-    	boore_thompson_2012_base,
-    	boore_thompson_2012,
-    	peak_factor,
-    	find_integrand_value,
-    	peak_factor_integrand,
-    	rvt_response_spectral_ordinate,
-	rvt_response_spectral_ordinate_cy,
-    	rvt_response_spectrum,
-	rvt_response_spectrum_cy,
-    	rvt_response_spectrum!,
-	rvt_response_spectrum_cy!
+	FourierParameters,
+	SourceParameters,
+	GeometricSpreadingParameters,
+	NearSourceSaturationParameters,
+	AnelasticAttenuationParameters,
+	PathParameters,
+	SiteParameters,
+	RandomVibrationParameters,
+    period,
+    transfer,
+    transfer!,
+    squared_transfer,
+    squared_transfer!,
+    site_amplification,
+	kappa_filter,
+    corner_frequency,
+	geometric_spreading,
+	near_source_saturation,
+	equivalent_point_source_distance,
+	anelastic_attenuation,
+	fourier_constant,
+	fourier_source,
+	fourier_source_shape,
+	fourier_path,
+	fourier_attenuation,
+	fourier_site,
+	fourier_spectral_ordinate,
+	fourier_spectrum,
+	fourier_spectrum!,
+	spectral_moment,
+	spectral_moments,
+	excitation_duration,
+	rms_duration,
+	peak_factor,
+	rvt_response_spectral_ordinate,
+	rvt_response_spectrum,
+	rvt_response_spectrum!
 
 
 # Write your package code here.
 include("oscillator/PJSoscillator.jl")
 include("fourier/PJSfourierParameters.jl")
+include("rvt/PJSrandomVibrationParameters.jl")
 include("fourier/PJSsite.jl")
 include("fourier/PJSsource.jl")
 include("fourier/PJSpath.jl")
+include("fourier/PJSfourierSpectrum.jl")
 include("duration/PJSduration.jl")
 include("rvt/PJSintegration.jl")
 include("rvt/PJSpeakFactor.jl")
