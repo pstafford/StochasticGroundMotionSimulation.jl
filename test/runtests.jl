@@ -85,6 +85,7 @@ using LinearAlgebra
         srcf = SourceParameters(100.0, 3.5, 2.75)
         @test srcd.Δσ.value == srcf.Δσ
 
+        @test StochasticGroundMotionSimulation.magnitude_to_moment(6.0) == exp10(25.05)
 
     end
 
@@ -270,7 +271,7 @@ using LinearAlgebra
         @test fas.site.model == :Unit
 
         q_r = anelastic_attenuation(1.0, 10.0, fas)
-        
+
     end
 
     @testset "Site" begin
@@ -863,6 +864,10 @@ using LinearAlgebra
         fkfd = StochasticGroundMotionSimulation.combined_kappa_frequency(Dual(r_psf), fasf)
         @test fkf == fkfd.value
 
+        fkf0 = StochasticGroundMotionSimulation.combined_kappa_frequency(r_psf, fas)
+        fkf1 = StochasticGroundMotionSimulation.combined_kappa_frequency(r_psf, fasf)
+        @test fkf0 > fkf1
+
     end
 
     @testset "RVT" begin
@@ -1299,6 +1304,10 @@ using LinearAlgebra
             m0 = spectral_moment(0, m, r_ps, fasf, sdof)
             rvt = RandomVibrationParameters(:PS)
             pf = peak_factor(m, r_ps, Dex, m0, fasf, sdof, rvt)
+            @test isnan(pf)
+            pf = peak_factor(Dual(m), r_ps, Dex, m0, fasf, sdof, rvt)
+            @test isnan(pf)
+            pf = peak_factor(m, r_ps, Dex, Dual(m0), fasf, sdof, rvt)
             @test isnan(pf)
             rvt = RandomVibrationParameters(:CL56)
             pf = peak_factor(m, r_ps, Dex, m0, fasf, sdof, rvt)
