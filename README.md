@@ -5,6 +5,11 @@
 [![Build Status](https://github.com/pstafford/StochasticGroundMotionSimulation.jl/workflows/CI/badge.svg)](https://github.com/pstafford/StochasticGroundMotionSimulation.jl/actions)
 [![codecov](https://codecov.io/gh/pstafford/StochasticGroundMotionSimulation.jl/branch/master/graph/badge.svg?token=EDEF06FN61)](https://codecov.io/gh/pstafford/StochasticGroundMotionSimulation.jl)
 
+Julia package to simulate response spectral ordinates via random vibration theory.
+
+
+
+
 ## Citing
 
 See [`CITATION.bib`](CITATION.bib) for the relevant reference(s).
