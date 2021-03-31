@@ -1,6 +1,6 @@
 using StochasticGroundMotionSimulation
 using Test
-using Traceur
+using ForwardDiff
 using ForwardDiff: Dual
 using FastGaussQuadrature
 using QuadGK
@@ -26,17 +26,13 @@ using LinearAlgebra
 
 
         sdof = Oscillator(1.0)
-        # @trace Oscillator(1.0)
         @code_warntype Oscillator(1.0)
         @code_warntype period(sdof)
         @code_warntype transfer(1.0, sdof)
 
-        # @trace rvt_response_spectral_ordinate(Ti[1], m, r, fas, rvt)
         @code_warntype rvt_response_spectral_ordinate(Ti[1], m, r, fas, rvt)
         @code_warntype rvt_response_spectrum(Ti, m, r, fas, rvt)
         @time Sai = rvt_response_spectrum(Ti, m, r, fas, rvt)
-        # @btime Sai = rvt_response_spectrum(Ti, m, r, fas)
-        # @btime rvt_response_spectrum_cy!(Sai, Ti, m, r, fas)
 
     end
 
@@ -46,7 +42,6 @@ using LinearAlgebra
         Δσ = 100.0
         β = 3.5
 
-        # @trace magnitude_to_moment(m)
         @code_warntype magnitude_to_moment(m)
 
         @code_warntype corner_frequency_brune(m, Δσ)
@@ -61,10 +56,11 @@ using LinearAlgebra
         @code_warntype corner_frequency(Dual(m), srcf)
         @code_warntype corner_frequency(Dual(m), srcd)
 
-        # get_parametric_type(srcd)
+        T = get_parametric_type(srcf)
+        @test T == Float64
+        T = get_parametric_type(srcd)
+        @test T <: Dual
 
-        # @trace corner_frequency(m, srcf)
-        # @trace corner_frequency(m, srcd)
 
         @time faf, fbf, fεf = corner_frequency(m, srcf)
         @time fad, fbd, fεd = corner_frequency(m, srcd)
@@ -90,45 +86,88 @@ using LinearAlgebra
         geof = GeometricSpreadingParameters(Rrefi, γi)
         geod = GeometricSpreadingParameters(Rrefi, [ 0.5 ], [ Dual{Float64}(1.0) ], BitVector([1,0]), :Piecewise)
 
+        T = get_parametric_type(geof)
+        @test T == Float64
+        T = get_parametric_type(geod)
+        @test T <: Dual
+
+
         sat = NearSourceSaturationParameters(:BT15)
+
+        T = get_parametric_type(sat)
+        @test T == Float64
 
         Q0 = 200.0
         anef = AnelasticAttenuationParameters(Q0)
         aned = AnelasticAttenuationParameters(Dual{Float64}(Q0))
 
+        T = get_parametric_type(anef)
+        @test T == Float64
+        T = get_parametric_type(aned)
+        @test T <: Dual
+
         pathf = PathParameters(geof, sat, anef)
         pathd = PathParameters(geod, sat, aned)
 
+        T = get_parametric_type(pathf)
+        @test T == Float64
+        T = get_parametric_type(pathd)
+        @test T <: Dual
+
         r = 10.0
         m = 6.0
-        @code_warntype near_source_saturation(m, pathf.saturation)
-        @code_warntype near_source_saturation(m, pathd.saturation)
 
-        @code_warntype near_source_saturation(m, pathf)
-        @code_warntype near_source_saturation(m, pathd)
+        # @code_warntype near_source_saturation(m, pathf.saturation)
+        # @code_warntype near_source_saturation(m, pathd.saturation)
+        hf = near_source_saturation(m, pathf.saturation)
+        hd = near_source_saturation(m, pathd.saturation)
+        if get_parametric_type(pathd.saturation) <: Dual
+            @test hf == hd.value
+        else
+            @test hf == hd
+        end
 
-        @code_warntype equivalent_point_source_distance(r, m, pathf)
-        @code_warntype equivalent_point_source_distance(r, m, pathd)
+        # @code_warntype near_source_saturation(m, pathf)
+        # @code_warntype near_source_saturation(m, pathd)
+        hf = near_source_saturation(m, pathf)
+        hd = near_source_saturation(m, pathd)
+        if get_parametric_type(pathd.saturation) <: Dual
+            @test hf == hd.value
+        else
+            @test hf == hd
+        end
 
-        @code_warntype geometric_spreading_piecewise(r, geof)
-        @code_warntype geometric_spreading_piecewise(r, geod)
+        # @code_warntype equivalent_point_source_distance(r, m, pathf)
+        # @code_warntype equivalent_point_source_distance(r, m, pathd)
+        r_psf = equivalent_point_source_distance(r, m, pathf)
+        r_psd = equivalent_point_source_distance(r, m, pathd)
 
-        @code_warntype geometric_spreading_cy14(r, geof)
-        @code_warntype geometric_spreading_cy14(r, geod)
+        # @code_warntype geometric_spreading_piecewise(r, geof)
+        # @code_warntype geometric_spreading_piecewise(r, geod)
+        grf = geometric_spreading_piecewise(r, geof)
+        grd = geometric_spreading_piecewise(r, geod)
+        @test grf == grd.value
 
-        @code_warntype geometric_spreading(r, geof)
-        @code_warntype geometric_spreading(r, geod)
+        # @code_warntype geometric_spreading_cy14(r, geof)
+        # @code_warntype geometric_spreading_cy14(r, geod)
+        grf = geometric_spreading_cy14(r, geof)
+        grd = geometric_spreading_cy14(r, geod)
+        @test grf == grd.value
 
-        @time geometric_spreading(r, m, geof, sat)
-        @time geometric_spreading(r, m, geod, sat)
+        # @code_warntype geometric_spreading(r, geof)
+        # @code_warntype geometric_spreading(r, geod)
+
+        grf = geometric_spreading(r, m, geof, sat)
+        grd = geometric_spreading(r, m, geod, sat)
+        @test grf == grd.value
 
         f = 1.0
         r = 100.0
-        @code_warntype anelastic_attenuation(f, r, anef)
-        @code_warntype anelastic_attenuation(f, r, aned)
-
-        @time anelastic_attenuation(f, r, anef)
-        @time anelastic_attenuation(f, r, aned)
+        # @code_warntype anelastic_attenuation(f, r, anef)
+        # @code_warntype anelastic_attenuation(f, r, aned)
+        qrf = anelastic_attenuation(f, r, anef)
+        qrd = anelastic_attenuation(f, r, aned)
+        @test qrf == qrd.value
 
     end
 
@@ -150,8 +189,11 @@ using LinearAlgebra
         siteNd = SiteParameters(κ0d, :NaN)
 
         f = 0.05
-        @code_warntype site_amplification(f, site0f)
-        @code_warntype site_amplification(f, site0d)
+        # @code_warntype site_amplification(f, site0f)
+        # @code_warntype site_amplification(f, site0d)
+        Sff = site_amplification(f, site0f)
+        Sfd = site_amplification(f, site0d)
+        @test Sff == Sfd
 
         @time Af0f = site_amplification(f, site0f)
         @time Af1f = site_amplification(f, siteAf)
@@ -161,6 +203,7 @@ using LinearAlgebra
 
         @test Af0f == Af1f
         @test Af3f == 1.0
+        @test Af2f < Af1f
         @test isnan(Af4f)
 
         @time Af0d = site_amplification(f, site0d)
@@ -171,6 +214,7 @@ using LinearAlgebra
 
         @test Af0d == Af1d
         @test Af3d == 1.0
+        @test Af2d < Af1d
         @test isnan(Af4d)
 
         @test Af0f == Af0d
@@ -183,10 +227,11 @@ using LinearAlgebra
         @test Af0 == Af1
 
         f = 10.0
-        @code_warntype kappa_filter(f, siteAf)
-        @code_warntype kappa_filter(f, siteAd)
-        @time kappa_filter(f, siteAf)
-        @time kappa_filter(f, siteAd)
+        # @code_warntype kappa_filter(f, siteAf)
+        # @code_warntype kappa_filter(f, siteAd)
+        @time Kff = kappa_filter(f, siteAf)
+        @time Kfd = kappa_filter(f, siteAd)
+        @test Kff == Kfd.value
 
     end
 
@@ -202,7 +247,6 @@ using LinearAlgebra
         fi = [ 0.5, 1.0, 2.0 ]
 
         @code_warntype transfer(fi, sdof)
-        # @trace transfer(fi, sdof)
 
         @time Hfi = transfer(fi, sdof)
         tfi = 2 * fi
@@ -228,7 +272,6 @@ using LinearAlgebra
         fas = FourierParameters(src, path, site)
 
         # Boore & Thompson 2014
-
         m = 6.0
         fa, fb, ε = corner_frequency(m, src)
         Ds = 1.0 / fa
@@ -240,13 +283,20 @@ using LinearAlgebra
         fasf = FourierParameters(srcf, path, site)
         fasd = FourierParameters(srcd, path, site)
 
-        fa, fb, ε = corner_frequency(m, srcf)
-        @code_warntype boore_thompson_2014(m, 0.0, srcf)
-        fa, fb, ε = corner_frequency(m, srcd)
-        @code_warntype boore_thompson_2014(m, 0.0, srcd)
+        faf, fbf, εf = corner_frequency(m, srcf)
+        # @code_warntype boore_thompson_2014(m, 0.0, srcf)
+        Dsf = boore_thompson_2014(m, 0.0, srcf)
+        @test Dsf ≈ 1.0/faf
+        @test isnan(fbf)
+        @test isnan(εf)
+        fad, fbd, εd = corner_frequency(m, srcd)
+        # @code_warntype boore_thompson_2014(m, 0.0, srcd)
+        Dsd = boore_thompson_2014(m, 0.0, srcd)
+        @test Dsd ≈ 1.0/fad
+        @test isnan(fbd)
+        @test isnan(εd)
 
-
-        @code_warntype boore_thompson_2014(m, 0.0, fasf)
+        # @code_warntype boore_thompson_2014(m, 0.0, fasf)
         @test boore_thompson_2014(m, 0.0, fasf) ≈ Ds
         @test boore_thompson_2014(m, 0.0, fasd) ≈ Ds
 
@@ -264,36 +314,41 @@ using LinearAlgebra
         fa, fb, ε = corner_frequency(m, srcAS)
         Ds = 0.5 * ( 1.0 / fa + 1.0 / fb )
         @test boore_thompson_2014(m, 0.0, srcAS) ≈ Ds
+        @test isnan(fb) == false
+        @test isnan(ε) == false
+        @test fa < fb
 
-
-        h = 0.1
+        # test gradient of BT14 duration model w.r.t. magnitude
+        h = 0.05
         m1 = 8.0
         m2 = m1 + h
         r_ps1 = 1.0 + near_source_saturation(m1, fasf)
         r_ps2 = 1.0 + near_source_saturation(m2, fasf)
-
         Dex1 = boore_thompson_2014(m1, r_ps1, fasf)
         Dex2 = boore_thompson_2014(m2, r_ps2, fasf)
+        fdg = log(Dex2/Dex1)/h
 
-        log(Dex2/Dex1)/h
-
-        using ForwardDiff
         d(x) = log(boore_thompson_2014(x[1], 1.0 + near_source_saturation(x[1], fasf), fasf))
         gd(x) = ForwardDiff.gradient(d, x)
-        gd([8.0])[1]
+        adg = gd([8.0])[1]
+
+        @test fdg ≈ adg atol=1e-2
 
 
         rvt = RandomVibrationParameters(:BT14)
-        @code_warntype excitation_duration(m, r, fasf, rvt)
-        @code_warntype excitation_duration(m, r, fasd, rvt)
+        # @code_warntype excitation_duration(m, r, fasf, rvt)
+        # @code_warntype excitation_duration(m, r, fasd, rvt)
+        Dexf = excitation_duration(m, r, fasf, rvt)
+        Dexd = excitation_duration(m, r, fasd, rvt)
+        @test Dexf == Dexd.value
 
 
         c11 = [ 8.4312e-01, -2.8671e-02, 2.0,  1.7316e+00,  1.1695e+00,  2.1671e+00,  9.6224e-01 ]
         c11f = boore_thompson_2012_coefs(1, 1)
+        @test c11f[1] == c11[1]
+        @test all(isapprox.(c11, c11f))
 
-        @code_warntype boore_thompson_2012_coefs(1, 1)
-
-        @time c = boore_thompson_2012_coefs(1, 1)
+        # @code_warntype boore_thompson_2012_coefs(1, 1)
 
         m = 8.0
         r = 1.0
@@ -305,42 +360,26 @@ using LinearAlgebra
         # define the η parameter as T_n/Dex
         η = T_n / Dex
 
-        @time boore_thompson_2012_base(η, c, ζ)
-        @code_warntype boore_thompson_2012_base(η, c, ζ)
-
-        Dex = boore_thompson_2014(m, r, srcd)
-        # get the oscillator period
-        sdof = Oscillator(1.0)
-        T_n = period(sdof)
-        ζ = sdof.ζ_n
-        # define the η parameter as T_n/Dex
-        η = T_n / Dex
-
-        @time boore_thompson_2012_base(η, c, ζ)
-        @code_warntype boore_thompson_2012_base(η, c, ζ)
-
-        @time boore_thompson_2012(m, r, srcf, sdof, rvt)
-        @code_warntype boore_thompson_2012(m, r, srcf, sdof, rvt)
-        # @trace boore_thompson_2012(m, r, srcf, sdof, rvt)
-
-        @time boore_thompson_2012(m, r, srcd, sdof, rvt)
-        @code_warntype boore_thompson_2012(m, r, srcd, sdof, rvt)
-
-
-        @test all(isapprox.(c11, c11f))
+        # @time c = boore_thompson_2012_coefs(1, 1)
+        # @time boore_thompson_2012_base(η, c, ζ)
+        #
+        # @time boore_thompson_2012(m, r, srcf, sdof, rvt)
+        # @code_warntype boore_thompson_2012(m, r, srcf, sdof, rvt)
+        #
+        # @time boore_thompson_2012(m, r, srcd, sdof, rvt)
+        # @code_warntype boore_thompson_2012(m, r, srcd, sdof, rvt)
 
         sdof = Oscillator(1.0)
 
-        Drms, Dex, Dratio = boore_thompson_2012(6.0, 10.0, fas, sdof, rvt)
-        Dex0 = boore_thompson_2014(6.0, 10.0, fas)
+        Drms, Dex, Dratio = boore_thompson_2012(m, r, fas, sdof, rvt)
+        Dex0 = boore_thompson_2014(m, r, fas)
 
         @test Dex == Dex0
 
-        @code_warntype rms_duration(m, r, srcf, path, sdof, rvt)
-        @code_warntype rms_duration(m, r, srcd, path, sdof, rvt)
-
-        @code_warntype rms_duration(m, r, fasf, sdof, rvt)
-        @code_warntype rms_duration(m, r, fasd, sdof, rvt)
+        # @code_warntype rms_duration(m, r, srcf, path, sdof, rvt)
+        # @code_warntype rms_duration(m, r, srcd, path, sdof, rvt)
+        # @code_warntype rms_duration(m, r, fasf, sdof, rvt)
+        # @code_warntype rms_duration(m, r, fasd, sdof, rvt)
 
         @time Drmsf, Dexf, Dratiof = rms_duration(m, r, fasf, sdof, rvt)
         @time Drmsd, Dexd, Dratiod = rms_duration(m, r, fasd, sdof, rvt)
@@ -392,14 +431,23 @@ using LinearAlgebra
         fasd = FourierParameters(srcd, pathd, sited)
         fasm = FourierParameters(srcf, pathm, sited)
 
+        Tf = get_parametric_type(fasf)
+        Td = get_parametric_type(fasd)
+        Tm = get_parametric_type(fasm)
+        @test Tf == Float64
+        @test Td <: Dual
+        @test Tm <: Dual
+        @test Td == Tm
 
-        @code_warntype fourier_constant(srcf)
-        @time fourier_constant(srcf)
-        @time fourier_constant(fasf)
+        # @code_warntype fourier_constant(srcf)
+        Cfs = fourier_constant(srcf)
+        Cff = fourier_constant(fasf)
+        @test Cfs == Cff
 
-        @code_warntype fourier_constant(srcd)
-        @time fourier_constant(srcd)
-        @time fourier_constant(fasd)
+        # @code_warntype fourier_constant(srcd)
+        Cfsd = fourier_constant(srcd)
+        Cffd = fourier_constant(fasd)
+        @test Cfsd == Cffd
 
         f = 1.0
         m = 6.0
