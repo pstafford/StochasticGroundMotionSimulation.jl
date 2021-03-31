@@ -26,8 +26,8 @@ end
 SourceParameters(Δσ::T) where {T<:Float64} = SourceParameters(Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, :Brune)
 SourceParameters(Δσ::T) where {T<:Real} = SourceParameters(Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, :Brune)
 SourceParameters(Δσ::T, model::Symbol) where {T<:Real} = SourceParameters(Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, model)
-SourceParameters{S, T}(Δσ::T, βs::S, ρs::S) where {S<:Float64,T<:Real} = SourceParameters(Δσ, 0.55, 1.0/sqrt(2.0), 2.0, βs, ρs, :Brune)
-SourceParameters{T, T}(Δσ::T, βs::T, ρs::T) where {T<:Float64} = SourceParameters(Δσ, 0.55, 1.0/sqrt(2.0), 2.0, βs, ρs, :Brune)
+SourceParameters(Δσ::T, βs::S, ρs::S) where {S<:Float64,T<:Real} = SourceParameters(Δσ, 0.55, 1.0/sqrt(2.0), 2.0, βs, ρs, :Brune)
+SourceParameters(Δσ::T, βs::T, ρs::T) where {T<:Float64} = SourceParameters(Δσ, 0.55, 1.0/sqrt(2.0), 2.0, βs, ρs, :Brune)
 
 """
 	get_parametric_type(src::SourceParameters{S,T}) where {S,T} = T
@@ -99,11 +99,11 @@ end
 
 NearSourceSaturationParameters(model::Symbol) = NearSourceSaturationParameters(Vector{Float64}(), Vector{Float64}(), Vector{Float64}(), BitVector(), 2, model)
 NearSourceSaturationParameters(exponent::Int, model::Symbol) = NearSourceSaturationParameters(Vector{Float64}(), Vector{Float64}(), Vector{Float64}(), BitVector(), exponent, model)
-NearSourceSaturationParameters{T,T,U}(mRefi::Vector{T}, hconi::Vector{T}, model::Symbol) where {T,U} = NearSourceSaturationParameters(mRefi, hconi, Vector{T}(), BitVector(undef, length(hconi)), 2, model)
-NearSourceSaturationParameters{S,T,U}(mRefi::Vector{S}, hvari::Vector{T}, model::Symbol) where {S,T,U} = NearSourceSaturationParameters(mRefi, Vector{S}(), hvari, BitVector(ones(length(hvari))), 2, model)
+NearSourceSaturationParameters(mRefi::Vector{T}, hconi::Vector{T}, model::Symbol) where {T} = NearSourceSaturationParameters(mRefi, hconi, Vector{T}(), BitVector(undef, length(hconi)), 2, model)
+NearSourceSaturationParameters(mRefi::Vector{S}, hvari::Vector{T}, model::Symbol) where {S,T} = NearSourceSaturationParameters(mRefi, Vector{S}(), hvari, BitVector(ones(length(hvari))), 2, model)
 
-NearSourceSaturationParameters{T,T,U}(mRefi::Vector{T}, hconi::Vector{T}) where {T,U} = NearSourceSaturationParameters(mRefi, hconi, Vector{T}(), BitVector(undef, length(hconi)), 2, :FullyConstrained)
-NearSourceSaturationParameters{S,T,U}(mRefi::Vector{S}, hvari::Vector{T}) where {S,T,U} = NearSourceSaturationParameters(mRefi, Vector{S}(), hvari, BitVector(ones(length(hvari))), 2, :FullyVariable)
+NearSourceSaturationParameters(mRefi::Vector{T}, hconi::Vector{T}) where {T} = NearSourceSaturationParameters(mRefi, hconi, Vector{T}(), BitVector(undef, length(hconi)), 2, :FullyConstrained)
+NearSourceSaturationParameters(mRefi::Vector{S}, hvari::Vector{T}) where {S,T} = NearSourceSaturationParameters(mRefi, Vector{S}(), hvari, BitVector(ones(length(hvari))), 2, :FullyVariable)
 
 # specialisation for a constant saturation term
 NearSourceSaturationParameters(hcon::Float64) = NearSourceSaturationParameters(Vector{Float64}(), [ hcon ], Vector{Float64}(), BitVector(undef,1), 2, :ConstantConstrained)

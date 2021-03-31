@@ -275,7 +275,7 @@ end
 	equivalent_point_source_distance(r, m, sat::NearSourceSaturationParameters)
 
 Compute equivalent point source distance
-- `r` is r_hyp or r_rup (depending upon the size of the event -- but is nominally r_rup)
+- `r` is ``r_{hyp}`` or ``r_{rup}`` (depending upon the size of the event -- but is nominally ``r_{rup}``)
 - `m` is magnitude
 - `sat` contains the `NearSourceSaturationParameters`
 
