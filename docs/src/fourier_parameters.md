@@ -20,7 +20,7 @@ The type `PathParameters` holds the properties required to define the path scali
 
 This type also hold instances of three other custom types that define aspects of the path scaling:
 - `GeometricSpreadingParameters` defined in [Geometric Spreading](@ref)
-- `NearSourceSaturationParameters` defined in [Near-source Saturation](@ref)
+- `NearSourceSaturationParameters` defined in [Near Source Saturation](@ref)
 - `AnelasticAttenuationParameters` defined in [Anelastic Attenuation](@ref)
 
 ### Geometric Spreading
@@ -29,7 +29,7 @@ This type also hold instances of three other custom types that define aspects of
 GeometricSpreadingParameters
 ```
 
-### Near-source Saturation
+### Near Source Saturation
 
 ```docs
 NearSourceSaturationParameters
