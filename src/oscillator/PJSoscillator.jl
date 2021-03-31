@@ -1,6 +1,6 @@
 
 """
-    Oscillator{T<:Real}
+    Oscillator
 
 Custom type to represent a SDOF oscillator. The type has two fields:
   - `f_n` is the natural frequency of the oscillator
@@ -11,7 +11,7 @@ Custom type to represent a SDOF oscillator. The type has two fields:
     sdof = Oscillator( 1.0, 0.05 )
 ```
 """
-struct Oscillator{T<:Real}
+struct Oscillator{T<:Float64}
     f_n::T
     ζ_n::T
 end
@@ -29,7 +29,7 @@ Default initializer setting the damping ratio to 5% of critical
     sdof = Oscillator(f_n)
 ```
 """
-Oscillator(f_n) = Oscillator(f_n, 0.05)
+Oscillator(f_n::T) where {T<:Float64} = Oscillator(f_n, 0.05)
 
 
 """
@@ -42,7 +42,7 @@ function period(sdof::Oscillator)
 end
 
 """
-    transfer(f::T, sdof::Oscillator{T}) where {T<:Real}
+    transfer(f::T, sdof::Oscillator) where {T<:Real}
 
 Compute the modulus of the transfer function for a SDOF system
 
@@ -53,7 +53,7 @@ Compute the modulus of the transfer function for a SDOF system
     Hf = transfer(f, sdof)
 ```
 """
-function transfer(f::T, sdof::Oscillator{T}) where T<:Real
+function transfer(f, sdof::Oscillator)
     # tuning ratio
     β = f / sdof.f_n
     return 1.0 / sqrt( (1.0 - β^2)^2 + (2sdof.ζ_n*β)^2 )
@@ -61,28 +61,7 @@ end
 
 
 """
-	squared_transfer(f::T, sdof::Oscillator{T}) where T<:Real
-
-Compute the square of the transfer function for a SDOF system, `sdof`, at frequency `f`.
-Inputs must derive from the `Real` type (and so is differentiable with `ForwardDiff`)
-
-# Examples
-```julia-repl
-	f = 2.0
-	# create sdof with natural frequency f_n=1.0 and damping ζ=0.05
-	sdof = Oscillator(1.0, 0.05)
-	Hf2 = squared_transfer(f, sdof)
-```
-"""
-function squared_transfer(f::T, sdof::Oscillator{T}) where T<:Real
-    # tuning ratio
-    β = f / sdof.f_n
-    return 1.0 / ( (1.0 - β^2)^2 + (2sdof.ζ_n*β)^2 )
-end
-
-
-"""
-	squared_transfer(f, sdof::Oscillator )
+	squared_transfer(f, sdof::Oscillator)
 
 Compute the square of the transfer function for a SDOF system, `sdof`, at frequency `f`.
 
@@ -102,7 +81,7 @@ end
 
 
 """
-    transfer(f::Vector{T}, sdof::Oscillator{T}) where T<:Real
+    transfer(f::Vector{T}, sdof::Oscillator) where T<:Real
 
 Computes the modulus of the transfer function of a SDOF for a vector of frequencies
   - `f::Vector` is the vector of frequencies
@@ -115,18 +94,18 @@ Computes the modulus of the transfer function of a SDOF for a vector of frequenc
   Hf = transfer(f, sdof)
 ```
 """
-function transfer(f::Vector{T}, sdof::Oscillator{T}) where T<:Real
+function transfer(f::Vector{T}, sdof::Oscillator) where T<:Real
     # tuning ratio
     Hf = similar(f)
-    for i = 1:length(f)
-        @inbounds Hf[i] = transfer(f[i],sdof)
+    for i in 1:length(f)
+        @inbounds Hf[i] = transfer(f[i], sdof)
     end
     return Hf
 end
 
 
 """
-    transfer!(Hf::Vector{T}, f::Vector{T}, sdof::Oscillator{T}) where T<:Real
+    transfer!(Hf::Vector{T}, f::Vector{T}, sdof::Oscillator) where T<:Real
 
 Computes the modulus of the transfer function of a SDOF for a vector of frequencies in place
 	- `Hf::Vector` is the pre-allocated vector into which the results are stored
@@ -141,15 +120,15 @@ Computes the modulus of the transfer function of a SDOF for a vector of frequenc
     transfer!(Hf, f, sdof)
 ```
 """
-function transfer!(Hf::Vector{T}, f::Vector{T}, sdof::Oscillator{T}) where T<:Real
-	for i = 1:length(f)
+function transfer!(Hf::Vector{T}, f::Vector{T}, sdof::Oscillator) where T<:Real
+	for i in 1:length(f)
 		@inbounds Hf[i] = transfer(f[i],sdof)
 	end
-	nothing
+	return nothing
 end
 
 """
-    squared_transfer!(Hf2::Vector{T}, f::Vector{T}, sdof::Oscillator{T}) where T<:Real
+    squared_transfer!(Hf2::Vector{T}, f::Vector{T}, sdof::Oscillator) where T<:Real
 
 Computes the square of the modulus of the transfer function of a SDOF for a vector of frequencies in place:
 	- `Hf2::Vector` is the pre-allocated vector into which the results are stored
@@ -165,11 +144,11 @@ Inputs derive from the `Real` type and so are differentiable.
     squared_transfer!(Hf2, f, sdof)
 ```
 """
-function squared_transfer!(Hf2::Vector{T}, f::Vector{T}, sdof::Oscillator{T}) where T<:Real
-	for i = 1:length(f)
+function squared_transfer!(Hf2::Vector{T}, f::Vector{T}, sdof::Oscillator) where T<:Real
+	for i in 1:length(f)
 		@inbounds Hf2[i] = squared_transfer(f[i],sdof)
 	end
-	nothing
+	return nothing
 end
 
 """
@@ -189,8 +168,8 @@ Computes the square of the modulus of the transfer function of a SDOF for a vect
 ```
 """
 function squared_transfer!(Hf2::Vector, f::Vector, sdof::Oscillator)
-	for i = 1:length(f)
+	for i in 1:length(f)
 		Hf2[i] = squared_transfer(f[i],sdof)
 	end
-	nothing
+	return nothing
 end

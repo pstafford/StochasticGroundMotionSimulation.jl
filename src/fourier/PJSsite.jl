@@ -5,7 +5,7 @@ const fii_b16 = [ 0.010, 0.015, 0.021, 0.031, 0.045, 0.065, 0.095, 0.138, 0.200,
 const Aii_b16 = [ 1.00, 1.01, 1.02, 1.02, 1.04, 1.06, 1.09, 1.13, 1.18, 1.25, 1.32, 1.41, 1.51, 1.64, 1.80, 1.99, 2.18, 2.38, 2.56, 2.75, 2.95, 3.17, 3.42, 3.68, 3.96 ]
 
 """
-	boore_2016_generic_amplification(f::Real)
+	boore_2016_generic_amplification(f)
 
 Computes the generic crustal amplification for a WUS velocity profile with Vs30 of 760 m/s using the Boore (2016) velocity model.
 
@@ -15,26 +15,29 @@ Computes the generic crustal amplification for a WUS velocity profile with Vs30 
 	Af = boore_2016_generic_amplification(f)
 ```
 """
-function boore_2016_generic_amplification(f::Real)
-    if f <= 0.01
-        return 1.0
-    elseif f >= 80.0
-        return 3.96
+function boore_2016_generic_amplification(f::T) where T<:Real
+    if isnan(f)
+        return T(NaN)
     else
-        for i = 1:length(fii_b16)
-            @inbounds if fii_b16[i] > f
-                j = i-1
-                @inbounds if fii_b16[j] == f
-                    @inbounds amp = Aii_b16[j]
-                    return amp
-                else
-                    @inbounds amp = Aii_b16[j] + (f-fii_b16[j])*(Aii_b16[i]-Aii_b16[j])/(fii_b16[i]-fii_b16[j])
-                    return amp
+        if f <= 0.01
+            return 1.0
+        elseif f >= 80.0
+            return 3.96
+        else
+            for i = 1:length(fii_b16)
+                @inbounds if fii_b16[i] > f
+                    j = i-1
+                    @inbounds if fii_b16[j] == f
+                        @inbounds amp = Aii_b16[j]
+                        return amp
+                    else
+                        @inbounds lnAmp = log(Aii_b16[j]) + (f-fii_b16[j])*log(Aii_b16[i]/Aii_b16[j])/(fii_b16[i]-fii_b16[j])
+                        return exp(lnAmp)
+                    end
                 end
             end
         end
     end
-    return NaN::Real
 end
 
 
@@ -77,7 +80,7 @@ const Aii_aa21_cy14_j = [ 3.689114, 3.704366, 3.719671, 3.735033, 3.750447, 3.76
 
 
 """
-	alatik_2021_cy14_inverted_amplification_seg(f::Real)
+	alatik_2021_cy14_inverted_amplification_seg(f::T) where T<:Real
 
 Computes the generic crustal amplification for a velocity profile with Vs30 of 760 m/s obtained from inverting the Chiou & Youngs (2014) ground-motion model.
 
@@ -91,156 +94,159 @@ Same as alatik_2021_cy14_inverted_amplification, just segmented to speed up the 
 	Af = alatik_2021_cy14_inverted_amplification_seg(f)
 ```
 """
-function alatik_2021_cy14_inverted_amplification_seg(f::Real)
-    if f <= 0.01
-        return 1.0
-    elseif f <= 0.199526
-        for i = 1:length(fii_aa21_cy14_a)
-            @inbounds if fii_aa21_cy14_a[i] > f
-                j = i-1
-                @inbounds if fii_aa21_cy14_a[j] == f
-                    @inbounds amp = Aii_aa21_cy14_a[j]
-                    return amp
-                else
-                    @inbounds amp = Aii_aa21_cy14_a[j] + (f-fii_aa21_cy14_a[j])*(Aii_aa21_cy14_a[i]-Aii_aa21_cy14_a[j])/(fii_aa21_cy14_a[i]-fii_aa21_cy14_a[j])
-                    return amp
-                end
-            end
-        end
-        return Aii_aa21_cy14_a[end]
-    elseif f <= 0.398107
-        for i = 1:length(fii_aa21_cy14_b)
-            @inbounds if fii_aa21_cy14_b[i] > f
-                j = i-1
-                @inbounds if fii_aa21_cy14_b[j] == f
-                    @inbounds amp = Aii_aa21_cy14_b[j]
-                    return amp
-                else
-                    @inbounds amp = Aii_aa21_cy14_b[j] + (f-fii_aa21_cy14_b[j])*(Aii_aa21_cy14_b[i]-Aii_aa21_cy14_b[j])/(fii_aa21_cy14_b[i]-fii_aa21_cy14_b[j])
-                    return amp
-                end
-            end
-        end
-        return Aii_aa21_cy14_b[end]
-    elseif f <= 0.794328
-        for i = 1:length(fii_aa21_cy14_c)
-            @inbounds if fii_aa21_cy14_c[i] > f
-                j = i-1
-                @inbounds if fii_aa21_cy14_c[j] == f
-                    @inbounds amp = Aii_aa21_cy14_c[j]
-                    return amp
-                else
-                    @inbounds amp = Aii_aa21_cy14_c[j] + (f-fii_aa21_cy14_c[j])*(Aii_aa21_cy14_c[i]-Aii_aa21_cy14_c[j])/(fii_aa21_cy14_c[i]-fii_aa21_cy14_c[j])
-                    return amp
-                end
-            end
-        end
-        return Aii_aa21_cy14_c[end]
-    elseif f <= 1.584893
-        for i = 1:length(fii_aa21_cy14_d)
-            @inbounds if fii_aa21_cy14_d[i] > f
-                j = i-1
-                @inbounds if fii_aa21_cy14_d[j] == f
-                    @inbounds amp = Aii_aa21_cy14_d[j]
-                    return amp
-                else
-                    @inbounds amp = Aii_aa21_cy14_d[j] + (f-fii_aa21_cy14_d[j])*(Aii_aa21_cy14_d[i]-Aii_aa21_cy14_d[j])/(fii_aa21_cy14_d[i]-fii_aa21_cy14_d[j])
-                    return amp
-                end
-            end
-        end
-        return Aii_aa21_cy14_d[end]
-    elseif f <= 3.162278
-        for i = 1:length(fii_aa21_cy14_e)
-            @inbounds if fii_aa21_cy14_e[i] > f
-                j = i-1
-                @inbounds if fii_aa21_cy14_e[j] == f
-                    @inbounds amp = Aii_aa21_cy14_e[j]
-                    return amp
-                else
-                    @inbounds amp = Aii_aa21_cy14_e[j] + (f-fii_aa21_cy14_e[j])*(Aii_aa21_cy14_e[i]-Aii_aa21_cy14_e[j])/(fii_aa21_cy14_e[i]-fii_aa21_cy14_e[j])
-                    return amp
-                end
-            end
-        end
-        return Aii_aa21_cy14_e[end]
-    elseif f <= 6.309573
-        for i = 1:length(fii_aa21_cy14_f)
-            @inbounds if fii_aa21_cy14_f[i] > f
-                j = i-1
-                @inbounds if fii_aa21_cy14_f[j] == f
-                    @inbounds amp = Aii_aa21_cy14_f[j]
-                    return amp
-                else
-                    @inbounds amp = Aii_aa21_cy14_f[j] + (f-fii_aa21_cy14_f[j])*(Aii_aa21_cy14_f[i]-Aii_aa21_cy14_f[j])/(fii_aa21_cy14_f[i]-fii_aa21_cy14_f[j])
-                    return amp
-                end
-            end
-        end
-        return Aii_aa21_cy14_f[end]
-    elseif f <= 12.589251
-        for i = 1:length(fii_aa21_cy14_g)
-            @inbounds if fii_aa21_cy14_g[i] > f
-                j = i-1
-                @inbounds if fii_aa21_cy14_g[j] == f
-                    @inbounds amp = Aii_aa21_cy14_g[j]
-                    return amp
-                else
-                    @inbounds amp = Aii_aa21_cy14_g[j] + (f-fii_aa21_cy14_g[j])*(Aii_aa21_cy14_g[i]-Aii_aa21_cy14_g[j])/(fii_aa21_cy14_g[i]-fii_aa21_cy14_g[j])
-                    return amp
-                end
-            end
-        end
-        return Aii_aa21_cy14_g[end]
-    elseif f <= 25.032
-        for i = 1:length(fii_aa21_cy14_h)
-            @inbounds if fii_aa21_cy14_h[i] > f
-                j = i-1
-                @inbounds if fii_aa21_cy14_h[j] == f
-                    @inbounds amp = Aii_aa21_cy14_h[j]
-                    return amp
-                else
-                    @inbounds amp = Aii_aa21_cy14_h[j] + (f-fii_aa21_cy14_h[j])*(Aii_aa21_cy14_h[i]-Aii_aa21_cy14_h[j])/(fii_aa21_cy14_h[i]-fii_aa21_cy14_h[j])
-                    return amp
-                end
-            end
-        end
-        return Aii_aa21_cy14_h[end]
-    elseif f <= 50.032
-        for i = 1:length(fii_aa21_cy14_i)
-            @inbounds if fii_aa21_cy14_i[i] > f
-                j = i-1
-                @inbounds if fii_aa21_cy14_i[j] == f
-                    @inbounds amp = Aii_aa21_cy14_i[j]
-                    return amp
-                else
-                    @inbounds amp = Aii_aa21_cy14_i[j] + (f-fii_aa21_cy14_i[j])*(Aii_aa21_cy14_i[i]-Aii_aa21_cy14_i[j])/(fii_aa21_cy14_i[i]-fii_aa21_cy14_i[j])
-                    return amp
-                end
-            end
-        end
-        return Aii_aa21_cy14_i[end]
-    elseif f < 100.0
-        for i = 1:length(fii_aa21_cy14_j)
-            @inbounds if fii_aa21_cy14_j[i] > f
-                j = i-1
-                @inbounds if fii_aa21_cy14_j[j] == f
-                    @inbounds amp = Aii_aa21_cy14_j[j]
-                    return amp
-                else
-                    @inbounds amp = Aii_aa21_cy14_j[j] + (f-fii_aa21_cy14_j[j])*(Aii_aa21_cy14_j[i]-Aii_aa21_cy14_j[j])/(fii_aa21_cy14_j[i]-fii_aa21_cy14_j[j])
-                    return amp
-                end
-            end
-        end
+function alatik_2021_cy14_inverted_amplification_seg(f::T) where T<:Real
+    if isnan(f)
+        return T(NaN)
     else
-        return 4.170967
+        if f <= 0.01
+            return 1.0
+        elseif f <= 0.199526
+            for i in 1:length(fii_aa21_cy14_a)
+                @inbounds if fii_aa21_cy14_a[i] > f
+                    j = i-1
+                    @inbounds if fii_aa21_cy14_a[j] == f
+                        @inbounds amp = Aii_aa21_cy14_a[j]
+                        return amp
+                    else
+                        @inbounds lnAmp = log(Aii_aa21_cy14_a[j]) + (f-fii_aa21_cy14_a[j])*log(Aii_aa21_cy14_a[i]/Aii_aa21_cy14_a[j])/(fii_aa21_cy14_a[i]-fii_aa21_cy14_a[j])
+                        return exp(lnAmp)
+                    end
+                end
+            end
+            return Aii_aa21_cy14_a[end]
+        elseif f <= 0.398107
+            for i in 1:length(fii_aa21_cy14_b)
+                @inbounds if fii_aa21_cy14_b[i] > f
+                    j = i-1
+                    @inbounds if fii_aa21_cy14_b[j] == f
+                        @inbounds amp = Aii_aa21_cy14_b[j]
+                        return amp
+                    else
+                        @inbounds lnAmp = log(Aii_aa21_cy14_b[j]) + (f-fii_aa21_cy14_b[j])*log(Aii_aa21_cy14_b[i]/Aii_aa21_cy14_b[j])/(fii_aa21_cy14_b[i]-fii_aa21_cy14_b[j])
+                        return exp(lnAmp)
+                    end
+                end
+            end
+            return Aii_aa21_cy14_b[end]
+        elseif f <= 0.794328
+            for i in 1:length(fii_aa21_cy14_c)
+                @inbounds if fii_aa21_cy14_c[i] > f
+                    j = i-1
+                    @inbounds if fii_aa21_cy14_c[j] == f
+                        @inbounds amp = Aii_aa21_cy14_c[j]
+                        return amp
+                    else
+                        @inbounds lnAmp = log(Aii_aa21_cy14_c[j]) + (f-fii_aa21_cy14_c[j])*log(Aii_aa21_cy14_c[i]/Aii_aa21_cy14_c[j])/(fii_aa21_cy14_c[i]-fii_aa21_cy14_c[j])
+                        return exp(lnAmp)
+                    end
+                end
+            end
+            return Aii_aa21_cy14_c[end]
+        elseif f <= 1.584893
+            for i in 1:length(fii_aa21_cy14_d)
+                @inbounds if fii_aa21_cy14_d[i] > f
+                    j = i-1
+                    @inbounds if fii_aa21_cy14_d[j] == f
+                        @inbounds amp = Aii_aa21_cy14_d[j]
+                        return amp
+                    else
+                        @inbounds lnAmp = log(Aii_aa21_cy14_d[j]) + (f-fii_aa21_cy14_d[j])*log(Aii_aa21_cy14_d[i]/Aii_aa21_cy14_d[j])/(fii_aa21_cy14_d[i]-fii_aa21_cy14_d[j])
+                        return exp(lnAmp)
+                    end
+                end
+            end
+            return Aii_aa21_cy14_d[end]
+        elseif f <= 3.162278
+            for i in 1:length(fii_aa21_cy14_e)
+                @inbounds if fii_aa21_cy14_e[i] > f
+                    j = i-1
+                    @inbounds if fii_aa21_cy14_e[j] == f
+                        @inbounds amp = Aii_aa21_cy14_e[j]
+                        return amp
+                    else
+                        @inbounds lnAmp = log(Aii_aa21_cy14_e[j]) + (f-fii_aa21_cy14_e[j])*log(Aii_aa21_cy14_e[i]/Aii_aa21_cy14_e[j])/(fii_aa21_cy14_e[i]-fii_aa21_cy14_e[j])
+                        return exp(lnAmp)
+                    end
+                end
+            end
+            return Aii_aa21_cy14_e[end]
+        elseif f <= 6.309573
+            for i in 1:length(fii_aa21_cy14_f)
+                @inbounds if fii_aa21_cy14_f[i] > f
+                    j = i-1
+                    @inbounds if fii_aa21_cy14_f[j] == f
+                        @inbounds amp = Aii_aa21_cy14_f[j]
+                        return amp
+                    else
+                        @inbounds lnAmp = log(Aii_aa21_cy14_f[j]) + (f-fii_aa21_cy14_f[j])*log(Aii_aa21_cy14_f[i]/Aii_aa21_cy14_f[j])/(fii_aa21_cy14_f[i]-fii_aa21_cy14_f[j])
+                        return exp(lnAmp)
+                    end
+                end
+            end
+            return Aii_aa21_cy14_f[end]
+        elseif f <= 12.589251
+            for i in 1:length(fii_aa21_cy14_g)
+                @inbounds if fii_aa21_cy14_g[i] > f
+                    j = i-1
+                    @inbounds if fii_aa21_cy14_g[j] == f
+                        @inbounds amp = Aii_aa21_cy14_g[j]
+                        return amp
+                    else
+                        @inbounds lnAmp = log(Aii_aa21_cy14_g[j]) + (f-fii_aa21_cy14_g[j])*log(Aii_aa21_cy14_g[i]/Aii_aa21_cy14_g[j])/(fii_aa21_cy14_g[i]-fii_aa21_cy14_g[j])
+                        return exp(lnAmp)
+                    end
+                end
+            end
+            return Aii_aa21_cy14_g[end]
+        elseif f <= 25.032
+            for i in 1:length(fii_aa21_cy14_h)
+                @inbounds if fii_aa21_cy14_h[i] > f
+                    j = i-1
+                    @inbounds if fii_aa21_cy14_h[j] == f
+                        @inbounds amp = Aii_aa21_cy14_h[j]
+                        return amp
+                    else
+                        @inbounds lnAmp = log(Aii_aa21_cy14_h[j]) + (f-fii_aa21_cy14_h[j])*log(Aii_aa21_cy14_h[i]/Aii_aa21_cy14_h[j])/(fii_aa21_cy14_h[i]-fii_aa21_cy14_h[j])
+                        return exp(lnAmp)
+                    end
+                end
+            end
+            return Aii_aa21_cy14_h[end]
+        elseif f <= 50.032
+            for i in 1:length(fii_aa21_cy14_i)
+                @inbounds if fii_aa21_cy14_i[i] > f
+                    j = i-1
+                    @inbounds if fii_aa21_cy14_i[j] == f
+                        @inbounds amp = Aii_aa21_cy14_i[j]
+                        return amp
+                    else
+                        @inbounds lnAmp = log(Aii_aa21_cy14_i[j]) + (f-fii_aa21_cy14_i[j])*log(Aii_aa21_cy14_i[i]/Aii_aa21_cy14_i[j])/(fii_aa21_cy14_i[i]-fii_aa21_cy14_i[j])
+                        return exp(lnAmp)
+                    end
+                end
+            end
+            return Aii_aa21_cy14_i[end]
+        elseif f < 100.0
+            for i in 1:length(fii_aa21_cy14_j)
+                @inbounds if fii_aa21_cy14_j[i] > f
+                    j = i-1
+                    @inbounds if fii_aa21_cy14_j[j] == f
+                        @inbounds amp = Aii_aa21_cy14_j[j]
+                        return amp
+                    else
+                        @inbounds lnAmp = log(Aii_aa21_cy14_j[j]) + (f-fii_aa21_cy14_j[j])*log(Aii_aa21_cy14_j[i]/Aii_aa21_cy14_j[j])/(fii_aa21_cy14_j[i]-fii_aa21_cy14_j[j])
+                        return exp(lnAmp)
+                    end
+                end
+            end
+        else
+            return 4.170967
+        end
     end
-    return NaN::Real
 end
 
 """
-	alatik_2021_cy14_inverted_amplification(f::Real)
+	alatik_2021_cy14_inverted_amplification(f::T) where T<:Real
 
 Computes the generic crustal amplification for a velocity profile with Vs30 of 760 m/s obtained from inverting the Chiou & Youngs (2014) ground-motion model.
 
@@ -252,26 +258,29 @@ Amplifications provided ahead of Al Atik & Abrahamson (2021) publication.
 	Af = alatik_2021_cy14_inverted_amplification(f)
 ```
 """
-function alatik_2021_cy14_inverted_amplification(f::Real)
-    if f <= 0.01
-        return 1.0
-    elseif f >= 100.0
-        return 4.170967
+function alatik_2021_cy14_inverted_amplification(f::T) where T<:Real
+    if isnan(f)
+        return T(NaN)
     else
-        for i = 1:length(fii_aa21_cy14)
-            @inbounds if fii_aa21_cy14[i] > f
-                j = i-1
-                @inbounds if fii_aa21_cy14[j] == f
-                    @inbounds amp = Aii_aa21_cy14[j]
-                    return amp
-                else
-                    @inbounds amp = Aii_aa21_cy14[j] + (f-fii_aa21_cy14[j])*(Aii_aa21_cy14[i]-Aii_aa21_cy14[j])/(fii_aa21_cy14[i]-fii_aa21_cy14[j])
-                    return amp
+        if f <= 0.01
+            return 1.0
+        elseif f >= 100.0
+            return 4.170967
+        else
+            for i in 1:length(fii_aa21_cy14)
+                @inbounds if fii_aa21_cy14[i] > f
+                    j = i-1
+                    @inbounds if fii_aa21_cy14[j] == f
+                        @inbounds amp = Aii_aa21_cy14[j]
+                        return amp
+                    else
+                        @inbounds lnAmp = log(Aii_aa21_cy14[j]) + (f-fii_aa21_cy14[j])*log(Aii_aa21_cy14[i]/Aii_aa21_cy14[j])/(fii_aa21_cy14[i]-fii_aa21_cy14[j])
+                        return exp(lnAmp)
+                    end
                 end
             end
         end
     end
-    return NaN::Real
 end
 
 
@@ -293,7 +302,7 @@ end
 
 
 """
-	site_amplification(f::Real; amp_model::Symbol=:AlAtik2021_cy14)
+	site_amplification(f::Real, amp_model::Symbol)
 
 Computes the site amplification (impedance) for a given frequency `f`. Requires the keyword argument `amp_model` as a `String` and defaults to the Boore (2016) model. Currently, any other string passed to the function will return the unit amplification
 
@@ -309,13 +318,38 @@ Computes the site amplification (impedance) for a given frequency `f`. Requires 
 	Af = site_amplification(f; amp_model=:Unit)
 ```
 """
-function site_amplification(f::Real; amp_model::Symbol=:AlAtik2021_cy14 )
-    if amp_model == :Unit
-        return unit_generic_amplification()
-    elseif amp_model == :Boore2016
+function site_amplification(f::T, model::Symbol) where T<:Real
+    if model == :Unit
+        return unit_generic_amplification() * oneunit(T)
+    elseif model == :Boore2016
         return boore_2016_generic_amplification(f)
-    else
-        # make the default return the same as the default argument in the function call
+    elseif model == :AlAtik2021_cy14
         return alatik_2021_cy14_inverted_amplification_seg(f)
+	else
+		return T(NaN)
     end
+end
+
+"""
+	site_amplification(f, site::SiteParameters)
+
+Computes the site amplification (impedance) for a given frequency `f`.
+"""
+site_amplification(f, site::SiteParameters) = site_amplification(f, site.model)
+
+"""
+	site_amplification(f, fas::FourierParameters)
+
+Computes the site amplification (impedance) for a given frequency `f`.
+"""
+site_amplification(f, fas::FourierParameters) = site_amplification(f, fas.site)
+
+
+"""
+    kappa_filter(f, site::SiteParameters)
+
+Kappa filter for a given frequency `f`
+"""
+function kappa_filter(f, site::SiteParameters)
+    return exp(-π*f*site.κ0)
 end
