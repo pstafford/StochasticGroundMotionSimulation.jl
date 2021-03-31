@@ -81,6 +81,11 @@ using LinearAlgebra
         @test fbf == fbd.value
         @test fεf == fεd.value
 
+        srcd = SourceParameters(Dual(100.0), 3.5, 2.75)
+        srcf = SourceParameters(100.0, 3.5, 2.75)
+        @test srcd.Δσ.value == srcf.Δσ
+
+
     end
 
     @testset "Path" begin
@@ -172,6 +177,36 @@ using LinearAlgebra
         qrf = anelastic_attenuation(f, r, anef)
         qrd = anelastic_attenuation(f, r, aned)
         @test qrf == qrd.value
+
+
+        geo = GeometricSpreadingParameters([1.0, 50.0, Inf], [ 1.0, 0.5 ])
+        geoc = GeometricSpreadingParameters([1.0, 50.0, Inf], [ 1.0, 0.5 ], :CY14)
+        @test geo.model == :Piecewise
+        @test geoc.model == :CY14
+        geod = GeometricSpreadingParameters([1.0, 50.0, Inf], [Dual(1.0), Dual(0.5)])
+        @test geo.γconi[1] == geod.γvari[1].value
+
+        sat = NearSourceSaturationParameters(1, :BT15)
+        sat = NearSourceSaturationParameters([5.5, 7.0, Inf], [4.0, 6.0], :ConstantConstrained)
+        sat = NearSourceSaturationParameters([5.5, 7.0, Inf], [Dual(4.0), Dual(6.0)], :ConstantVariable)
+        sat = NearSourceSaturationParameters([5.5, 7.0, Inf], [4.0, 6.0])
+        sat = NearSourceSaturationParameters([5.5, 7.0, Inf], [Dual(4.0), Dual(6.0)])
+        sat = NearSourceSaturationParameters(5.0)
+        satd = NearSourceSaturationParameters(Dual(5.0))
+        sat = NearSourceSaturationParameters(5.0, 2)
+        sat = NearSourceSaturationParameters(Dual(5.0), 2)
+
+        ane = AnelasticAttenuationParameters(200.0, 0.5, 3.5)
+        @test ane.rmetric == :Rps
+
+        path = PathParameters(geo, ane)
+        @test path.saturation.model == :None
+
+        path = PathParameters(geo, satd, ane)
+        @test StochasticGroundMotionSimulation.get_parametric_type(path) <: Dual
+
+        fas = FourierParameters(SourceParameters(100.0), path)
+        @test fas.site.model == :Unit
 
     end
 
@@ -419,10 +454,13 @@ using LinearAlgebra
         d1a, d2a, d3a = StochasticGroundMotionSimulation.boore_thompson_2012(6.1234, 2.0, src, sdof, rvt)
         d1b, d2b, d3b = StochasticGroundMotionSimulation.boore_thompson_2012(6.1234, 2.1234, src, sdof, rvt)
         d1c, d2c, d3c = StochasticGroundMotionSimulation.boore_thompson_2012(6.0, 2.1234, src, sdof, rvt)
+        d1d, d2d, d3d = StochasticGroundMotionSimulation.boore_thompson_2012(6.0, 2.0, src, sdof, rvt)
         @test d1a < d1b
         @test d2a < d2b
         @test d3a > d3b
         @test d1a > d1c
+        @test d1d < d1a
+
 
         c = StochasticGroundMotionSimulation.boore_thompson_2015_coefs(1, 1, region=:ENA)
         idx = 1
@@ -431,10 +469,12 @@ using LinearAlgebra
         d1a, d2a, d3a = StochasticGroundMotionSimulation.boore_thompson_2015(6.1234, 2.0, src, sdof, rvt)
         d1b, d2b, d3b = StochasticGroundMotionSimulation.boore_thompson_2015(6.1234, 2.1234, src, sdof, rvt)
         d1c, d2c, d3c = StochasticGroundMotionSimulation.boore_thompson_2015(6.0, 2.1234, src, sdof, rvt)
+        d1d, d2d, d3d = StochasticGroundMotionSimulation.boore_thompson_2015(6.0, 2.0, src, sdof, rvt)
         @test d1a < d1b
         @test d2a < d2b
         @test d3a > d3b
         @test d1a > d1c
+        @test d1d < d1a
 
         d1as, d2as, d3as = StochasticGroundMotionSimulation.boore_thompson_2015(6.1234, 2.0, src, sdof, rvt)
         d1af, d2af, d3af = StochasticGroundMotionSimulation.boore_thompson_2015(6.1234, 2.0, fas, sdof, rvt)
@@ -447,6 +487,18 @@ using LinearAlgebra
         @test isnan(d1)
         @test isnan(d2)
         @test isnan(d3)
+
+        srcf = SourceParameters(100.0)
+        srcd = SourceParameters(Dual(100.0))
+        rvt = RandomVibrationParameters(:PS, :PS, :PS, :PS)
+
+        @test isnan(excitation_duration(6.0, 10.0, srcf, rvt))
+        @test isnan(excitation_duration(6.0, 10.0, srcd, rvt))
+        @test isnan(excitation_duration(6.0, Dual(10.0), srcf, rvt))
+
+        D50 = excitation_duration(6.0, 50.0, srcf, RandomVibrationParameters())
+        D150 = excitation_duration(6.0, 150.0, srcf, RandomVibrationParameters())
+        @test D150 > D50
 
     end
 
@@ -535,15 +587,44 @@ using LinearAlgebra
         Afcd = fourier_source_shape(f, fa, fb, ε, srcd.model)
         @test Afcd ≈ 1.0 atol=1e-3
 
+        src_a = SourceParameters(100.0, :Atkinson_Silva_2000)
+        Af_a = fourier_source_shape(f, m, src_a)
+        @test Af_a ≈ 1.0 atol=1e-3
+        src_n = SourceParameters(100.0, :Null)
+        Af_n = fourier_source_shape(f, m, src_n)
+        src_b = SourceParameters(100.0)
+        Af_b = fourier_source_shape(f, m, src_b)
+        @test Af_n == Af_b
+
+        fa, fb, ε = corner_frequency(m, src_a)
+        Af_a = fourier_source_shape(f, fa, fb, ε, src_a.model)
+        @test Af_a ≈ 1.0 atol=1e-3
+        fa, fb, ε = corner_frequency(m, src_b)
+        Af_n = fourier_source_shape(f, fa, fb, ε, src_n.model)
+        @test Af_n ≈ Af_b
+
+
         # @code_warntype fourier_source(f, m, srcf)
         # @code_warntype fourier_source(f, m, srcd)
-        # @time fourier_source(f, m, srcf)
-        # @time fourier_source(f, m, fasf)
+        Afs = fourier_source(f, m, srcf)
+        Aff = fourier_source(f, m, fasf)
+        @test Afs == Aff
         # @time fourier_source(f, m, srcd)
         # @time fourier_source(f, m, fasd)
 
         f = 10.0
         r = 100.0
+        m = 6.0
+
+        ane = AnelasticAttenuationParameters(200.0, 0.5, :Rrup)
+        Pfr = fourier_path(f, r, m, geof, sat, ane)
+        path = PathParameters(geof, sat, ane)
+        Pfp = fourier_path(f, r, m, path)
+        fas = FourierParameters(SourceParameters(100.0), path)
+        Pff = fourier_path(f, r, m, fas)
+        @test Pfr == Pfp
+        @test Pfr == Pff
+
 
         # @code_warntype fourier_path(f, r, geof, anef)
         # @code_warntype fourier_path(f, r, geod, aned)
@@ -578,6 +659,8 @@ using LinearAlgebra
         Qm = fourier_attenuation(f, r, fasm)
         @test Qf == Qd.value
         @test Qd == Qm
+
+        @test fourier_attenuation(-1.0, r, fasf) == 1.0
 
         # @code_warntype fourier_site(f, sitef)
         # @code_warntype fourier_site(f, sited)
@@ -622,10 +705,6 @@ using LinearAlgebra
         end
         @test all(isapprox.(Afid, Afim))
 
-        # @code_warntype fourier_spectrum!(Afif, fi, m, r_psf, fasf)
-        # @code_warntype fourier_spectrum!(Afid, fi, m, r_psf, fasd)
-        # @code_warntype fourier_spectrum!(Afim, fi, m, r_psd, fasm)
-
         fourier_spectrum!(Afif, fi, m, r_psf, fasf)
         fourier_spectrum!(Afid, fi, m, r_psf, fasd)
         fourier_spectrum!(Afim, fi, m, r_psd, fasm)
@@ -633,10 +712,6 @@ using LinearAlgebra
             @test Afif[i] == Afid[i].value
         end
         @test all(isapprox.(Afid, Afim))
-
-        # @code_warntype StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afif, fi, m, r_psf, fasf)
-        # @code_warntype StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afid, fi, m, r_psf, fasd)
-        # @code_warntype StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afim, fi, m, r_psd, fasm)
 
         StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afif, fi, m, r_psf, fasf)
         StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afid, fi, m, r_psf, fasd)
@@ -646,11 +721,50 @@ using LinearAlgebra
         end
         @test all(isapprox.(Afid, Afim))
 
+
+
+        ane = AnelasticAttenuationParameters(200.0, 0.0, :Rrup)
+        path = PathParameters(geof, sat, ane)
+        fas = FourierParameters(SourceParameters(100.0), path)
+
+        m = Dual(6.0)
+        r_rup = 10.0
+        r_ps = equivalent_point_source_distance(r_rup, m, fas)
+
+        Afid = fourier_spectrum(Vector{Float64}(), m, r_ps, fas)
+        @test eltype(Afid) <: Dual
+        Afid = fourier_spectrum(fi, m, r_ps, fas)
+
+        sqAfid = StochasticGroundMotionSimulation.squared_fourier_spectrum(fi, m, r_ps, fas)
+        @test any(isapprox.(sqAfid, Afid.^2))
+
+        # @code_warntype fourier_spectrum!(Afif, fi, m, r_psf, fasf)
+        # @code_warntype fourier_spectrum!(Afid, fi, m, r_psf, fasd)
+        # @code_warntype fourier_spectrum!(Afim, fi, m, r_psd, fasm)
+
+
+        Afid = fourier_spectrum(Vector{Float64}(), m, r_ps, fas)
+        fourier_spectrum!(Afid, Vector{Float64}(), m, r_ps, fas)
+        StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afid, Vector{Float64}(), m, r_ps, fas)
+
+        Afid = fourier_spectrum(fi, m, r_ps, fas)
+        fourier_spectrum!(Afid, fi, m, r_ps, fas)
+        StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afid, fi, m, r_ps, fas)
+
+        # @code_warntype StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afif, fi, m, r_psf, fasf)
+        # @code_warntype StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afid, fi, m, r_psf, fasd)
+        # @code_warntype StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afim, fi, m, r_psd, fasm)
+
+
         # @code_warntype combined_kappa_frequency(r_psf, fasf)
         # @code_warntype combined_kappa_frequency(r_psd, fasd)
         fkf = StochasticGroundMotionSimulation.combined_kappa_frequency(r_psf, fasf)
         fkd = StochasticGroundMotionSimulation.combined_kappa_frequency(r_psd, fasd)
         @test fkf == fkd.value
+
+        fkf = StochasticGroundMotionSimulation.combined_kappa_frequency(r_psf, fasf)
+        fkfd = StochasticGroundMotionSimulation.combined_kappa_frequency(Dual(r_psf), fasf)
+        @test fkf == fkfd.value
 
     end
 
@@ -1080,6 +1194,28 @@ using LinearAlgebra
             rvt = RandomVibrationParameters(:PS)
             pf = peak_factor(6.0, 10.0, fasf, sdof, rvt)
             @test isnan(pf)
+
+            m = 6.0
+            r_rup = 10.0
+            r_ps = equivalent_point_source_distance(r_rup, m, fasf)
+            Dex = excitation_duration(m, r_ps, fasf, rvt)
+            m0 = spectral_moment(0, m, r_ps, fasf, sdof)
+            rvt = RandomVibrationParameters(:PS)
+            pf = peak_factor(m, r_ps, Dex, m0, fasf, sdof, rvt)
+            @test isnan(pf)
+            rvt = RandomVibrationParameters(:CL56)
+            pf = peak_factor(m, r_ps, Dex, m0, fasf, sdof, rvt)
+            @test isnan(pf) == false
+            @test pf == peak_factor(m, r_ps, fasf, sdof, RandomVibrationParameters(:CL56))
+
+            pfi = StochasticGroundMotionSimulation.peak_factor_integrand_cl56(0.0, 10.0, 10.0)
+            @test pfi ≈ 1.0
+            pfi = StochasticGroundMotionSimulation.peak_factor_integrand_cl56(Inf, 10.0, 10.0)
+            @test pfi ≈ 0.0
+
+            pf0 = StochasticGroundMotionSimulation.peak_factor_cl56(10.0, 10.0)
+            pf1 = StochasticGroundMotionSimulation.peak_factor_cl56(10.0, 10.0, nodes=50)
+            @test pf0 ≈ pf1
 
         end
 
