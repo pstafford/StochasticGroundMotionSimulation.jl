@@ -9,8 +9,8 @@ Custom type defining the source parameters of a Fourier spectrum
 - `V::Float64` is the partition factor (for splitting to horizontal components)
 - `F::Float64` is the free surface factor
 - `β::Float64` is the source velocity in units of km/s
-- `ρ::Float64` is the source density in units of t/m^3 or g/cm^3
-- `src_model::Symbol` identifies the type of source spectrum (:Brune, Atkinson_Silva_2000)
+- `ρ::Float64` is the source density in units of t/m³ or g/cm³
+- `src_model::Symbol` identifies the type of source spectrum (`:Brune`, `:Atkinson_Silva_2000`)
 """
 struct SourceParameters{S<:Float64, T<:Real}
 	# source parameters
@@ -38,7 +38,7 @@ get_parametric_type(src::SourceParameters{S,T}) where {S,T} = T
 
 
 """
-	GeometricSpreadingParameters{S<:Real,T<:Real,U<:AbstractVector{Bool}}
+	GeometricSpreadingParameters
 
 Struct for geometric spreading parameters.
 Holds fields:
@@ -71,7 +71,7 @@ get_parametric_type(geo::GeometricSpreadingParameters{S,T,U}) where {S,T,U} = T
 
 
 """
-	NearSourceSaturationParameters{S<:Real,T<:Real,U<:AbstractVector{Bool}}
+	NearSourceSaturationParameters
 
 Struct for near-source saturation parameters. Mimic structure of the `GeometricSpreadingParameters` struct.
 Holds fields:
@@ -123,7 +123,7 @@ get_parametric_type(sat::NearSourceSaturationParameters{S,T,U}) where {S,T,U} = 
 
 
 """
-	AnelasticAttenuationParameters{S<:Real,T<:Real}
+	AnelasticAttenuationParameters
 
 Struct for anelastic attenuation parameters.
 Holds fields:
@@ -172,6 +172,10 @@ Consists of three other custom structs
 - `geometric` is a `GeometricSpreadingParameters` type
 - `saturation` is a `NearSourceSaturationParameters` type
 - `anelastic` is an `AnelasticAttenuationParameters` type
+
+The base constructor is: `PathParameters(geo::G, sat::S, ane::A) where {G<:GeometricSpreadingParameters, S<:NearSourceSaturationParameters, A<:AnelasticAttenuationParameters}`
+
+See also: [`FourierParameters`](@ref)
 """
 struct PathParameters{G<:GeometricSpreadingParameters,S<:NearSourceSaturationParameters,A<:AnelasticAttenuationParameters}
 	geometric::G
@@ -209,8 +213,10 @@ end
 
 Custom type defining the site parameters of a Fourier spectrum
 
-- `κ0::Union{Float64,Dual{Float64}}` is the site kappa in units of s
-- `amp_model::Symbol` is a symbol identifying the impedance function
+- `κ0::T where T<:Real` is the site kappa in units of s
+- `model::Symbol` is a symbol identifying the impedance function
+
+See also: [`FourierParameters`](@ref), [`site_amplification`](@ref)
 """
 struct SiteParameters{T<:Real}
     # site parameters
@@ -231,7 +237,10 @@ get_parametric_type(site::SiteParameters{T}) where {T} = T
 """
     FourierParameters
 
-Custom type for the parameters the Fourier amplitude spectrum. This type is comprised of source, path and site types.
+Custom type for the parameters the Fourier amplitude spectrum.
+This type is comprised of source, path and site types, and so has a base constructor of: `FourierParameters(src::S, path::T, site::U) where {S<:SourceParameters, T<:PathParameters, U<:SiteParameters}`
+
+See also: [`SourceParameters`](@ref), [`PathParameters`](@ref), [`SiteParameters`](@ref)
 """
 struct FourierParameters{S<:SourceParameters, T<:PathParameters, U<:SiteParameters}
 	source::S	# source parameters
