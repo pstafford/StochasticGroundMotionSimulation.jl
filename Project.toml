@@ -11,14 +11,15 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 PolynomialRoots = "3a141323-8675-5d76-9d11-e1df1406c778"
 QuadGK = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
 Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
+SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 
 [compat]
-PolynomialRoots = "1.0"
-Roots = "1.0"
-Interpolations = "0.13"
-QuadGK = "2.4"
-ForwardDiff = "0.10"
 FastGaussQuadrature = "0.4"
+ForwardDiff = "0.10"
+Interpolations = "0.13"
+PolynomialRoots = "1.0"
+QuadGK = "2.4"
+Roots = "1.0"
 julia = "1.5"
 
 [extras]
