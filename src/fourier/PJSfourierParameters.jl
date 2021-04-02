@@ -10,7 +10,7 @@ Custom type defining the source parameters of a Fourier spectrum
 - `F::Float64` is the free surface factor
 - `β::Float64` is the source velocity in units of km/s
 - `ρ::Float64` is the source density in units of t/m³ or g/cm³
-- `src_model::Symbol` identifies the type of source spectrum (`:Brune`, `:Atkinson_Silva_2000`)
+- `model::Symbol` identifies the type of source spectrum (`:Brune`, `:Atkinson_Silva_2000`)
 """
 struct SourceParameters{S<:Float64, T<:Real}
 	# source parameters
