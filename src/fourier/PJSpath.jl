@@ -25,28 +25,6 @@ geometric_spreading(r_ps::T, fas::FourierParameters) where T<:Real = geometric_s
 
 
 """
-	geometric_spreading_piecewise(r_ps::S, geo::GeometricSpreadingParameters{T,T,U}) where {S<:Real, T<:Float64, U<:AbstractVector{Bool}}
-
-Piecewise linear (in log-log space) geometric spreading function.
-Makes use of the reference distances `Rrefi` and spreading rates `γi` in `path`.
-"""
-function geometric_spreading_piecewise(r_ps::S, geo::GeometricSpreadingParameters{T,T,U}) where {S<:Real, T<:Float64, U<:AbstractVector{Bool}}
-	z_r = oneunit(T)
-    for i in 1:length(geo.γfree)
-		@inbounds Rr0 = geo.Rrefi[i]
-		@inbounds Rr1 = geo.Rrefi[i+1]
-		@inbounds γ_r = geo.γconi[i]
-    	if r_ps < Rr1
-        	z_r *= (Rr0 / r_ps)^γ_r
-        	return z_r
-      	else
-        	z_r *= (Rr0 / Rr1)^γ_r
-      	end
-    end
-    return z_r
-end
-
-"""
 	geometric_spreading_piecewise(r_ps::V, geo::GeometricSpreadingParameters{S,T,U}) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}, V<:Real}
 
 Piecewise linear (in log-log space) geometric spreading function.
