@@ -417,18 +417,18 @@ end
 """
 	combined_kappa_frequency(r::T, ane::AnelasticAttenuationParameters, site::SiteParameters) where T<:Real
 
-Frequency at which the combined κ_r and κ_0 filters (squared versions) give a value of 0.5.
+Frequency at which the combined κ_r and κ_0 filters (squared versions) give a value of `Af2target`.
 `r` can be either `r_ps` or `r_rup` depending upon what matches `ane.rmetric`
 """
-function combined_kappa_frequency(r::T, ane::AnelasticAttenuationParameters, site::SiteParameters) where T<:Real
+function combined_kappa_frequency(r::T, Af2target, ane::AnelasticAttenuationParameters, site::SiteParameters) where T<:Real
   	if ane.η < 0.1
     	# a closed form solution exists (for effectively η=0)
-    	return log(2.0) / ( 2π * ( r / (ane.Q0 * ane.cQ) + site.κ0 ) )
+    	return log(1.0/Af2target) / ( 2π * ( r / (ane.Q0 * ane.cQ) + site.κ0 ) )
   	else
-		g(f) = 0.5 - (fourier_attenuation(f, r, ane, site)^2)
+		g(f) = Af2target - (fourier_attenuation(f, r, ane, site)^2)
 		f_0 = find_zero(g, (0.01,100.0), Bisection(); xatol=1e-2)
 		# fk = min(max(f_0, 0.2), 1.0)
-		fk = max(f_0, 0.2)
+		fk = max(f_0, 0.1)
 		U = get_parametric_type(ane)
 		V = get_parametric_type(site)
 		if T <: Float64
