@@ -444,5 +444,5 @@ function combined_kappa_frequency(r::T, Af2target::Float64, ane::AnelasticAttenu
   	end
 end
 
-combined_kappa_frequency(r::T, path::PathParameters, site::SiteParameters) where T<:Real = combined_kappa_frequency(r, path.anelastic, site)
-combined_kappa_frequency(r::T, fas::FourierParameters) where T<:Real = combined_kappa_frequency(r, fas.path, fas.site)
+combined_kappa_frequency(r::T, Af2target::Float64, path::PathParameters, site::SiteParameters) where T<:Real = combined_kappa_frequency(r, Af2target, path.anelastic, site)
+combined_kappa_frequency(r::T, Af2target::Float64, fas::FourierParameters) where T<:Real = combined_kappa_frequency(r, Af2target, fas.path, fas.site)
