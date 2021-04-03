@@ -415,12 +415,12 @@ function squared_fourier_spectrum!(Afsq::Vector{U}, f::Vector{V}, m::S, r_ps::T,
 end
 
 """
-	combined_kappa_frequency(r::T, ane::AnelasticAttenuationParameters, site::SiteParameters) where T<:Real
+	combined_kappa_frequency(r::T, Af2target::Float64, ane::AnelasticAttenuationParameters, site::SiteParameters) where T<:Real
 
 Frequency at which the combined κ_r and κ_0 filters (squared versions) give a value of `Af2target`.
 `r` can be either `r_ps` or `r_rup` depending upon what matches `ane.rmetric`
 """
-function combined_kappa_frequency(r::T, Af2target, ane::AnelasticAttenuationParameters, site::SiteParameters) where T<:Real
+function combined_kappa_frequency(r::T, Af2target::Float64, ane::AnelasticAttenuationParameters, site::SiteParameters) where T<:Real
   	if ane.η < 0.1
     	# a closed form solution exists (for effectively η=0)
     	return log(1.0/Af2target) / ( 2π * ( r / (ane.Q0 * ane.cQ) + site.κ0 ) )
