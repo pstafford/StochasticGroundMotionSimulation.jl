@@ -856,16 +856,16 @@ using LinearAlgebra
 
         # @code_warntype combined_kappa_frequency(r_psf, fasf)
         # @code_warntype combined_kappa_frequency(r_psd, fasd)
-        fkf = StochasticGroundMotionSimulation.combined_kappa_frequency(r_psf, fasf)
-        fkd = StochasticGroundMotionSimulation.combined_kappa_frequency(r_psd, fasd)
+        fkf = combined_kappa_frequency(r_psf, 0.5, fasf)
+        fkd = combined_kappa_frequency(r_psd, 0.5, fasd)
         @test fkf == fkd.value
 
-        fkf = StochasticGroundMotionSimulation.combined_kappa_frequency(r_psf, fasf)
-        fkfd = StochasticGroundMotionSimulation.combined_kappa_frequency(Dual(r_psf), fasf)
+        fkf = combined_kappa_frequency(r_psf, 0.5, fasf)
+        fkfd = combined_kappa_frequency(Dual(r_psf), 0.5, fasf)
         @test fkf == fkfd.value
 
-        fkf0 = StochasticGroundMotionSimulation.combined_kappa_frequency(r_psf, fas)
-        fkf1 = StochasticGroundMotionSimulation.combined_kappa_frequency(r_psf, fasf)
+        fkf0 = combined_kappa_frequency(r_psf, 0.5, fas)
+        fkf1 = combined_kappa_frequency(r_psf, 0.5, fasf)
         @test fkf0 > fkf1
 
     end
