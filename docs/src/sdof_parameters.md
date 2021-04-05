@@ -11,6 +11,9 @@ Type simply stores the oscillator frequency and damping ratio.
 ```
 
 ## Functionality
+
+The main methods that are used to interact with `Oscillator` instances are:
+
 ```@docs
   period
   transfer
