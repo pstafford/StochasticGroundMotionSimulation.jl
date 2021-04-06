@@ -24,9 +24,9 @@ makedocs(;
                 "Source spectrum" => "source_spectrum.md",
                 "Path scaling" => "path_scaling.md",
                 "Site scaling" => "site_scaling.md",
-            ]
+            ],
+            "Method Index" => "method_index.md"
         ]
-
     ],
 )
 
