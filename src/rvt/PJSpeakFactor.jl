@@ -1,5 +1,5 @@
 
-"""
+@doc raw"""
 	peak_factor_cl56(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; nodes::Int=35) where {S<:Real,T<:Real}
 
 Peak factor computed using the Cartwright and Longuet-Higgins (1956) formulation.
@@ -42,7 +42,7 @@ function peak_factor_cl56(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillato
 end
 
 
-"""
+@doc raw"""
 	peak_factor_cl56(m::S, r_ps::T, Dex::U, m0::V, fas::FourierParameters, sdof::Oscillator; nodes::Int=35) where {S<:Real,T<:Real,U<:Real,V<:Real}
 
 Peak factor computed using the Cartwright and Longuet-Higgins (1956) formulation, using pre-computed `Dex` and `m0` values.
@@ -89,7 +89,7 @@ function peak_factor_cl56(m::S, r_ps::T, Dex::U, m0::V, fas::FourierParameters, 
 end
 
 
-"""
+@doc raw"""
 	peak_factor_cl56(n_z::T, n_e::T; nodes::Int=35) where T<:Real
 
 Peak factor computed using the Cartwright and Longuet-Higgins (1956) formulation, using pre-computed `n_z` and `n_e` values.
@@ -129,7 +129,7 @@ function peak_factor_cl56(n_z::T, n_e::T; nodes::Int=35) where T<:Real
 end
 
 
-"""
+@doc raw"""
 	peak_factor_cl56_gk(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator) where {S<:Real,T<:Real}
 
 Peak factor computed using the Cartwright and Longuet-Higgins (1956) formulation, using adaptive Gauss-Kronrod integration.
@@ -198,7 +198,7 @@ function vanmarcke_ccdf(x, n_z::T, δeff::T) where T<:Real
 end
 
 
-"""
+@doc raw"""
 	peak_factor_dk80(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; nodes::Int=30) where {S<:Real,T<:Real}
 
 Peak factor computed using the Der Kiureghian (1980)/Vanmarcke (1975) formulation.
@@ -254,7 +254,7 @@ function peak_factor_dk80(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillato
 end
 
 
-"""
+@doc raw"""
 	peak_factor_dk80(m::S, r_ps::T, Dex::U, m0::V, fas::FourierParameters, sdof::Oscillator; nodes::Int=30) where {S<:Real,T<:Real,U<:Real,V<:Real}
 
 Peak factor computed using the Der Kiureghian (1980)/Vanmarcke (1975) formulation, using precomputed `Dex` and `m0`.
@@ -307,7 +307,7 @@ function peak_factor_dk80(m::S, r_ps::T, Dex::U, m0::V, fas::FourierParameters, 
 end
 
 
-"""
+@doc raw"""
 	peak_factor_dk80_gk(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator) where {S<:Float64,T<:Real}
 
 Peak factor computed using the Der Kiureghian (1980)/Vanmarcke (1975) formulation, using precomputed `Dex` and `m0`.
@@ -355,10 +355,10 @@ end
 
 
 
-"""
+@doc raw"""
 	peak_factor(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; pf_method::Symbol=:DK80) where {S<:Real,T<:Real}
 
-Peak factor u_max / u_rms with a switch of `pf_method` to determine the approach adopted.
+Peak factor ``u_{max} / u_{rms}`` with a switch of `pf_method` to determine the approach adopted.
 `pf_method` can currently be one of:
 	- `:CL56` for Cartright Longuet-Higgins (1956)
 	- `:DK80` for Der Kiureghian (1980), building on Vanmarcke (1975)
