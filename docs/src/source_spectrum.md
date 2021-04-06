@@ -16,7 +16,7 @@ The most commonly adopted source spectral shape is the ``\omega^2`` model that h
 ```math
  E_s(f) = \frac{1}{1 + \left(\frac{f}{f_c}\right)^2}
 ```
-  
+
 ## Functionality
 
 ```@docs
@@ -24,4 +24,5 @@ fourier_constant
 fourier_source_shape
 fourier_source
 corner_frequency
+magnitude_to_moment
 ```
