@@ -1,5 +1,5 @@
 
-"""
+@doc raw"""
 	spectral_moment(order::Int, m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; nodes::Int=31, control_freqs::Vector{Float64}=[1e-3, 1e-1, 1.0, 10.0, 100.0, 300.0] ) where {S<:Real,T<:Real}
 
 Compute spectral moment of a specified order.
@@ -54,7 +54,7 @@ function spectral_moment(order::Int, m::S, r_ps::T, fas::FourierParameters, sdof
 end
 
 
-"""
+@doc raw"""
 	spectral_moments(order::Vector{Int}, m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; nodes::Int=31, control_freqs::Vector{Float64}=[1e-3, 1e-1, 1.0, 10.0, 100.0, 300.0] ) where {S<:Real,T<:Real}
 
 Compute a vector of spectral moments for the specified `order`.
@@ -123,7 +123,7 @@ end
 
 
 
-"""
+@doc raw"""
 	spectral_moments_gk(order::Vector{Int}, m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator) where {S<:Real,T<:Real}
 
 Compute a vector of spectral moments for the specified `order` using Gauss-Kronrod integration from the `QuadGK.jl` package.
@@ -150,7 +150,7 @@ function spectral_moments_gk(order::Vector{Int}, m::S, r_ps::T, fas::FourierPara
 end
 
 
-"""
+@doc raw"""
 	zeros_extrema_frequencies(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator) where {S<:Real,T<:Real}
 
 Defines the frequencies of extrema and zero-crossings using moments ``m_0``, ``m_2`` and ``m_4``. Returns a tuple of ``(f_z,f_e)``.
@@ -177,7 +177,7 @@ function zeros_extrema_frequencies(m::S, r_ps::T, fas::FourierParameters, sdof::
 end
 
 
-"""
+@doc raw"""
 	zeros_extrema_numbers(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Real,T<:Real}
 
 Defines the numbers of extrema and zero-crossings using moments ``m_0``, ``m_2`` and ``m_4``. Returns a tuple of ``(2f_z D_{ex}, 2f_e D_{ex})``.
@@ -202,7 +202,7 @@ end
 
 
 
-"""
+@doc raw"""
 	rvt_response_spectral_ordinate(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Real,T<:Real}
 
 Response spectral ordinate (units of ``g``) for the specified scenario.
@@ -229,7 +229,7 @@ function rvt_response_spectral_ordinate(m::S, r_ps::T, fas::FourierParameters, s
 end
 
 
-"""
+@doc raw"""
 	rvt_response_spectral_ordinate(period::U, m::S, r_ps::T, fas::FourierParameters, rvt::RandomVibrationParameters) where {S<:Real,T<:Real,U<:Float64}
 
 Response spectral ordinate (units of ``g``) for the specified scenario.
@@ -250,7 +250,7 @@ end
 
 
 
-"""
+@doc raw"""
 	rvt_response_spectrum(period::Vector{U}, m::S, r_ps::T, fas::FourierParameters, rvt::RandomVibrationParameters) where {S<:Real,T<:Real,U<:Float64}
 
 Response spectrum (units of ``g``) for the vector of periods `period` and the specified scenario.
@@ -277,7 +277,7 @@ function rvt_response_spectrum(period::Vector{U}, m::S, r_ps::T, fas::FourierPar
 end
 
 
-"""
+@doc raw"""
 	rvt_response_spectrum!(Sa::Vector{U}, period::Vector{V}, m::S, r_ps::T, fas::FourierParameters, rvt::RandomVibrationParameters) where {S<:Real,T<:Real,U<:Real,V<:Float64}
 
 In-place response spectrum (units of ``g``) for the vector of periods `period` and the specified scenario.
