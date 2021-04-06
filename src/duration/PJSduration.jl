@@ -1,7 +1,9 @@
 
+"""
+  boore_thompson_2014(m, r_ps::U, src::SourceParameters{S,T}) where {S<:Float64, T<:Real, U<:Real}
 
-
-# function to implement the Boore & Thompson (2014) excitation duration function
+Boore & Thompson (2014) excitation duration model.
+"""
 function boore_thompson_2014(m, r_ps::U, src::SourceParameters{S,T}) where {S<:Float64, T<:Real, U<:Real}
   # source duration
   fa, fb, ε = corner_frequency(m, src)
@@ -39,6 +41,13 @@ end
 boore_thompson_2014(m, r_ps, fas::FourierParameters) = boore_thompson_2014(m, r_ps, fas.source)
 
 
+"""
+  excitation_duration(m, r_ps::U, src::SourceParameters{S,T}, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real,U<:Real}
+
+Generic function implementing excitation duration models.
+
+Currently, only the Boore & Thompson (2014) model is implemented.
+"""
 function excitation_duration(m, r_ps::U, src::SourceParameters{S,T}, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real,U<:Real}
   if rvt.dur_ex == :BT14
     return boore_thompson_2014(m, r_ps, src)
@@ -59,6 +68,12 @@ excitation_duration(m, r_ps, fas::FourierParameters, rvt::RandomVibrationParamet
 # Definition of Boore & Thompson (2012) constant values to be used within subsequent functions
 include("coefficients/PJSbooreThompson2012.jl")
 
+
+"""
+  boore_thompson_2012_coefs(idx_m::T, idx_r::T; region::Symbol=:WNA) where T<:Int
+
+Base function to extract the coefficients of the Boore & Thompson (2012) rms duration model.
+"""
 function boore_thompson_2012_coefs(idx_m::T, idx_r::T; region::Symbol=:WNA) where T<:Int
   idx = (idx_r - 1) * num_m_ii_bt12 + idx_m
   if region == :ENA
@@ -71,7 +86,11 @@ function boore_thompson_2012_coefs(idx_m::T, idx_r::T; region::Symbol=:WNA) wher
 end
 
 
-# base function for Boore & Thompson (2012)
+"""
+  boore_thompson_2012_base(η::S, c::Vector{T}, ζ::T=0.05) where {S<:Real,T<:Float64}
+
+Base function to compute the Boore & Thompson (2012) rms duration model for known magnitude and distance.
+"""
 function boore_thompson_2012_base(η::S, c::Vector{T}, ζ::T=0.05) where {S<:Real,T<:Float64}
   @inbounds ηc3 = η^c[3]
   @inbounds ratio = (c[1] + c[2]*((1.0 - ηc3)/(1.0 + ηc3))) * (1.0 + c[4]/(2π*ζ)*( η /(1.0 + c[5]*η^c[6]) )^c[7])
@@ -79,7 +98,12 @@ function boore_thompson_2012_base(η::S, c::Vector{T}, ζ::T=0.05) where {S<:Rea
 end
 
 
-# function to implement the Boore & Thompson (2012) duration ratio model
+"""
+  boore_thompson_2012(m, r_ps::T, src::SourceParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
+
+Boore & Thompson (2012) rms duration model. Also outputs the excitation duration (given that its required within the rms duration calculations).
+
+"""
 function boore_thompson_2012(m, r_ps::T, src::SourceParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
   # for magnitude and distance that don't match coefficient tables we need to use bilinear interpolation
   # get the excitation duration (as recommended by Boore & Thompson, 2012)
@@ -171,6 +195,12 @@ boore_thompson_2012(m, r_ps, fas::FourierParameters, sdof::Oscillator, rvt::Rand
 # Definition of Boore & Thompson (2015) constant values to be used within subsequent functions
 include("coefficients/PJSbooreThompson2015.jl")
 
+
+"""
+  boore_thompson_2015_coefs(idx_m::T, idx_r::T; region::Symbol=:WNA) where T<:Int
+
+Base function to extract the coefficients of the Boore & Thompson (2015) rms duration model.
+"""
 function boore_thompson_2015_coefs(idx_m::T, idx_r::T; region::Symbol=:WNA) where T<:Int
   idx = (idx_r - 1) * num_m_ii_bt15 + idx_m
   if region == :ENA
@@ -182,16 +212,12 @@ function boore_thompson_2015_coefs(idx_m::T, idx_r::T; region::Symbol=:WNA) wher
   end
 end
 
-# function get_mr(idx_m::T, idx_r::T; region::Symbol=:WNA) where T<:Int
-#   idx = (idx_r - 1) * num_m_ii_bt15 + idx_m
-#   if region == :ENA
-#     return ( coefs_ena_bt15[idx,1], coefs_ena_bt15[idx,2] )
-#   else
-#     return ( coefs_wna_bt15[idx,1], coefs_wna_bt15[idx,2] )
-#   end
-# end
 
-# base function for Boore & Thompson (2015) - Note this is the same function as in BT12
+"""
+  boore_thompson_2015_base(η::S, c::Vector{T}, ζ::T=0.05) where {S<:Real,T<:Float64}
+
+Base function to compute the Boore & Thompson (2015) rms duration model for known magnitude and distance.
+"""
 function boore_thompson_2015_base(η::S, c::Vector{T}, ζ::T=0.05) where {S<:Real,T<:Float64}
   @inbounds ηc3 = η^c[3]
   @inbounds ratio = (c[1] + c[2]*((1.0 - ηc3)/(1.0 + ηc3))) * (1.0 + c[4]/(2π*ζ)*( η /(1.0 + c[5]*η^c[6]) )^c[7])
@@ -199,7 +225,12 @@ function boore_thompson_2015_base(η::S, c::Vector{T}, ζ::T=0.05) where {S<:Rea
 end
 
 
-# function to implement the Boore & Thompson (2015) duration ratio model
+"""
+  boore_thompson_2015(m, r_ps::T, src::SourceParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
+
+Boore & Thompson (2015) rms duration model. Also outputs the excitation duration (given that its required within the rms duration calculations).
+
+"""
 function boore_thompson_2015(m, r_ps::T, src::SourceParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
   # for magnitude and distance that don't match coefficient tables we need to use bilinear interpolation of the log Drms values
   # get the excitation duration (as recommended by Boore & Thompson, 2015)
