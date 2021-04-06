@@ -41,7 +41,7 @@ function period(sdof::Oscillator)
 	return 1.0/sdof.f_n
 end
 
-"""
+@doc raw"""
     transfer(f::T, sdof::Oscillator) where {T<:Real}
 
 Compute the modulus of the transfer function for a SDOF system.
