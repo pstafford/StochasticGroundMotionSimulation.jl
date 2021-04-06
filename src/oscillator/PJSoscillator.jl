@@ -1,6 +1,6 @@
 
 """
-    Oscillator
+    Oscillator{T<:Float64}
 
 Custom type to represent a SDOF oscillator. The type has two fields:
   - `f_n` is the natural frequency of the oscillator
@@ -44,7 +44,13 @@ end
 """
     transfer(f::T, sdof::Oscillator) where {T<:Real}
 
-Compute the modulus of the transfer function for a SDOF system
+Compute the modulus of the transfer function for a SDOF system.
+
+The transfer function is defined as:
+```math
+|H(f,f_n,\zeta_n)| = \frac{1}{\sqrt{ \left(1 - \beta^2 \right) + \left(2\zeta_n\beta\right)^2 }}
+```
+where ``\beta`` is the tuning ratio defined by ``f/f_n``.
 
 # Examples
 ```julia-repl
@@ -52,6 +58,8 @@ Compute the modulus of the transfer function for a SDOF system
     sdof = Oscillator(1.0, 0.05)
     Hf = transfer(f, sdof)
 ```
+
+See also: [`squared_transfer`](@ref)
 """
 function transfer(f, sdof::Oscillator)
     # tuning ratio
@@ -72,6 +80,8 @@ Compute the square of the transfer function for a SDOF system, `sdof`, at freque
 	sdof = Oscillator( 1.0, 0.05 )
 	Hf2 = squared_transfer( f, sdof )
 ```
+
+See also: [`transfer`](@ref)
 """
 function squared_transfer(f, sdof::Oscillator)
     # tuning ratio

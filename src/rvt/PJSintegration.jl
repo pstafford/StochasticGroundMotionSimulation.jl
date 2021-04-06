@@ -29,6 +29,12 @@ function trapezoidal_rule(x::Vector, y::Vector)
     return (x[2] - x[1]) * ( sum(y) - (y[1] + y[end])/2 )
 end
 
+
+"""
+    trapezoidal(fun::Function, n, flim...)
+
+Applies the `trapezoidal_rule` using `n` points over the frequency intervals specified by `flim...`.
+"""
 function trapezoidal(fun::Function, n, flim...)
     ii = 0.0
     for i in 2:length(flim)
@@ -40,12 +46,23 @@ function trapezoidal(fun::Function, n, flim...)
 end
 
 
+"""
+    gauss_interval(integrand::Function, n, fmin, fmax)
+
+Computes Gauss-Legendre integration using `n` nodes and weights over the intervals `[fmin,fmax]`.
+"""
 function gauss_interval(integrand::Function, n, fmin, fmax)
     xi, wi = gausslegendre(n)
     ifi = @. integrand( (fmax-fmin)/2 * xi + (fmin+fmax)/2 )
     return (fmax-fmin)/2 * dot( wi, ifi )
 end
 
+
+"""
+    gauss_intervals(fun::Function, n, flim...)
+
+Computes Gauss-Legendre integration using `n` nodes and weights of the intervals specified in `flim...`.
+"""
 function gauss_intervals(fun::Function, n, flim...)
     xi, wi = gausslegendre(n)
     ii = 0.0

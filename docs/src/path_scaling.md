@@ -3,6 +3,7 @@ CurrentModule = StochasticGroundMotionSimulation
 ```
 
 # Path Scaling
+
 The path scaling can be broken into geometric spreading -- including the effects of near-source saturation -- and anelastic attenuation.
 Within `StochasticGroundMotionSimulation` the `PathParameters` type holds custom structs that relate to each of these three components:
 - `GeometricSpreadingParameters` defines the geometric spreading model (spreading rates, transition distances, and functional scaling)
@@ -10,10 +11,8 @@ Within `StochasticGroundMotionSimulation` the `PathParameters` type holds custom
 - `AnelasticAttenuationParameters` defines the properties of the anelastic attenuation model.
 
 
-
-
-
 ## Geometric Spreading
+
 Parameters for representing geometric spreading are contained within a `GeometricSpreadingParameters` instance.
 To compute the actual geometric spreading for a given distance we make use of the `geometric_spreading` function:
 
@@ -48,6 +47,11 @@ and it is most common to follow Boore & Thompson (2015) and to use ``n=2`` so th
   r_{ps} = \sqrt{ r_{rup}^2 + h(\bm{M})^2 }
 ```
 
+### Functionality
+
+```@docs
+near_source_saturation
+```
 
 ## Anelastic Attenuation
 
@@ -62,3 +66,11 @@ where, normally, ``Q(f)=Q_0 f^\eta`` such that:
 
 The `AnelasticAttenuationParameters` type therefore holds the values of ``Q0``, ``\eta``, and ``c_Q``.
 In addition, it holds a field `rmetric` that can take values of `:Rrup` and `:Rps` depending upon whether one wishes to interpret the distance within the exponential function as the rupture distance, `:Rrup`, or the equivalent point-source distance, `:Rps`.
+
+### Functionality
+
+```@docs
+anelastic_attenuation
+fourier_attenuation
+combined_kappa_frequency
+```

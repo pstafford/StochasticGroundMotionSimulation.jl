@@ -6,16 +6,22 @@ CurrentModule = StochasticGroundMotionSimulation
 Definition of the various custom types within the `StochasticGroundMotionSimulation` module.
 Types to store properties related to source, path, and site components of the Fourier spectral model are provided.
 
+```@docs
+FourierParameters
+```
+
 ## Source Parameters
 The type `SourceParameters` holds the properties required to define the source spectrum of the Fourier Amplitude Spectrum.
+
 ```@docs
-  SourceParameters
+SourceParameters
 ```
 
 ## Path Parameters
 The type `PathParameters` holds the properties required to define the path scaling of the Fourier Amplitude Spectrum.
+
 ```@docs
-  PathParameters
+PathParameters
 ```
 
 This type also hold instances of three other custom types that define aspects of the path scaling:
@@ -29,7 +35,7 @@ This type also hold instances of three other custom types that define aspects of
 GeometricSpreadingParameters
 ```
 
-### Near Source Saturation
+### Near-Source Saturation
 
 Near source saturation models are represented within the `NearSourceSaturationParameters` type.
 This type can simply identify existing models that are implemented, such as:

@@ -288,7 +288,7 @@ boore_thompson_2015(m, r_ps, fas::FourierParameters, sdof::Oscillator, rvt::Rand
 
 
 """
-  rms_duration(m::S, r_ps::T, src::SourceParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
+    rms_duration(m::S, r_ps::T, src::SourceParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
 
 Returns a 3-tuple of (Drms, Dex, Dratio), using a switch on `rvt.dur_rms`.
 Default `:BT12` makes use of the `:BT14` model for excitation duration, `Dex`.

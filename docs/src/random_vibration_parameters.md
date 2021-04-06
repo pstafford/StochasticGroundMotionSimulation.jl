@@ -32,6 +32,12 @@ In all cases, the Boore & Thompson (2014) excitation duration model is employed 
 
 ## Functionality
 
+The overall goal of these random vibration methods is to compute:
+```math
+S_a = \psi \sqrt{ \frac{m_0}{D_{rms}}}
+```
+where ``\psi`` is the peak factor computed from `peak_factor`, ``m_0`` is the zeroth order spectral moment computed from `spectral_moment`, and ``D_{rms}`` is the root-mean-square duration computed from `rms_duration`.
+
 The main methods used to interact with `RandomVibrationParameters` are:
 
 ```@docs

@@ -1,5 +1,20 @@
 
+"""
+	spectral_moment(order::Int, m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; nodes::Int=31, control_freqs::Vector{Float64}=[1e-3, 1e-1, 1.0, 10.0, 100.0, 300.0] ) where {S<:Real,T<:Real}
 
+Compute spectral moment of a specified order.
+
+Evaluates the expression:
+```math
+	m_k = 2\int_{0}^{\infty} \left(2\pi f\right)^k |H(f;f_n,\zeta_n)|^2 |A(f)|^2 df
+```
+where ``k`` is the order of the moment.
+
+Integration is performed using Gauss-Legendre integration using `nodes` nodes and weights.
+The integration domain is partitioned over the `control_freqs` as well as two inserted frequencies at `f_n/1.5` and `f_n*1.5` in order to ensure good approximation of the integral around the `sdof` resonant frequency.
+
+See also: [`spectral_moments`](@ref)
+"""
 function spectral_moment(order::Int, m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; nodes::Int=31, control_freqs::Vector{Float64}=[1e-3, 1e-1, 1.0, 10.0, 100.0, 300.0] ) where {S<:Real,T<:Real}
 	# pre-allocate for squared fourier amplitude spectrum
 	if S <: Dual
@@ -39,6 +54,22 @@ function spectral_moment(order::Int, m::S, r_ps::T, fas::FourierParameters, sdof
 end
 
 
+"""
+	spectral_moments(order::Vector{Int}, m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; nodes::Int=31, control_freqs::Vector{Float64}=[1e-3, 1e-1, 1.0, 10.0, 100.0, 300.0] ) where {S<:Real,T<:Real}
+
+Compute a vector of spectral moments for the specified `order`.
+
+Evaluates the expression:
+```math
+	m_k = 2\int_{0}^{\infty} \left(2\pi f\right)^k |H(f;f_n,\zeta_n)|^2 |A(f)|^2 df
+```
+for each order, where ``k`` is the order of the moment.
+
+Integration is performed using Gauss-Legendre integration using `nodes` nodes and weights.
+The integration domain is partitioned over the `control_freqs` as well as two inserted frequencies at `f_n/1.5` and `f_n*1.5` in order to ensure good approximation of the integral around the `sdof` resonant frequency.
+
+See also: [`spectral_moment`](@ref), [`spectral_moments_gk`](@ref)
+"""
 function spectral_moments(order::Vector{Int}, m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; nodes::Int=31, control_freqs::Vector{Float64}=[1e-3, 1e-1, 1.0, 10.0, 100.0, 300.0] ) where {S<:Real,T<:Real}
 	# pre-allocate for squared fourier amplitude spectrum
 	if S <: Dual
@@ -92,6 +123,23 @@ end
 
 
 
+"""
+	spectral_moments_gk(order::Vector{Int}, m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator) where {S<:Real,T<:Real}
+
+Compute a vector of spectral moments for the specified `order` using Gauss-Kronrod integration from the `QuadGK.jl` package.
+
+Evaluates the expression:
+```math
+	m_k = 2\int_{0}^{\infty} \left(2\pi f\right)^k |H(f;f_n,\zeta_n)|^2 |A(f)|^2 df
+```
+for each order, where ``k`` is the order of the moment.
+
+Integration is performed using adaptive Gauss-Kronrod integration with the domain split over two intervals from ``[0,f_n]`` and ``[f_n,\infty]`` to ensure that the resonant peak is not missed.
+
+Note that due to the default tolerances, the moments computed by this method are more accurate than those from `spectral_moments` using the Gauss-Legendre approximation. However, this method is also significantly slower, and cannot be used within an automatic differentiation environment.
+
+See also: [`spectral_moment`](@ref), [`spectral_moments`](@ref)
+"""
 function spectral_moments_gk(order::Vector{Int}, m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator) where {S<:Real,T<:Real}
 	int_sumi = zeros(length(order))
 	for (i, o) in enumerate(order)
@@ -102,8 +150,22 @@ function spectral_moments_gk(order::Vector{Int}, m::S, r_ps::T, fas::FourierPara
 end
 
 
+"""
+	zeros_extrema_frequencies(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator) where {S<:Real,T<:Real}
 
-# function to define functions to compute the extrema and zero-crossing frequencies
+Defines the frequencies of extrema and zero-crossings using moments ``m_0``, ``m_2`` and ``m_4``. Returns a tuple of ``(f_z,f_e)``.
+
+The frequency of zero crossings is:
+```math
+f_{z} = \frac{1}{2\pi}\sqrt{\frac{m_2}{m_0}}
+```
+The frequency of extrema is:
+```math
+f_{e} = \frac{1}{2\pi}\sqrt{\frac{m_4}{m_2}}
+```
+
+See also: [`zeros_extrema_numbers`](@ref)
+"""
 function zeros_extrema_frequencies(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator) where {S<:Real,T<:Real}
 	mi = spectral_moments([0, 2, 4], m, r_ps, fas, sdof)
 	m_0 = mi[1]
@@ -115,7 +177,23 @@ function zeros_extrema_frequencies(m::S, r_ps::T, fas::FourierParameters, sdof::
 end
 
 
-# function to define the numbers of zero crossings and extrema
+"""
+	zeros_extrema_numbers(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Real,T<:Real}
+
+Defines the numbers of extrema and zero-crossings using moments ``m_0``, ``m_2`` and ``m_4``. Returns a tuple of ``(2f_z D_{ex}, 2f_e D_{ex})``.
+
+The frequency of zero crossings is:
+```math
+n_{z} = \frac{D_{ex}}{\pi}\sqrt{\frac{m_2}{m_0}}
+```
+The frequency of extrema is:
+```math
+n_{e} = \frac{D_{ex}}{\pi}\sqrt{\frac{m_4}{m_2}}
+```
+In both cases, the excitaion duration, ``D_{ex}`` is computed from the `excitation_duration` function.
+
+See also: [`zeros_extrema_frequencies`](@ref), [`excitation_duration`](@ref)
+"""
 function zeros_extrema_numbers(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Real,T<:Real}
     fz, fe = zeros_extrema_frequencies(m, r_ps, fas, sdof)
     Dex = excitation_duration(m, r_ps, fas, rvt)
@@ -124,7 +202,19 @@ end
 
 
 
+"""
+	rvt_response_spectral_ordinate(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Real,T<:Real}
 
+Response spectral ordinate (units of ``g``) for the specified scenario.
+
+The spectral ordinate is computed using the expression:
+```math
+S_a = \psi \sqrt{\frac{m_0}{D_{rms}}}
+```
+where ``\psi`` is the peak factor computed from `peak_factor`, ``m_0`` is the zeroth order spectral moment from `spectral_moment`, and ``D_{rms}`` is the RMS duration computed from `rms_duration`.
+
+See also: [`rvt_response_spectral_ordinate`](@ref), [`rvt_response_spectrum`](@ref), [`rvt_response_spectrum!`](@ref)
+"""
 function rvt_response_spectral_ordinate(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Real,T<:Real}
 	# get the duration metrics
 	Drms, Dex, Dratio = rms_duration(m, r_ps, fas, sdof, rvt)
@@ -139,6 +229,19 @@ function rvt_response_spectral_ordinate(m::S, r_ps::T, fas::FourierParameters, s
 end
 
 
+"""
+	rvt_response_spectral_ordinate(period::U, m::S, r_ps::T, fas::FourierParameters, rvt::RandomVibrationParameters) where {S<:Real,T<:Real,U<:Float64}
+
+Response spectral ordinate (units of ``g``) for the specified scenario.
+
+The spectral ordinate is computed using the expression:
+```math
+S_a = \psi \sqrt{\frac{m_0}{D_{rms}}}
+```
+where ``\psi`` is the peak factor computed from `peak_factor`, ``m_0`` is the zeroth order spectral moment from `spectral_moment`, and ``D_{rms}`` is the RMS duration computed from `rms_duration`.
+
+See also: [`rvt_response_spectral_ordinate`](@ref), [`rvt_response_spectrum`](@ref), [`rvt_response_spectrum!`](@ref)
+"""
 function rvt_response_spectral_ordinate(period::U, m::S, r_ps::T, fas::FourierParameters, rvt::RandomVibrationParameters) where {S<:Real,T<:Real,U<:Float64}
   	# create a sdof instance
   	sdof = Oscillator(1.0/period)
@@ -147,6 +250,19 @@ end
 
 
 
+"""
+	rvt_response_spectrum(period::Vector{U}, m::S, r_ps::T, fas::FourierParameters, rvt::RandomVibrationParameters) where {S<:Real,T<:Real,U<:Float64}
+
+Response spectrum (units of ``g``) for the vector of periods `period` and the specified scenario.
+
+Each spectral ordinate is computed using the expression:
+```math
+S_a = \psi \sqrt{\frac{m_0}{D_{rms}}}
+```
+where ``\psi`` is the peak factor computed from `peak_factor`, ``m_0`` is the zeroth order spectral moment from `spectral_moment`, and ``D_{rms}`` is the RMS duration computed from `rms_duration`. The various terms are all functions of the oscillator period.
+
+See also: [`rvt_response_spectral_ordinate`](@ref), [`rvt_response_spectrum!`](@ref)
+"""
 function rvt_response_spectrum(period::Vector{U}, m::S, r_ps::T, fas::FourierParameters, rvt::RandomVibrationParameters) where {S<:Real,T<:Real,U<:Float64}
 	if S <: Dual
 		Sa = zeros(S,length(period))
@@ -161,7 +277,19 @@ function rvt_response_spectrum(period::Vector{U}, m::S, r_ps::T, fas::FourierPar
 end
 
 
+"""
+	rvt_response_spectrum!(Sa::Vector{U}, period::Vector{V}, m::S, r_ps::T, fas::FourierParameters, rvt::RandomVibrationParameters) where {S<:Real,T<:Real,U<:Real,V<:Float64}
 
+In-place response spectrum (units of ``g``) for the vector of periods `period` and the specified scenario.
+
+Each spectral ordinate is computed using the expression:
+```math
+S_a = \psi \sqrt{\frac{m_0}{D_{rms}}}
+```
+where ``\psi`` is the peak factor computed from `peak_factor`, ``m_0`` is the zeroth order spectral moment from `spectral_moment`, and ``D_{rms}`` is the RMS duration computed from `rms_duration`. The various terms are all functions of the oscillator period.
+
+See also: [`rvt_response_spectral_ordinate`](@ref), [`rvt_response_spectrum!`](@ref)
+"""
 function rvt_response_spectrum!(Sa::Vector{U}, period::Vector{V}, m::S, r_ps::T, fas::FourierParameters, rvt::RandomVibrationParameters) where {S<:Real,T<:Real,U<:Real,V<:Float64}
 	for i in 1:length(period)
 		@inbounds Sa[i] = rvt_response_spectral_ordinate(period[i], m, r_ps, fas, rvt)
