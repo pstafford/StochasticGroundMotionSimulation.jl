@@ -6,7 +6,7 @@
 [![codecov](https://codecov.io/gh/pstafford/StochasticGroundMotionSimulation.jl/branch/master/graph/badge.svg?token=EDEF06FN61)](https://codecov.io/gh/pstafford/StochasticGroundMotionSimulation.jl)
 [![DOI](https://zenodo.org/badge/338342369.svg)](https://zenodo.org/badge/latestdoi/338342369)
 
-Julia package to simulate response spectral ordinates via random vibration theory.
+[Julia](http://www.julialang.org) package to simulate response spectral ordinates via random vibration theory.
 
 Package defines new custom types:
 - `FourierParameters`: representing the parameters of the Fourier amplitude spectrum
@@ -24,6 +24,39 @@ The `FourierParameters` type is constructed from three components:
 The package is developed in a manner to enable automatic differentiation operations to be performed via `ForwardDiff.jl`.
 This makes the package suitable for gradient-based inversions of ground-motion data, as well as inversions of published ground-motion models.
 
+## Installation
+
+First, a working version of [Julia](http://www.julialang.org) needs to be installed.
+The relevant binary (or source code) can be downloaded from the [Julia Downloads Page](https://julialang.org/downloads/).
+
+`StochasticGroundMotionSimulation.jl` is not currently a registered package and so cannot be installed directly from the package manager.
+
+However, installation remains very straightforward.
+Within a Julia REPL session, access the package manager via `]`, and then at the `pkg>` prompt type (below the `pkg>` component is part of the prompt, so only the `add ...` portion is necessary).
+```julia
+pkg> add https://github.com/pstafford/StochasticGroundMotionSimulation.jl.git
+```
+
+This will install the pacakge to be available locally on your system.
+
+## Usage
+
+Within a Julia session, bring the functionality of `StochasticGroundMotionSimulation.jl` into scope by typing (here the `julia>` component represents the prompt within a REPL session, within a text editor, simply type `using StochasticGroundMotionSimulation`):
+```julia
+julia> using StochasticGroundMotionSimulation
+```
+
+## Accessing Help
+
+Aside from the [documentation](https://pstafford.github.io/StochasticGroundMotionSimulation.jl/stable) accessible from the links at the top of this page, descriptions of methods and types within the package can be accessed within REPL sessions (or within Juno).
+
+Within, a REPL session, enter `?` to access the help prompt.
+Then, type the relevant item.
+For example:
+
+```julia
+help?> FourierParameters
+```
 
 ## Citing
 
