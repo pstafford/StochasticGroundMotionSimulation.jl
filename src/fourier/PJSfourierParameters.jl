@@ -210,13 +210,18 @@ end
 
 
 
-"""
+@doc raw"""
 	SiteParameters
 
 Custom type defining the site parameters of a Fourier spectrum
 
 - `κ0::T where T<:Real` is the site kappa in units of s
 - `model::Symbol` is a symbol identifying the impedance function
+
+The argument `model` is currently one of:
+- `:Unit` for a generic unit amplification
+- `:Boore2016` for the Boore (2016) amplification for ``V_{S,30}=760`` m/s
+- `:AlAtik2021_cy14` for the Al Atik & Abrahamson (2021) inversion of CY14 for ``V_{S,30}=760`` m/s  
 
 See also: [`FourierParameters`](@ref), [`site_amplification`](@ref)
 """
