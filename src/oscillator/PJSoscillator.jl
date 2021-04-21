@@ -48,7 +48,7 @@ Compute the modulus of the transfer function for a SDOF system.
 
 The transfer function is defined as:
 ```math
-|H(f,f_n,\zeta_n)| = \frac{1}{\sqrt{ \left(1 - \beta^2 \right) + \left(2\zeta_n\beta\right)^2 }}
+|H(f,f_n,\zeta_n)| = \frac{1}{\sqrt{ \left(1 - \beta^2 \right)^2 + \left(2\zeta_n\beta\right)^2 }}
 ```
 where ``\beta`` is the tuning ratio defined by ``f/f_n``.
 
