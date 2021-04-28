@@ -4,7 +4,7 @@
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://pstafford.github.io/StochasticGroundMotionSimulation.jl/dev)
 [![Build Status](https://github.com/pstafford/StochasticGroundMotionSimulation.jl/workflows/CI/badge.svg)](https://github.com/pstafford/StochasticGroundMotionSimulation.jl/actions)
 [![codecov](https://codecov.io/gh/pstafford/StochasticGroundMotionSimulation.jl/branch/master/graph/badge.svg?token=EDEF06FN61)](https://codecov.io/gh/pstafford/StochasticGroundMotionSimulation.jl)
-[![DOI](https://zenodo.org/badge/338342369.svg)](https://zenodo.org/badge/latestdoi/338342369)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4667333.svg)](https://doi.org/10.5281/zenodo.4667333)
 
 [Julia](http://www.julialang.org) package to simulate response spectral ordinates via random vibration theory.
 
