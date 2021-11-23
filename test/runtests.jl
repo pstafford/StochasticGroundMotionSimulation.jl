@@ -86,7 +86,7 @@ using LinearAlgebra
         srcf = SourceParameters(100.0, 3.5, 2.75)
         @test srcd.Δσ.value == srcf.Δσ
 
-        @test StochasticGroundMotionSimulation.magnitude_to_moment(6.0) == exp10(25.05)
+        @test StochasticGroundMotionSimulation.magnitude_to_moment(6.0) ≈ exp10(25.05)
 
     end
 
