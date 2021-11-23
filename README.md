@@ -29,15 +29,12 @@ This makes the package suitable for gradient-based inversions of ground-motion d
 First, a working version of [Julia](http://www.julialang.org) needs to be installed.
 The relevant binary (or source code) can be downloaded from the [Julia Downloads Page](https://julialang.org/downloads/).
 
-`StochasticGroundMotionSimulation.jl` is not currently a registered package and so cannot be installed directly from the package manager.
+`StochasticGroundMotionSimulation.jl` is a registered package and can be installed directly from the package manager.
 
-However, installation remains very straightforward.
 Within a Julia REPL session, access the package manager via `]`, and then at the `pkg>` prompt type (below the `pkg>` component is part of the prompt, so only the `add ...` portion is necessary).
 ```julia
-pkg> add https://github.com/pstafford/StochasticGroundMotionSimulation.jl.git
+pkg> add StochasticGroundMotionSimulation
 ```
-
-This will install the pacakge to be available locally on your system.
 
 ## Usage
 
