@@ -888,11 +888,6 @@ using LinearAlgebra
 
         @testset "Integration" begin
 
-            # n = 200
-            # @time xi, wi = gausslegendre(n)
-            # @time xi, wi = gausslaguerre(n)
-            # @time xi, wi = gausslobatto(n)
-
             Δσf = 100.0
             γ1f = 1.158
             γ2f = 0.5
@@ -942,8 +937,6 @@ using LinearAlgebra
 
 
             # Boore comparison (assume his are cgs units)
-            # ps2db(f) = ( (2π * sdof.f_n) / ( (2π * f)^2 ) )^2 * 1e-4
-            # ps2db(f) = ( 1.0 / ( 2π * f^2 * sdof.f_n ) )^2
             ps2db(f) = (1.0 / (2π * sdof.f_n))^2 * 1e4
 
             dbm0_integrand(f) = StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(f, m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(f, sdof) * ps2db(f)
@@ -974,16 +967,6 @@ using LinearAlgebra
             @time igk = 2 * quadgk(dbm4_integrand, exp(-7.0), exp(7.0))[1]
             @time iglelnm = 2 * StochasticGroundMotionSimulation.gauss_intervals(dbm4ln_integrand, 250, -7.0, log(sdof.f_n), 7.0)
             @test igk ≈ iglelnm rtol = 1e-3
-
-
-            # using DifferentialEquations
-            #
-            # u0 = 0.0
-            # tspan = (0.0, 300.0)
-            # f0(u,p,t) = dbm0_integrand(t)
-            # prob = ODEProblem(f0, u0, tspan)
-            # sol = solve(prob, RK4())
-            # 2*sol.u[end]
 
 
             m0_integrand(f) = StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(f, m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(f, sdof)
@@ -1022,7 +1005,7 @@ using LinearAlgebra
             @time itr = StochasticGroundMotionSimulation.trapezoidal(m1ln_integrand, 60, lnfi...)
 
             # @test igk ≈ igle rtol=1e-2
-            @test igk ≈ iglelnm rtol = 1e-5
+            @test igk ≈ iglelnm rtol = 1e-4
             @test igk ≈ itr rtol = 1e-3
 
 
@@ -1030,7 +1013,7 @@ using LinearAlgebra
             @time iglelnm = StochasticGroundMotionSimulation.gauss_intervals(m2ln_integrand, 30, lnfi...)
             @time itr = StochasticGroundMotionSimulation.trapezoidal(m2ln_integrand, 60, lnfi...)
 
-            @test igk ≈ iglelnm rtol = 1e-5
+            @test igk ≈ iglelnm rtol = 1e-4
             @test igk ≈ itr rtol = 1e-3
 
             @time igk = quadgk(m4_integrand, exp(-7.0), exp(7.0))[1]
@@ -1039,8 +1022,6 @@ using LinearAlgebra
 
             @test igk ≈ iglelnm rtol = 1e-4
             @test igk ≈ itr rtol = 1e-3
-
-
 
 
             integrand(x) = sin(x)
@@ -1181,8 +1162,8 @@ using LinearAlgebra
             m0f = spectral_moment(order, m, r_psf, fasf, sdof)
             m0d = spectral_moment(order, m, r_psd, fasd, sdof)
             m0m = spectral_moment(order, m, r_psm, fasm, sdof)
-            @test m0f == m0d.value
-            @test m0d == m0m
+            @test m0f ≈ m0d.value
+            @test m0d ≈ m0m
 
             # @code_warntype spectral_moment(order, m, r_psf, fasf, sdof)
             # @code_warntype spectral_moment(order, m, r_psd, fasd, sdof)
@@ -1388,7 +1369,6 @@ using LinearAlgebra
             r_psd = equivalent_point_source_distance(r, m, fasd)
             r_psm = equivalent_point_source_distance(r, m, fasm)
 
-            # Ti = exp10.(range(-2.0, stop=1.0, length=31))
             Ti = [0.01, 0.02, 0.03, 0.04, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 5.0, 7.5, 10.0]
 
             rvt = RandomVibrationParameters()
@@ -1405,99 +1385,6 @@ using LinearAlgebra
             # @code_warntype rvt_response_spectrum(Ti, m, r_psd, fasd, rvt)
             # @code_warntype rvt_response_spectrum(Ti, m, r_psm, fasm, rvt)
 
-
-            # function spectral_slope_rtp(x::Vector, r_rup, T, par::Vector)
-            #     src = SourceParameters(exp(par[1]))
-            #     geo = GeometricSpreadingParameters([1.0, 50.0, Inf], [ par[2], 0.5 ], :CY14mod)
-            #     heff = par[3] * exp( par[4]*m )
-            #     sat = NearSourceSaturationParameters(heff, 1)
-            #     ane = AnelasticAttenuationParameters(par[5], par[6], :Rrup)
-            #     path = PathParameters(geo, sat, ane)
-            #     site = SiteParameters(0.039)
-            #     fas = FourierParameters(src, path, site)
-            #     rvt = RandomVibrationParameters()
-            #
-            #     r_ps = equivalent_point_source_distance(r_rup, x[1], fas)
-            #
-            #     return log(rvt_response_spectral_ordinate(T, x[1], r_ps, fas, rvt))
-            # end
-            #
-            # r_rup = 1.0
-            # T = 0.01
-            # hα = 0.023
-            # hβ = 0.4
-            # γ = 1.2
-            # γ*hβ
-            # par = [ 5.25, γ, hα, hβ, 185.0, 0.66 ]
-            #
-            #
-            # x = [ 7.8 ]
-            # h = hα * exp( hβ * x[1] )
-            # r_ps = r_rup + h
-            #
-            # spectral_slope(x) = spectral_slope_rtp(x, r_rup, T, par)
-            # exp(spectral_slope(x))
-            # gspectral_slope(x) = ForwardDiff.gradient(spectral_slope, x)
-            # gspectral_slope(x)[1]
-            #
-            # lnSa1 = spectral_slope([7.0])
-            # lnSa2 = spectral_slope([8.40])
-            # (lnSa2 - lnSa1)/1.4
-
-
-
-            # r_rup = 1.0
-            # T = 0.01
-            # hα = 0.023
-            # hβ = 0.88
-            # γ = 1.2
-            # par = [ 5.25, γ, hα, hβ, 185.0, 0.66 ]
-            #
-            # m = 8.4
-            #
-            # src = SourceParameters(exp(par[1]))
-            # geo = GeometricSpreadingParameters([1.0, 50.0, Inf], [ par[2], 0.5 ], :CY14mod)
-            # heff = hα * exp( hβ * m )
-            # sat = NearSourceSaturationParameters(heff, 1)
-            # ane = AnelasticAttenuationParameters(par[5], par[6], :Rrup)
-            # path = PathParameters(geo, sat, ane)
-            # fas = FourierParameters(src, path, site)
-            # # equivalent_point_source_distance(r_rup, m, fas)
-            # r_ps = r_rup + heff
-            # site = SiteParameters(0.039)
-            # rvt = RandomVibrationParameters()
-            # sdof = Oscillator(1.0/T)
-            #
-            # rvt_response_spectral_ordinate(T, m, r_ps, fas, rvt)
-            #
-            # fc, fb, fe = corner_frequency(m, fas)
-            # fk = combined_kappa_frequency(r_rup, ane, site)
-            #
-            # m0 = spectral_moment(0, m, r_ps, fas, sdof)
-            #
-            # Afc = fourier_spectral_ordinate(fc*1.5, m, r_ps, fas)
-            # Afk = fourier_spectral_ordinate(fk, m, r_ps, fas)
-            #
-            # fn = 100.0
-            # transfer(fn/3, Oscillator(fn))
-            #
-            #
-            # mi = collect(range(7.0, stop=8.5, step=0.1))
-            # pfi = zeros(length(mi))
-            # for i in 1:length(mi)
-            #     heff = hα * exp( hβ * mi[i] )
-            #     sat = NearSourceSaturationParameters(heff, 1)
-            #     ane = AnelasticAttenuationParameters(par[5], par[6], :Rrup)
-            #     path = PathParameters(geo, sat, ane)
-            #     fas = FourierParameters(src, path, site)
-            #     r_ps = r_rup + heff
-            #     pfi[i] = peak_factor(mi[i], r_ps, fas, sdof, rvt)
-            # end
-            #
-            # [ mi pfi ]
-
         end
-
     end
-
 end
