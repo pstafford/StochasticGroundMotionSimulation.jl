@@ -231,7 +231,7 @@ struct SiteParameters{T<:Real}
 	model::Symbol		# site amplification model
 end
 
-SiteParameters(κ0::T) where {T} = SiteParameters(κ0, :AlAtik2021_cy14)
+SiteParameters(κ0::T) where {T} = SiteParameters(κ0, :AlAtik2021_cy14_760)
 
 """
 	get_parametric_type(site::SiteParameters{T}) where {T} = T

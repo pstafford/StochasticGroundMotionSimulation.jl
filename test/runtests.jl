@@ -10,9 +10,9 @@ using LinearAlgebra
 @testset "StochasticGroundMotionSimulation.jl" begin
 
     @testset "Performance" begin
-        Ti = [ 0.01, 0.02, 0.03, 0.04, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 5.0, 7.5, 10.0 ]
-        m = 4.0+π
-        r = 500.0+π
+        Ti = [0.01, 0.02, 0.03, 0.04, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 5.0, 7.5, 10.0]
+        m = 4.0 + π
+        r = 500.0 + π
 
         src = SourceParameters(100.0)
         geo = GeometricSpreadingParameters([1.0, 50.0, Inf], [1.0, 0.5])
@@ -22,7 +22,7 @@ using LinearAlgebra
         site = SiteParameters(0.039)
 
         fas = FourierParameters(src, path, site)
-        rvt = RandomVibrationParameters(:CL56)
+        rvt = RandomVibrationParameters(:DK80)
 
 
         sdof = Oscillator(1.0)
@@ -33,6 +33,7 @@ using LinearAlgebra
         # @code_warntype rvt_response_spectral_ordinate(Ti[1], m, r, fas, rvt)
         # @code_warntype rvt_response_spectrum(Ti, m, r, fas, rvt)
         # @time Sai = rvt_response_spectrum(Ti, m, r, fas, rvt)
+        # @profile Sai = rvt_response_spectrum(Ti, m, r, fas, rvt)
 
     end
 
@@ -91,10 +92,10 @@ using LinearAlgebra
 
     @testset "Path" begin
 
-        Rrefi = [ 1.0, 50.0, Inf ]
-        γi = [ 1.0, 0.5 ]
+        Rrefi = [1.0, 50.0, Inf]
+        γi = [1.0, 0.5]
         geof = GeometricSpreadingParameters(Rrefi, γi)
-        geod = GeometricSpreadingParameters(Rrefi, [ 0.5 ], [ Dual{Float64}(1.0) ], BitVector([1,0]), :Piecewise)
+        geod = GeometricSpreadingParameters(Rrefi, [0.5], [Dual{Float64}(1.0)], BitVector([1, 0]), :Piecewise)
 
         T = StochasticGroundMotionSimulation.get_parametric_type(geof)
         @test T == Float64
@@ -143,7 +144,7 @@ using LinearAlgebra
         grf = geometric_spreading(r_ps, fasf)
         @test grp == grf
 
-        geop = GeometricSpreadingParameters([1.0, Inf], [1.0], Vector{Float64}(), BitVector(undef,0), :Piecewise )
+        geop = GeometricSpreadingParameters([1.0, Inf], [1.0], Vector{Float64}(), BitVector(undef, 0), :Piecewise)
         @test StochasticGroundMotionSimulation.geometric_spreading_piecewise(r_ps, geop) == 1.0
         @test StochasticGroundMotionSimulation.geometric_spreading_piecewise(Dual(r_ps), geop) == 1.0
         fasp = FourierParameters(SourceParameters(50.0), PathParameters(geop, sat, anef))
@@ -175,7 +176,7 @@ using LinearAlgebra
         end
 
         src = SourceParameters(100.0)
-        geo = GeometricSpreadingParameters([1.0, Inf], [ 1.0 ])
+        geo = GeometricSpreadingParameters([1.0, Inf], [1.0])
         ane = AnelasticAttenuationParameters(200.0, 0.5)
         sat_ya = NearSourceSaturationParameters(:YA15)
         sat_cy = NearSourceSaturationParameters(:CY14)
@@ -241,8 +242,8 @@ using LinearAlgebra
         @test qrf == qrd.value
 
 
-        geo = GeometricSpreadingParameters([1.0, 50.0, Inf], [ 1.0, 0.5 ])
-        geoc = GeometricSpreadingParameters([1.0, 50.0, Inf], [ 1.0, 0.5 ], :CY14)
+        geo = GeometricSpreadingParameters([1.0, 50.0, Inf], [1.0, 0.5])
+        geoc = GeometricSpreadingParameters([1.0, 50.0, Inf], [1.0, 0.5], :CY14)
         @test geo.model == :Piecewise
         @test geoc.model == :CY14
         geod = GeometricSpreadingParameters([1.0, 50.0, Inf], [Dual(1.0), Dual(0.5)])
@@ -280,13 +281,13 @@ using LinearAlgebra
         κ0d = Dual{Float64}(κ0f)
 
         site0f = SiteParameters(κ0f)
-        siteAf = SiteParameters(κ0f, :AlAtik2021_cy14)
+        siteAf = SiteParameters(κ0f, :AlAtik2021_cy14_760)
         siteBf = SiteParameters(κ0f, :Boore2016)
         siteUf = SiteParameters(κ0f, :Unit)
         siteNf = SiteParameters(κ0f, :NaN)
 
         site0d = SiteParameters(κ0d)
-        siteAd = SiteParameters(κ0d, :AlAtik2021_cy14)
+        siteAd = SiteParameters(κ0d, :AlAtik2021_cy14_760)
         siteBd = SiteParameters(κ0d, :Boore2016)
         siteUd = SiteParameters(κ0d, :Unit)
         siteNd = SiteParameters(κ0d, :NaN)
@@ -297,6 +298,7 @@ using LinearAlgebra
         Sff = site_amplification(f, site0f)
         Sfd = site_amplification(f, site0d)
         @test Sff == Sfd
+
 
         Af0f = site_amplification(f, site0f)
         Af1f = site_amplification(f, siteAf)
@@ -329,6 +331,36 @@ using LinearAlgebra
 
         @test Af0 == Af1
 
+        ft = 10.0
+        Af620 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_ask14_620))
+        Af760 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_ask14_760))
+        Af1100 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_ask14_1100))
+
+        @test Af620 > Af760
+        @test Af760 > Af1100
+
+        Af620 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_bssa14_620))
+        Af760 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_bssa14_760))
+        Af1100 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_bssa14_1100))
+
+        @test Af620 > Af760
+        @test Af760 > Af1100
+
+        Af620 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_cb14_620))
+        Af760 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_cb14_760))
+        Af1100 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_cb14_1100))
+
+        @test Af620 > Af760
+        @test Af760 > Af1100
+
+        Af620 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_cy14_620))
+        Af760 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_cy14_760))
+        Af1100 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_cy14_1100))
+
+        @test Af620 > Af760
+        @test Af760 > Af1100
+
+
         f = 10.0
         # @code_warntype kappa_filter(f, siteAf)
         # @code_warntype kappa_filter(f, siteAd)
@@ -340,34 +372,16 @@ using LinearAlgebra
         @test StochasticGroundMotionSimulation.boore_2016_generic_amplification(0.015) == 1.01
         @test isnan(StochasticGroundMotionSimulation.boore_2016_generic_amplification(NaN))
 
-        numf = length(StochasticGroundMotionSimulation.fii_b16)
-        for i in 1:numf
-            fi = StochasticGroundMotionSimulation.fii_b16[i]
-            @test StochasticGroundMotionSimulation.boore_2016_generic_amplification(fi) == StochasticGroundMotionSimulation.Aii_b16[i]
+        numf = length(StochasticGroundMotionSimulation.fii_b16_760)
+        for i = 1:numf
+            fi = StochasticGroundMotionSimulation.fii_b16_760[i]
+            @test StochasticGroundMotionSimulation.boore_2016_generic_amplification(fi) == StochasticGroundMotionSimulation.Aii_b16_760[i]
         end
 
-        @test isnan(StochasticGroundMotionSimulation.alatik_2021_cy14_inverted_amplification_seg(NaN))
-
-        numf = length(StochasticGroundMotionSimulation.fii_aa21_cy14)
-        for i in 1:numf
-            fi = StochasticGroundMotionSimulation.fii_aa21_cy14[i]
-            @test StochasticGroundMotionSimulation.alatik_2021_cy14_inverted_amplification_seg(fi) == StochasticGroundMotionSimulation.Aii_aa21_cy14[i]
-        end
-
-        @test isnan(StochasticGroundMotionSimulation.alatik_2021_cy14_inverted_amplification(NaN))
-
-        numf = length(StochasticGroundMotionSimulation.fii_aa21_cy14)
-        for i in 1:numf
-            fi = StochasticGroundMotionSimulation.fii_aa21_cy14[i]
-            @test StochasticGroundMotionSimulation.alatik_2021_cy14_inverted_amplification(fi) == StochasticGroundMotionSimulation.Aii_aa21_cy14[i]
-        end
-
-        numf = length(StochasticGroundMotionSimulation.fii_b16)
-        for i in 1:numf
-            fi = StochasticGroundMotionSimulation.fii_b16[i]
-            Afi_all = StochasticGroundMotionSimulation.alatik_2021_cy14_inverted_amplification(fi)
-            Afi_seg = StochasticGroundMotionSimulation.alatik_2021_cy14_inverted_amplification_seg(fi)
-            @test Afi_all ≈ Afi_seg
+        numf = length(StochasticGroundMotionSimulation.fii_aa21_cy14_760)
+        for i = 1:numf
+            fi = StochasticGroundMotionSimulation.fii_aa21_cy14_760[i]
+            @test StochasticGroundMotionSimulation.itp_aa21_cy14_760(log(fi)) == StochasticGroundMotionSimulation.Aii_aa21_cy14_760[i]
         end
 
     end
@@ -377,11 +391,11 @@ using LinearAlgebra
         f_n = 1.0
         sdof = Oscillator(f_n, ζ)
 
-        @test f_n ≈ 1.0/period(sdof)
+        @test f_n ≈ 1.0 / period(sdof)
 
         @test transfer(0.5, sdof)^2 ≈ StochasticGroundMotionSimulation.squared_transfer(0.5, sdof)
 
-        fi = [ 0.5, 1.0, 2.0 ]
+        fi = [0.5, 1.0, 2.0]
 
         # @code_warntype transfer(fi, sdof)
 
@@ -391,7 +405,7 @@ using LinearAlgebra
         @test Hfi ≈ transfer(tfi, sdof)
 
         StochasticGroundMotionSimulation.squared_transfer!(Hfi, fi, sdof)
-        @test Hfi ≈ transfer(fi, sdof).^2
+        @test Hfi ≈ transfer(fi, sdof) .^ 2
 
     end
 
@@ -423,13 +437,13 @@ using LinearAlgebra
         faf, fbf, εf = corner_frequency(m, srcf)
         # @code_warntype StochasticGroundMotionSimulation.boore_thompson_2014(m, 0.0, srcf)
         Dsf = StochasticGroundMotionSimulation.boore_thompson_2014(m, 0.0, srcf)
-        @test Dsf ≈ 1.0/faf
+        @test Dsf ≈ 1.0 / faf
         @test isnan(fbf)
         @test isnan(εf)
         fad, fbd, εd = corner_frequency(m, srcd)
         # @code_warntype StochasticGroundMotionSimulation.boore_thompson_2014(m, 0.0, srcd)
         Dsd = StochasticGroundMotionSimulation.boore_thompson_2014(m, 0.0, srcd)
-        @test Dsd ≈ 1.0/fad
+        @test Dsd ≈ 1.0 / fad
         @test isnan(fbd)
         @test isnan(εd)
 
@@ -449,7 +463,7 @@ using LinearAlgebra
 
         srcAS = SourceParameters(Δσf, :Atkinson_Silva_2000)
         fa, fb, ε = corner_frequency(m, srcAS)
-        Ds = 0.5 * ( 1.0 / fa + 1.0 / fb )
+        Ds = 0.5 * (1.0 / fa + 1.0 / fb)
         @test StochasticGroundMotionSimulation.boore_thompson_2014(m, 0.0, srcAS) ≈ Ds
         @test isnan(fb) == false
         @test isnan(ε) == false
@@ -463,13 +477,13 @@ using LinearAlgebra
         r_ps2 = 1.0 + near_source_saturation(m2, fasf)
         Dex1 = StochasticGroundMotionSimulation.boore_thompson_2014(m1, r_ps1, fasf)
         Dex2 = StochasticGroundMotionSimulation.boore_thompson_2014(m2, r_ps2, fasf)
-        fdg = log(Dex2/Dex1)/h
+        fdg = log(Dex2 / Dex1) / h
 
         d(x) = log(StochasticGroundMotionSimulation.boore_thompson_2014(x[1], 1.0 + near_source_saturation(x[1], fasf), fasf))
         gd(x) = ForwardDiff.gradient(d, x)
         adg = gd([8.0])[1]
 
-        @test fdg ≈ adg atol=1e-2
+        @test fdg ≈ adg atol = 1e-2
 
 
         rvt = RandomVibrationParameters(:BT14)
@@ -480,7 +494,7 @@ using LinearAlgebra
         @test Dexf == Dexd.value
 
 
-        c11 = [ 8.4312e-01, -2.8671e-02, 2.0,  1.7316e+00,  1.1695e+00,  2.1671e+00,  9.6224e-01 ]
+        c11 = [8.4312e-01, -2.8671e-02, 2.0, 1.7316e+00, 1.1695e+00, 2.1671e+00, 9.6224e-01]
         c11f = StochasticGroundMotionSimulation.StochasticGroundMotionSimulation.boore_thompson_2012_coefs(1, 1)
         @test c11f[1] == c11[1]
         @test all(isapprox.(c11, c11f))
@@ -533,7 +547,7 @@ using LinearAlgebra
         Ds = 1.0 / fa
 
         Dex270 = Ds + 34.2
-        Dex300 = Dex270 + 0.156*30.0
+        Dex300 = Dex270 + 0.156 * 30.0
         @test Dex270 ≈ StochasticGroundMotionSimulation.boore_thompson_2014(m, 270.0, src)
         @test Dex300 ≈ StochasticGroundMotionSimulation.boore_thompson_2014(m, 300.0, src)
 
@@ -545,9 +559,9 @@ using LinearAlgebra
         @test isnan(excitation_duration(m, -1.0, srcd, rvt))
         @test isnan(excitation_duration(m, Dual(-1.0), src, rvt))
 
-        c = StochasticGroundMotionSimulation.StochasticGroundMotionSimulation.boore_thompson_2012_coefs(1, 1, region=:ENA)
+        c = StochasticGroundMotionSimulation.StochasticGroundMotionSimulation.boore_thompson_2012_coefs(1, 1, region = :ENA)
         idx = 1
-        @test all(isapprox(c, StochasticGroundMotionSimulation.coefs_ena_bt12[idx,3:9]))
+        @test all(isapprox(c, StochasticGroundMotionSimulation.coefs_ena_bt12[idx, 3:9]))
 
         d1a, d2a, d3a = StochasticGroundMotionSimulation.boore_thompson_2012(6.1234, 2.0, src, sdof, rvt)
         d1b, d2b, d3b = StochasticGroundMotionSimulation.boore_thompson_2012(6.1234, 2.1234, src, sdof, rvt)
@@ -560,9 +574,9 @@ using LinearAlgebra
         @test d1d < d1a
 
 
-        c = StochasticGroundMotionSimulation.boore_thompson_2015_coefs(1, 1, region=:ENA)
+        c = StochasticGroundMotionSimulation.boore_thompson_2015_coefs(1, 1, region = :ENA)
         idx = 1
-        @test all(isapprox(c, StochasticGroundMotionSimulation.coefs_ena_bt15[idx,3:9]))
+        @test all(isapprox(c, StochasticGroundMotionSimulation.coefs_ena_bt15[idx, 3:9]))
 
         d1a, d2a, d3a = StochasticGroundMotionSimulation.boore_thompson_2015(6.1234, 2.0, src, sdof, rvt)
         d1b, d2b, d3b = StochasticGroundMotionSimulation.boore_thompson_2015(6.1234, 2.1234, src, sdof, rvt)
@@ -622,7 +636,7 @@ using LinearAlgebra
         Rrefi = [1.0, 50.0, Inf]
         geof = GeometricSpreadingParameters(Rrefi, [γ1f, γ2f])
         geod = GeometricSpreadingParameters(Rrefi, [γ1d, γ2d])
-        geom = GeometricSpreadingParameters(Rrefi, [γ1f], [γ2d], BitVector([0,1]), :Piecewise)
+        geom = GeometricSpreadingParameters(Rrefi, [γ1f], [γ2d], BitVector([0, 1]), :Piecewise)
 
         anef = AnelasticAttenuationParameters(Q0f, ηf)
         aned = AnelasticAttenuationParameters(Q0d, ηd)
@@ -673,21 +687,21 @@ using LinearAlgebra
         @test Affs == Afff
         @test Afds == Afdf
 
-        @test Afff ≈ 1.0 atol=1e-3
+        @test Afff ≈ 1.0 atol = 1e-3
 
         fa, fb, ε = corner_frequency(m, srcf)
         # @code_warntype fourier_source_shape(f, fa, fb, ε, srcf.model)
         Afc = fourier_source_shape(f, fa, fb, ε, srcf.model)
-        @test Afc ≈ 1.0 atol=1e-3
+        @test Afc ≈ 1.0 atol = 1e-3
 
         fa, fb, ε = corner_frequency(m, srcd)
         # @code_warntype fourier_source_shape(f, fa, fb, ε, srcd.model)
         Afcd = fourier_source_shape(f, fa, fb, ε, srcd.model)
-        @test Afcd ≈ 1.0 atol=1e-3
+        @test Afcd ≈ 1.0 atol = 1e-3
 
         src_a = SourceParameters(100.0, :Atkinson_Silva_2000)
         Af_a = fourier_source_shape(f, m, src_a)
-        @test Af_a ≈ 1.0 atol=1e-3
+        @test Af_a ≈ 1.0 atol = 1e-3
         src_n = SourceParameters(100.0, :Null)
         Af_n = fourier_source_shape(f, m, src_n)
         src_b = SourceParameters(100.0)
@@ -696,7 +710,7 @@ using LinearAlgebra
 
         fa, fb, ε = corner_frequency(m, src_a)
         Af_a = fourier_source_shape(f, fa, fb, ε, src_a.model)
-        @test Af_a ≈ 1.0 atol=1e-3
+        @test Af_a ≈ 1.0 atol = 1e-3
         fa, fb, ε = corner_frequency(m, src_b)
         Af_n = fourier_source_shape(f, fa, fb, ε, src_n.model)
         @test Af_n ≈ Af_b
@@ -788,7 +802,7 @@ using LinearAlgebra
         @test Af == Ad.value
         @test Ad == Am
 
-        fi = [ 0.01, 0.1, 1.0, 10.0, 100.0 ]
+        fi = [0.01, 0.1, 1.0, 10.0, 100.0]
 
         # @code_warntype fourier_spectrum(fi, m, r_psf, fasf)
         # @code_warntype fourier_spectrum(fi, m, r_psf, fasd)
@@ -798,7 +812,7 @@ using LinearAlgebra
         Afif = fourier_spectrum(fi, m, r_psf, fasf)
         Afid = fourier_spectrum(fi, m, r_psf, fasd)
         Afim = fourier_spectrum(fi, m, r_psd, fasm)
-        for i in 1:length(fi)
+        for i = 1:length(fi)
             @test Afif[i] == Afid[i].value
         end
         @test all(isapprox.(Afid, Afim))
@@ -806,7 +820,7 @@ using LinearAlgebra
         fourier_spectrum!(Afif, fi, m, r_psf, fasf)
         fourier_spectrum!(Afid, fi, m, r_psf, fasd)
         fourier_spectrum!(Afim, fi, m, r_psd, fasm)
-        for i in 1:length(fi)
+        for i = 1:length(fi)
             @test Afif[i] == Afid[i].value
         end
         @test all(isapprox.(Afid, Afim))
@@ -814,7 +828,7 @@ using LinearAlgebra
         StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afif, fi, m, r_psf, fasf)
         StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afid, fi, m, r_psf, fasd)
         StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afim, fi, m, r_psd, fasm)
-        for i in 1:length(fi)
+        for i = 1:length(fi)
             @test Afif[i] == Afid[i].value
         end
         @test all(isapprox.(Afid, Afim))
@@ -834,7 +848,7 @@ using LinearAlgebra
         Afid = fourier_spectrum(fi, m, r_ps, fas)
 
         sqAfid = StochasticGroundMotionSimulation.squared_fourier_spectrum(fi, m, r_ps, fas)
-        @test any(isapprox.(sqAfid, Afid.^2))
+        @test any(isapprox.(sqAfid, Afid .^ 2))
 
         # @code_warntype fourier_spectrum!(Afif, fi, m, r_psf, fasf)
         # @code_warntype fourier_spectrum!(Afid, fi, m, r_psf, fasd)
@@ -899,7 +913,7 @@ using LinearAlgebra
             Rrefi = [1.0, 50.0, Inf]
             geof = GeometricSpreadingParameters(Rrefi, [γ1f, γ2f])
             geod = GeometricSpreadingParameters(Rrefi, [γ1d, γ2d])
-            geom = GeometricSpreadingParameters(Rrefi, [γ1f], [γ2d], BitVector([0,1]), :Piecewise)
+            geom = GeometricSpreadingParameters(Rrefi, [γ1f], [γ2d], BitVector([0, 1]), :Piecewise)
 
             anef = AnelasticAttenuationParameters(Q0f, ηf)
             aned = AnelasticAttenuationParameters(Q0d, ηd)
@@ -930,36 +944,36 @@ using LinearAlgebra
             # Boore comparison (assume his are cgs units)
             # ps2db(f) = ( (2π * sdof.f_n) / ( (2π * f)^2 ) )^2 * 1e-4
             # ps2db(f) = ( 1.0 / ( 2π * f^2 * sdof.f_n ) )^2
-            ps2db(f) = ( 1.0 / ( 2π*sdof.f_n ) )^2 * 1e4
+            ps2db(f) = (1.0 / (2π * sdof.f_n))^2 * 1e4
 
             dbm0_integrand(f) = StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(f, m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(f, sdof) * ps2db(f)
             dbm0ln_integrand(lnf) = exp(lnf) * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(exp(lnf), m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(exp(lnf), sdof) * ps2db(exp(lnf))
 
-            dbm1_integrand(f) = (2π*f) * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(f, m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(f, sdof) * ps2db(f)
-            dbm1ln_integrand(lnf) = exp(lnf) * (2π*exp(lnf)) * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(exp(lnf), m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(exp(lnf), sdof) * ps2db(exp(lnf))
+            dbm1_integrand(f) = (2π * f) * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(f, m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(f, sdof) * ps2db(f)
+            dbm1ln_integrand(lnf) = exp(lnf) * (2π * exp(lnf)) * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(exp(lnf), m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(exp(lnf), sdof) * ps2db(exp(lnf))
 
-            dbm2_integrand(f) = (2π*f)^2 * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(f, m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(f, sdof) * ps2db(f)
-            dbm2ln_integrand(lnf) = exp(lnf) * (2π*exp(lnf))^2  * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(exp(lnf), m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(exp(lnf), sdof) * ps2db(exp(lnf))
+            dbm2_integrand(f) = (2π * f)^2 * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(f, m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(f, sdof) * ps2db(f)
+            dbm2ln_integrand(lnf) = exp(lnf) * (2π * exp(lnf))^2 * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(exp(lnf), m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(exp(lnf), sdof) * ps2db(exp(lnf))
 
-            dbm4_integrand(f) = (2π*f)^4 * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(f, m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(f, sdof) * ps2db(f)
-            dbm4ln_integrand(lnf) = exp(lnf) * (2π*exp(lnf))^4 * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(exp(lnf), m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(exp(lnf), sdof) * ps2db(exp(lnf))
+            dbm4_integrand(f) = (2π * f)^4 * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(f, m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(f, sdof) * ps2db(f)
+            dbm4ln_integrand(lnf) = exp(lnf) * (2π * exp(lnf))^4 * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(exp(lnf), m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(exp(lnf), sdof) * ps2db(exp(lnf))
 
-            @time igk = 2*quadgk(dbm0_integrand, 0.0, Inf)[1]
-            @time igk = 2*quadgk(dbm0_integrand, exp(-7.0), exp(7.0))[1]
-            @time iglelnm = 2*StochasticGroundMotionSimulation.gauss_intervals(dbm0ln_integrand, 250, -7.0, log(sdof.f_n), 7.0)
-            @test igk ≈ iglelnm rtol=1e-4
+            @time igk = 2 * quadgk(dbm0_integrand, 0.0, Inf)[1]
+            @time igk = 2 * quadgk(dbm0_integrand, exp(-7.0), exp(7.0))[1]
+            @time iglelnm = 2 * StochasticGroundMotionSimulation.gauss_intervals(dbm0ln_integrand, 250, -7.0, log(sdof.f_n), 7.0)
+            @test igk ≈ iglelnm rtol = 1e-4
 
-            @time igk = 2*quadgk(dbm1_integrand, exp(-7.0), exp(7.0))[1]
-            @time iglelnm = 2*StochasticGroundMotionSimulation.gauss_intervals(dbm1ln_integrand, 250, -7.0, log(sdof.f_n), 7.0)
-            @test igk ≈ iglelnm rtol=1e-4
+            @time igk = 2 * quadgk(dbm1_integrand, exp(-7.0), exp(7.0))[1]
+            @time iglelnm = 2 * StochasticGroundMotionSimulation.gauss_intervals(dbm1ln_integrand, 250, -7.0, log(sdof.f_n), 7.0)
+            @test igk ≈ iglelnm rtol = 1e-4
 
-            @time igk = 2*quadgk(dbm2_integrand, exp(-7.0), exp(7.0))[1]
-            @time iglelnm = 2*StochasticGroundMotionSimulation.gauss_intervals(dbm2ln_integrand, 250, -7.0, log(sdof.f_n), 7.0)
-            @test igk ≈ iglelnm rtol=1e-3
+            @time igk = 2 * quadgk(dbm2_integrand, exp(-7.0), exp(7.0))[1]
+            @time iglelnm = 2 * StochasticGroundMotionSimulation.gauss_intervals(dbm2ln_integrand, 250, -7.0, log(sdof.f_n), 7.0)
+            @test igk ≈ iglelnm rtol = 1e-3
 
-            @time igk = 2*quadgk(dbm4_integrand, exp(-7.0), exp(7.0))[1]
-            @time iglelnm = 2*StochasticGroundMotionSimulation.gauss_intervals(dbm4ln_integrand, 250, -7.0, log(sdof.f_n), 7.0)
-            @test igk ≈ iglelnm rtol=1e-3
+            @time igk = 2 * quadgk(dbm4_integrand, exp(-7.0), exp(7.0))[1]
+            @time iglelnm = 2 * StochasticGroundMotionSimulation.gauss_intervals(dbm4ln_integrand, 250, -7.0, log(sdof.f_n), 7.0)
+            @test igk ≈ iglelnm rtol = 1e-3
 
 
             # using DifferentialEquations
@@ -975,14 +989,14 @@ using LinearAlgebra
             m0_integrand(f) = StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(f, m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(f, sdof)
             m0ln_integrand(lnf) = exp(lnf) * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(exp(lnf), m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(exp(lnf), sdof)
 
-            m1_integrand(f) = (2π*f) * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(f, m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(f, sdof)
-            m1ln_integrand(lnf) = exp(lnf) * (2π*exp(lnf)) * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(exp(lnf), m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(exp(lnf), sdof)
+            m1_integrand(f) = (2π * f) * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(f, m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(f, sdof)
+            m1ln_integrand(lnf) = exp(lnf) * (2π * exp(lnf)) * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(exp(lnf), m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(exp(lnf), sdof)
 
-            m2_integrand(f) = (2π*f)^2 * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(f, m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(f, sdof)
-            m2ln_integrand(lnf) = exp(lnf) * (2π*exp(lnf))^2  * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(exp(lnf), m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(exp(lnf), sdof)
+            m2_integrand(f) = (2π * f)^2 * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(f, m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(f, sdof)
+            m2ln_integrand(lnf) = exp(lnf) * (2π * exp(lnf))^2 * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(exp(lnf), m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(exp(lnf), sdof)
 
-            m4_integrand(f) = (2π*f)^4 * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(f, m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(f, sdof)
-            m4ln_integrand(lnf) = exp(lnf) * (2π*exp(lnf))^4 * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(exp(lnf), m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(exp(lnf), sdof)
+            m4_integrand(f) = (2π * f)^4 * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(f, m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(f, sdof)
+            m4ln_integrand(lnf) = exp(lnf) * (2π * exp(lnf))^4 * StochasticGroundMotionSimulation.squared_fourier_spectral_ordinate(exp(lnf), m, r_psf, fasf) * StochasticGroundMotionSimulation.squared_transfer(exp(lnf), sdof)
 
 
             @time igk = quadgk(m0_integrand, exp(-7.0), exp(7.0))[1]
@@ -992,10 +1006,10 @@ using LinearAlgebra
             @time iglelnm = StochasticGroundMotionSimulation.gauss_intervals(m0ln_integrand, 250, -7.0, log(sdof.f_n), 7.0)
 
             # @test igk ≈ igle rtol=1e-2
-            @test igk ≈ igleln rtol=1e-4
-            @test igk ≈ iglelnm rtol=1e-4
+            @test igk ≈ igleln rtol = 1e-4
+            @test igk ≈ iglelnm rtol = 1e-4
 
-            lnfi = log.([ 1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3, sdof.f_n ])
+            lnfi = log.([1e-3, 1e-2, 1e-1, 1e0, 1e1, 1e2, 1e3, sdof.f_n])
             sort!(lnfi)
 
             @time igk = quadgk(m1_integrand, exp(-7.0), exp(7.0))[1]
@@ -1008,23 +1022,23 @@ using LinearAlgebra
             @time itr = StochasticGroundMotionSimulation.trapezoidal(m1ln_integrand, 60, lnfi...)
 
             # @test igk ≈ igle rtol=1e-2
-            @test igk ≈ iglelnm rtol=1e-5
-            @test igk ≈ itr rtol=1e-3
+            @test igk ≈ iglelnm rtol = 1e-5
+            @test igk ≈ itr rtol = 1e-3
 
 
             @time igk = quadgk(m2_integrand, exp(-7.0), exp(7.0))[1]
             @time iglelnm = StochasticGroundMotionSimulation.gauss_intervals(m2ln_integrand, 30, lnfi...)
             @time itr = StochasticGroundMotionSimulation.trapezoidal(m2ln_integrand, 60, lnfi...)
 
-            @test igk ≈ iglelnm rtol=1e-5
-            @test igk ≈ itr rtol=1e-3
+            @test igk ≈ iglelnm rtol = 1e-5
+            @test igk ≈ itr rtol = 1e-3
 
             @time igk = quadgk(m4_integrand, exp(-7.0), exp(7.0))[1]
             @time iglelnm = StochasticGroundMotionSimulation.gauss_intervals(m4ln_integrand, 30, lnfi...)
             @time itr = StochasticGroundMotionSimulation.trapezoidal(m4ln_integrand, 60, lnfi...)
 
-            @test igk ≈ iglelnm rtol=1e-4
-            @test igk ≈ itr rtol=1e-3
+            @test igk ≈ iglelnm rtol = 1e-4
+            @test igk ≈ itr rtol = 1e-3
 
 
 
@@ -1034,7 +1048,7 @@ using LinearAlgebra
             intervals = 101
             x_min = 0.0
             x_max = 2π
-            xx = collect(range(x_min, stop=x_max, length=intervals))
+            xx = collect(range(x_min, stop = x_max, length = intervals))
             yy = integrand.(xx)
 
             isr = StochasticGroundMotionSimulation.simpsons_rule(xx, yy)
@@ -1042,8 +1056,8 @@ using LinearAlgebra
 
             igk = quadgk(integrand, x_min, x_max)[1]
 
-            @test isr ≈ igk atol=10*eps()
-            @test ist ≈ igk atol=10*eps()
+            @test isr ≈ igk atol = 10 * eps()
+            @test ist ≈ igk atol = 10 * eps()
 
 
             m = 6.0
@@ -1060,16 +1074,16 @@ using LinearAlgebra
             integrand(f) = StochasticGroundMotionSimulation.squared_transfer(f, sdof) * fourier_spectral_ordinate(f, m, r, fas)^2
 
             intervals = 101
-            x_min = sdof.f_n/1.1
-            x_max = sdof.f_n*1.1
-            xx = collect(range(x_min, stop=x_max, length=intervals))
+            x_min = sdof.f_n / 1.1
+            x_max = sdof.f_n * 1.1
+            xx = collect(range(x_min, stop = x_max, length = intervals))
             yy = integrand.(xx)
 
             isr = StochasticGroundMotionSimulation.simpsons_rule(xx, yy)
             igk = quadgk(integrand, x_min, x_max)[1]
 
-            @test isr ≈ igk rtol=1e-6
-            @test isr ≈ igk atol=1e-6
+            @test isr ≈ igk rtol = 1e-6
+            @test isr ≈ igk atol = 1e-6
 
 
             integrand(f) = StochasticGroundMotionSimulation.squared_transfer(f, sdof) * fourier_spectral_ordinate(f, m, r, fas)^2
@@ -1077,40 +1091,40 @@ using LinearAlgebra
             intervals = 101
             x_min = 100.0
             x_max = 200.0
-            xx = collect(range(x_min, stop=x_max, length=intervals))
+            xx = collect(range(x_min, stop = x_max, length = intervals))
             yy = integrand.(xx)
 
             isr = StochasticGroundMotionSimulation.simpsons_rule(xx, yy)
             igk = quadgk(integrand, x_min, x_max)[1]
 
-            @test isr ≈ igk rtol=1e-3
-            @test isr ≈ igk atol=1e-6
+            @test isr ≈ igk rtol = 1e-3
+            @test isr ≈ igk atol = 1e-6
 
 
-            integrand(f) = (2π*f)^4 * StochasticGroundMotionSimulation.squared_transfer(f, sdof) * fourier_spectral_ordinate(f, m, r, fas)^2
+            integrand(f) = (2π * f)^4 * StochasticGroundMotionSimulation.squared_transfer(f, sdof) * fourier_spectral_ordinate(f, m, r, fas)^2
 
             intervals = 101
             x_min = 100.0
             x_max = 200.0
-            xx = collect(range(x_min, stop=x_max, length=intervals))
+            xx = collect(range(x_min, stop = x_max, length = intervals))
             yy = integrand.(xx)
 
             isr = StochasticGroundMotionSimulation.simpsons_rule(xx, yy)
             igk = quadgk(integrand, x_min, x_max)[1]
 
-            @test isr ≈ igk rtol=1e-3
-            @test isr ≈ igk atol=1e-6
+            @test isr ≈ igk rtol = 1e-3
+            @test isr ≈ igk atol = 1e-6
 
             x_min = 300.0
             x_max = 500.0
-            xx = collect(range(x_min, stop=x_max, length=intervals))
+            xx = collect(range(x_min, stop = x_max, length = intervals))
             yy = integrand.(xx)
 
             isr = StochasticGroundMotionSimulation.simpsons_rule(xx, yy)
             igk = quadgk(integrand, x_min, x_max)[1]
 
-            @test isr ≈ igk rtol=1e-3
-            @test isr ≈ igk atol=1e-6
+            @test isr ≈ igk rtol = 1e-3
+            @test isr ≈ igk atol = 1e-6
 
         end
 
@@ -1136,7 +1150,7 @@ using LinearAlgebra
             Rrefi = [1.0, 50.0, Inf]
             geof = GeometricSpreadingParameters(Rrefi, [γ1f, γ2f])
             geod = GeometricSpreadingParameters(Rrefi, [γ1d, γ2d])
-            geom = GeometricSpreadingParameters(Rrefi, [γ1f], [γ2d], BitVector([0,1]), :Piecewise)
+            geom = GeometricSpreadingParameters(Rrefi, [γ1f], [γ2d], BitVector([0, 1]), :Piecewise)
 
             anef = AnelasticAttenuationParameters(Q0f, ηf)
             aned = AnelasticAttenuationParameters(Q0d, ηd)
@@ -1185,14 +1199,14 @@ using LinearAlgebra
             smi = spectral_moments([0, 1, 2, 4], m, r_psf, fasf, sdof)
             smigk = StochasticGroundMotionSimulation.spectral_moments_gk([0, 1, 2, 4], m, r_psf, fasf, sdof)
 
-            @test all(isapprox.(smi, smigk, rtol=1e-3))
+            @test all(isapprox.(smi, smigk, rtol = 1e-3))
 
 
-            sdof = Oscillator(1/3)
+            sdof = Oscillator(1 / 3)
             smi = spectral_moments([0, 1, 2, 4], m, r_psf, fasf, sdof)
             smigk = StochasticGroundMotionSimulation.spectral_moments_gk([0, 1, 2, 4], m, r_psf, fasf, sdof)
 
-            @test all(isapprox.(smi, smigk, rtol=1e-3))
+            @test all(isapprox.(smi, smigk, rtol = 1e-3))
 
             m = Dual(6.0)
             smdi = spectral_moments([0, 1, 2, 4], m, r_psf, fasf, sdof)
@@ -1205,17 +1219,17 @@ using LinearAlgebra
             @test smdi ≈ smfi
 
             rvt = RandomVibrationParameters()
-            Ti = [ 0.01, 0.1, 1.0 ]
+            Ti = [0.01, 0.1, 1.0]
             m = Dual(6.0)
             Sadi = rvt_response_spectrum(Ti, m, 10.0, fasf, rvt)
             Safi = rvt_response_spectrum(Ti, m.value, 10.0, fasf, rvt)
-            for i in 1:length(Ti)
+            for i = 1:length(Ti)
                 @test Sadi[i].value ≈ Safi[i]
             end
 
             rvt_response_spectrum!(Sadi, Ti, m, 10.0, fasf, rvt)
             rvt_response_spectrum!(Safi, Ti, m.value, 10.0, fasf, rvt)
-            for i in 1:length(Ti)
+            for i = 1:length(Ti)
                 @test Sadi[i].value ≈ Safi[i]
             end
 
@@ -1244,7 +1258,7 @@ using LinearAlgebra
             Rrefi = [1.0, 50.0, Inf]
             geof = GeometricSpreadingParameters(Rrefi, [γ1f, γ2f])
             geod = GeometricSpreadingParameters(Rrefi, [γ1d, γ2d])
-            geom = GeometricSpreadingParameters(Rrefi, [γ1f], [γ2d], BitVector([0,1]), :Piecewise)
+            geom = GeometricSpreadingParameters(Rrefi, [γ1f], [γ2d], BitVector([0, 1]), :Piecewise)
 
             anef = AnelasticAttenuationParameters(Q0f, ηf)
             aned = AnelasticAttenuationParameters(Q0d, ηd)
@@ -1274,18 +1288,18 @@ using LinearAlgebra
             sdof = Oscillator(1.0)
 
             @time pfps = StochasticGroundMotionSimulation.peak_factor_dk80(m, r_psf, fasf, sdof)
-            @time pfpsn = StochasticGroundMotionSimulation.peak_factor_dk80(m, r_psf, fasf, sdof, nodes=30)
+            @time pfpsn = StochasticGroundMotionSimulation.peak_factor_dk80(m, r_psf, fasf, sdof, nodes = 30)
             @time pfgk = StochasticGroundMotionSimulation.peak_factor_dk80_gk(m, r_psf, fasf, sdof)
 
-            @test pfps ≈ pfgk rtol=1e-6
-            @test pfpsn ≈ pfgk rtol=1e-6
+            @test pfps ≈ pfgk rtol = 1e-6
+            @test pfpsn ≈ pfgk rtol = 1e-6
 
             @time pfps = StochasticGroundMotionSimulation.peak_factor_cl56(m, r_psf, fasf, sdof)
-            @time pfpsn = StochasticGroundMotionSimulation.peak_factor_cl56(m, r_psf, fasf, sdof, nodes=40)
+            @time pfpsn = StochasticGroundMotionSimulation.peak_factor_cl56(m, r_psf, fasf, sdof, nodes = 40)
             @time pfgk = StochasticGroundMotionSimulation.peak_factor_cl56_gk(m, r_psf, fasf, sdof)
 
-            @test pfps ≈ pfgk rtol=1e-5
-            @test pfpsn ≈ pfgk rtol=1e-5
+            @test pfps ≈ pfgk rtol = 1e-5
+            @test pfpsn ≈ pfgk rtol = 1e-5
 
             @test StochasticGroundMotionSimulation.vanmarcke_cdf(-1.0, 10.0, 0.5) == 0.0
 
@@ -1320,7 +1334,7 @@ using LinearAlgebra
             @test pfi ≈ 0.0
 
             pf0 = StochasticGroundMotionSimulation.peak_factor_cl56(10.0, 10.0)
-            pf1 = StochasticGroundMotionSimulation.peak_factor_cl56(10.0, 10.0, nodes=50)
+            pf1 = StochasticGroundMotionSimulation.peak_factor_cl56(10.0, 10.0, nodes = 50)
             @test pf0 ≈ pf1
 
         end
@@ -1347,7 +1361,7 @@ using LinearAlgebra
             Rrefi = [1.0, 50.0, Inf]
             geof = GeometricSpreadingParameters(Rrefi, [γ1f, γ2f])
             geod = GeometricSpreadingParameters(Rrefi, [γ1d, γ2d])
-            geom = GeometricSpreadingParameters(Rrefi, [γ1f], [γ2d], BitVector([0,1]), :Piecewise)
+            geom = GeometricSpreadingParameters(Rrefi, [γ1f], [γ2d], BitVector([0, 1]), :Piecewise)
 
             anef = AnelasticAttenuationParameters(Q0f, ηf)
             aned = AnelasticAttenuationParameters(Q0d, ηd)
@@ -1375,14 +1389,14 @@ using LinearAlgebra
             r_psm = equivalent_point_source_distance(r, m, fasm)
 
             # Ti = exp10.(range(-2.0, stop=1.0, length=31))
-            Ti = [ 0.01, 0.02, 0.03, 0.04, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 5.0, 7.5, 10.0 ]
+            Ti = [0.01, 0.02, 0.03, 0.04, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 5.0, 7.5, 10.0]
 
             rvt = RandomVibrationParameters()
 
             Saif = rvt_response_spectrum(Ti, m, r_psf, fasf, rvt)
             Said = rvt_response_spectrum(Ti, m, r_psd, fasd, rvt)
             Saim = rvt_response_spectrum(Ti, m, r_psm, fasm, rvt)
-            for i in 1:length(Ti)
+            for i = 1:length(Ti)
                 @test Saif[i] ≈ Said[i].value
             end
             @test all(isapprox.(Said, Saim))
