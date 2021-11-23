@@ -1307,7 +1307,7 @@ using LinearAlgebra
             rvt = RandomVibrationParameters(:CL56)
             pf = peak_factor(m, r_ps, Dex, m0, fasf, sdof, rvt)
             @test isnan(pf) == false
-            @test pf == peak_factor(m, r_ps, fasf, sdof, RandomVibrationParameters(:CL56))
+            @test pf ≈ peak_factor(m, r_ps, fasf, sdof, RandomVibrationParameters(:CL56))
 
             pfi = StochasticGroundMotionSimulation.peak_factor_integrand_cl56(0.0, 10.0, 10.0)
             @test pfi ≈ 1.0
