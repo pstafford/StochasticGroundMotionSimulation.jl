@@ -17,7 +17,11 @@ Computes the generic crustal amplification for a WUS velocity profile with Vs30 
 ```
 """
 function boore_2016_generic_amplification(f::T) where {T<:Real}
-    return itp_b16_760(log(f))
+    if isnan(f)
+        return T(NaN)
+    else
+        return itp_b16_760(log(f))
+    end
 end
 
 
