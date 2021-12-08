@@ -4,23 +4,23 @@
 
 Geometric spreading function, switches between different approaches on `path.geo_model`.
 """
-function geometric_spreading(r_ps::T, m::S, geo::GeometricSpreadingParameters, sat::NearSourceSaturationParameters) where {S<:Real, T<:Real}
-	if geo.model == :Piecewise
-		return geometric_spreading_piecewise(r_ps, geo)
-	elseif geo.model == :CY14
-		return geometric_spreading_cy14(r_ps, geo)
-	elseif geo.model == :CY14mod
-		return geometric_spreading_cy14mod(r_ps, m, geo, sat)
-	else
-		return NaN * oneunit(get_parametric_type(geo))
-	end
+function geometric_spreading(r_ps::T, m::S, geo::GeometricSpreadingParameters, sat::NearSourceSaturationParameters) where {S<:Real,T<:Real}
+    if geo.model == :Piecewise
+        return geometric_spreading_piecewise(r_ps, geo)
+    elseif geo.model == :CY14
+        return geometric_spreading_cy14(r_ps, geo)
+    elseif geo.model == :CY14mod
+        return geometric_spreading_cy14mod(r_ps, m, geo, sat)
+    else
+        return NaN * oneunit(get_parametric_type(geo))
+    end
 end
 
-geometric_spreading(r_ps::T, m::S, path::PathParameters) where {S<:Real, T<:Real} = geometric_spreading(r_ps, m, path.geometric, path.saturation)
-geometric_spreading(r_ps::T, m::S, fas::FourierParameters) where {S<:Real, T<:Real} = geometric_spreading(r_ps, m, fas.path)
+geometric_spreading(r_ps::T, m::S, path::PathParameters) where {S<:Real,T<:Real} = geometric_spreading(r_ps, m, path.geometric, path.saturation)
+geometric_spreading(r_ps::T, m::S, fas::FourierParameters) where {S<:Real,T<:Real} = geometric_spreading(r_ps, m, fas.path)
 # special variants that don't require a magnitude input
-geometric_spreading(r_ps::T, path::PathParameters) where T<:Real = geometric_spreading(r_ps, NaN, path.geometric, path.saturation)
-geometric_spreading(r_ps::T, fas::FourierParameters) where T<:Real = geometric_spreading(r_ps, fas.path)
+geometric_spreading(r_ps::T, path::PathParameters) where {T<:Real} = geometric_spreading(r_ps, NaN, path.geometric, path.saturation)
+geometric_spreading(r_ps::T, fas::FourierParameters) where {T<:Real} = geometric_spreading(r_ps, fas.path)
 
 
 
@@ -30,29 +30,29 @@ geometric_spreading(r_ps::T, fas::FourierParameters) where T<:Real = geometric_s
 Piecewise linear (in log-log space) geometric spreading function.
 Makes use of the reference distances `Rrefi` and spreading rates `γi` in `path`.
 """
-function geometric_spreading_piecewise(r_ps::V, geo::GeometricSpreadingParameters{S,T,U}) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}, V<:Real}
-	z_r = oneunit(T)
-	j = 1
-	k = 1
-    for i in 1:length(geo.γfree)
-		@inbounds Rr0 = geo.Rrefi[i]
-		@inbounds Rr1 = geo.Rrefi[i+1]
-		γ_r = oneunit(T)
+function geometric_spreading_piecewise(r_ps::V, geo::GeometricSpreadingParameters{S,T,U}) where {S<:Float64,T<:Real,U<:AbstractVector{Bool},V<:Real}
+    z_r = oneunit(T)
+    j = 1
+    k = 1
+    for i = 1:length(geo.γfree)
+        @inbounds Rr0 = geo.Rrefi[i]
+        @inbounds Rr1 = geo.Rrefi[i+1]
+        γ_r = oneunit(T)
 
-		if geo.γfree[i] == 0
-			@inbounds γ_r *= geo.γconi[j]
-			j += 1
-		else
-			@inbounds γ_r *= geo.γvari[k]
-			k += 1
-		end
+        if geo.γfree[i] == 0
+            @inbounds γ_r *= geo.γconi[j]
+            j += 1
+        else
+            @inbounds γ_r *= geo.γvari[k]
+            k += 1
+        end
 
-    	if r_ps < Rr1
-        	z_r *= (Rr0 / r_ps)^γ_r
-        	return z_r
-      	else
-        	z_r *= (Rr0 / Rr1)^γ_r
-      	end
+        if r_ps < Rr1
+            z_r *= (Rr0 / r_ps)^γ_r
+            return z_r
+        else
+            z_r *= (Rr0 / Rr1)^γ_r
+        end
     end
     return z_r
 end
@@ -67,27 +67,27 @@ geometric_spreading_piecewise(r_ps, fas::FourierParameters) = geometric_spreadin
 Geometric spreading function from Chiou & Youngs (2014).
 Defines a smooth transition from one rate `γi[1]` to another `γi[2]`, with a spreading bandwidth of `Rrefi[2]` km.
 """
-function geometric_spreading_cy14(r_ps::V, geo::GeometricSpreadingParameters{S,T,U}) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}, V<:Real}
-	unit = oneunit(T)
-	j = 1
-	k = 1
-	if geo.γfree[1] == 0
-		γ1 = geo.γconi[j] * unit
-		j += 1
-	else
-		γ1 = geo.γvari[k]
-		k += 1
-	end
-	if geo.γfree[2] == 0
-		γ2 = geo.γconi[j] * unit
-	else
-		γ2 = geo.γvari[k]
-	end
-	R0sq = (geo.Rrefi[1])^2
-	Rrsq = (geo.Rrefi[2])^2
-	ln_z_r = -γ1*log(r_ps) + (-γ2+γ1)/2*log( (r_ps^2 + Rrsq) / (R0sq + Rrsq) )
-	z_r = exp(ln_z_r)
-	return z_r
+function geometric_spreading_cy14(r_ps::V, geo::GeometricSpreadingParameters{S,T,U}) where {S<:Float64,T<:Real,U<:AbstractVector{Bool},V<:Real}
+    unit = oneunit(T)
+    j = 1
+    k = 1
+    if geo.γfree[1] == 0
+        γ1 = geo.γconi[j] * unit
+        j += 1
+    else
+        γ1 = geo.γvari[k]
+        k += 1
+    end
+    if geo.γfree[2] == 0
+        γ2 = geo.γconi[j] * unit
+    else
+        γ2 = geo.γvari[k]
+    end
+    R0sq = (geo.Rrefi[1])^2
+    Rrsq = (geo.Rrefi[2])^2
+    ln_z_r = -γ1 * log(r_ps) + (-γ2 + γ1) / 2 * log((r_ps^2 + Rrsq) / (R0sq + Rrsq))
+    z_r = exp(ln_z_r)
+    return z_r
 end
 
 
@@ -102,28 +102,28 @@ Geometric spreading function from Chiou & Youngs (2014).
 Modified to make use of both `r_ps` and `r_rup` so that only the first saturation term contaminates the source amplitudes.
 Defines a smooth transition from one rate `γi[1]` to another `γi[2]`, with a spreading bandwidth of `Rrefi[2]` km.
 """
-function geometric_spreading_cy14mod(r_ps::V, m::W, geo::GeometricSpreadingParameters{S,T,U}, sat::NearSourceSaturationParameters) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}, V<:Real, W<:Real}
-	unit = oneunit(T)
-	j = 1
-	k = 1
-	if geo.γfree[1] == 0
-		γ1 = geo.γconi[j] * unit
-		j += 1
-	else
-		γ1 = geo.γvari[k]
-		k += 1
-	end
-	if geo.γfree[2] == 0
-		γ2 = geo.γconi[j] * unit
-	else
-		γ2 = geo.γvari[k]
-	end
-	R0sq = (geo.Rrefi[1])^2
-	Rrsq = (geo.Rrefi[2])^2
-	r_rup = rupture_distance_from_equivalent_point_source_distance(r_ps, m, sat)
-	ln_z_r = -γ1*log(r_ps) + (-γ2+γ1)/2*log( (r_rup^2 + Rrsq) / (R0sq + Rrsq) )
-	z_r = exp(ln_z_r)
-	return z_r
+function geometric_spreading_cy14mod(r_ps::V, m::W, geo::GeometricSpreadingParameters{S,T,U}, sat::NearSourceSaturationParameters) where {S<:Float64,T<:Real,U<:AbstractVector{Bool},V<:Real,W<:Real}
+    unit = oneunit(T)
+    j = 1
+    k = 1
+    if geo.γfree[1] == 0
+        γ1 = geo.γconi[j] * unit
+        j += 1
+    else
+        γ1 = geo.γvari[k]
+        k += 1
+    end
+    if geo.γfree[2] == 0
+        γ2 = geo.γconi[j] * unit
+    else
+        γ2 = geo.γvari[k]
+    end
+    R0sq = (geo.Rrefi[1])^2
+    Rrsq = (geo.Rrefi[2])^2
+    r_rup = rupture_distance_from_equivalent_point_source_distance(r_ps, m, sat)
+    ln_z_r = -γ1 * log(r_ps) + (-γ2 + γ1) / 2 * log((r_rup^2 + Rrsq) / (R0sq + Rrsq))
+    z_r = exp(ln_z_r)
+    return z_r
 end
 
 
@@ -152,25 +152,25 @@ Any other symbol passed will return `NaN`.
 See also: [`near_source_saturation`](@ref)
 """
 function near_source_saturation(m, sat::NearSourceSaturationParameters)
-	unit = oneunit(get_parametric_type(sat))
-	if sat.model == :BT15
-		# use the Boore & Thompson (2015) finite fault factor
-		return finite_fault_factor_bt15(m) * unit
-	elseif sat.model == :YA15
-		# use the Yenier & Atkinson (2015) finite fault factor
-		return finite_fault_factor_ya15(m) * unit
-	elseif sat.model == :CY14
-		# use the fitted model averaging over Chiou & Youngs (2014)
-		return finite_fault_factor_cy14(m) * unit
-	elseif sat.model == :None
-		return zero(get_parametric_type(sat))
-	elseif sat.model == :ConstantConstrained
-		return sat.hconi[1] * unit
-	elseif sat.model == :ConstantVariable
-		return sat.hvari[1] * unit
-	else
-		return NaN * unit
-	end
+    unit = oneunit(get_parametric_type(sat))
+    if sat.model == :BT15
+        # use the Boore & Thompson (2015) finite fault factor
+        return finite_fault_factor_bt15(m) * unit
+    elseif sat.model == :YA15
+        # use the Yenier & Atkinson (2015) finite fault factor
+        return finite_fault_factor_ya15(m) * unit
+    elseif sat.model == :CY14
+        # use the fitted model averaging over Chiou & Youngs (2014)
+        return finite_fault_factor_cy14(m) * unit
+    elseif sat.model == :None
+        return zero(get_parametric_type(sat))
+    elseif sat.model == :ConstantConstrained
+        return sat.hconi[1] * unit
+    elseif sat.model == :ConstantVariable
+        return sat.hvari[1] * unit
+    else
+        return NaN * unit
+    end
 end
 
 """
@@ -200,25 +200,25 @@ Finite fault factor from Boore & Thompson (2015) used to create equivalent point
 
 See also: [`near_source_saturation`](@ref), [`finite_fault_factor_ya15`](@ref), [`finite_fault_factor_cy14`](@ref)
 """
-function finite_fault_factor_bt15(m::T) where T<:Real
-	Mt1 = 5.744
-	Mt2 = 7.744
-	if m <= Mt1
-		a1 = 0.7497
-		b1 = 0.4300
-		h = a1 + b1*(m - Mt1)
-	elseif m >= Mt2
-		a2 = 1.4147
-		b2 = 0.2350
-		h = a2 + b2*(m - Mt2)
-	else
-		c0 = 0.7497
-		c1 = 0.4300
-		c2 = -0.04875
-		c3 = 0.0
-		h = c0 + c1*(m - Mt1) + c2*(m - Mt1)^2 + c3*(m - Mt1)^3
-	end
-	return 10.0^h
+function finite_fault_factor_bt15(m::T) where {T<:Real}
+    Mt1 = 5.744
+    Mt2 = 7.744
+    if m <= Mt1
+        a1 = 0.7497
+        b1 = 0.4300
+        h = a1 + b1 * (m - Mt1)
+    elseif m >= Mt2
+        a2 = 1.4147
+        b2 = 0.2350
+        h = a2 + b2 * (m - Mt2)
+    else
+        c0 = 0.7497
+        c1 = 0.4300
+        c2 = -0.04875
+        c3 = 0.0
+        h = c0 + c1 * (m - Mt1) + c2 * (m - Mt1)^2 + c3 * (m - Mt1)^3
+    end
+    return 10.0^h
 end
 
 """
@@ -228,8 +228,8 @@ Finite fault factor from Yenier & Atkinson (2015) used to create equivalent poin
 
 See also: [`near_source_saturation`](@ref), [`finite_fault_factor_bt15`](@ref), [`finite_fault_factor_cy14`](@ref)
 """
-function finite_fault_factor_ya15(m::T) where T<:Real
-	return 10.0^(-0.405 + 0.235*m)
+function finite_fault_factor_ya15(m::T) where {T<:Real}
+    return 10.0^(-0.405 + 0.235 * m)
 end
 
 
@@ -241,11 +241,11 @@ This is a model developed to match the average saturation length over the full p
 
 See also: [`near_source_saturation`](@ref), [`finite_fault_factor_bt15`](@ref), [`finite_fault_factor_ya15`](@ref)
 """
-function finite_fault_factor_cy14(m::T) where T<:Real
-	hα = 7.308
-	hβ = 0.4792
-	hγ = 3.556
-	return hα * cosh( hβ * max( m - hγ, 0.0 ) )
+function finite_fault_factor_cy14(m::T) where {T<:Real}
+    hα = 7.308
+    hβ = 0.4792
+    hγ = 3.556
+    return hα * cosh(hβ * max(m - hγ, 0.0))
 end
 
 
@@ -260,9 +260,9 @@ Compute equivalent point source distance
 See also: [`near_source_saturation`](@ref)
 """
 function equivalent_point_source_distance(r, m, sat::NearSourceSaturationParameters)
-	h = near_source_saturation(m, sat)
-	n = sat.exponent
-	return ( r^n + h^n )^(1/n)
+    h = near_source_saturation(m, sat)
+    n = sat.exponent
+    return (r^n + h^n)^(1 / n)
 end
 
 equivalent_point_source_distance(r, m, path::PathParameters) = equivalent_point_source_distance(r, m, path.saturation)
@@ -278,9 +278,9 @@ Compute rupture distance from equivalent point source distance
 - `sat` contains the `NearSourceSaturationParameters`
 """
 function rupture_distance_from_equivalent_point_source_distance(r_ps, m, sat::NearSourceSaturationParameters)
-	h = near_source_saturation(m, sat)
-	n = sat.exponent
-	return ( r_ps^n - h^n )^(1/n)
+    h = near_source_saturation(m, sat)
+    n = sat.exponent
+    return (r_ps^n - h^n)^(1 / n)
 end
 
 rupture_distance_from_equivalent_point_source_distance(r_ps, m, path::PathParameters) = rupture_distance_from_equivalent_point_source_distance(r_ps, m, path.saturation)
@@ -293,8 +293,97 @@ rupture_distance_from_equivalent_point_source_distance(r_ps, m, fas::FourierPara
 Anelastic attenuation filter, computed using equivalent point source distance metric or a standard rupture distance.
 """
 function anelastic_attenuation(f::S, r::T, anelastic::AnelasticAttenuationParameters) where {S<:Float64,T<:Real}
-	return exp( -π*f*r / ( anelastic.Q0 * f^anelastic.η * anelastic.cQ ) )
+    PT = get_parametric_type(anelastic)
+    Qfilt = oneunit(PT)
+    jq = jη = 1
+    kq = kη = 1
+    for i = 1:length(anelastic.Qfree)
+        @inbounds Rr0 = anelastic.Rrefi[i]
+        @inbounds Rr1 = anelastic.Rrefi[i+1]
+
+        Q0_r = oneunit(PT)
+        η_r = oneunit(PT)
+        cQ_r = anelastic.cQ[i]
+
+        # get the relevant constrained or free quality factor for this path segment
+        if anelastic.Qfree[i] == 0
+            @inbounds Q0_r *= anelastic.Q0coni[jq]
+            jq += 1
+        else
+            @inbounds Q0_r *= anelastic.Q0vari[kq]
+            kq += 1
+        end
+        # get the relevant constrained of free quality exponent for this path segment
+        if anelastic.ηfree[i] == 0
+            @inbounds η_r *= anelastic.ηconi[jη]
+            jη += 1
+        else
+            @inbounds η_r *= anelastic.ηvari[kη]
+            kη += 1
+        end
+
+        if r < Rr1
+            Qfilt *= exp(-π * f^(1.0 - η_r) * (r - Rr0) / (Q0_r * cQ_r))
+            return Qfilt
+        else
+            Qfilt *= exp(-π * f^(1.0 - η_r) * (Rr1 - Rr0) / (Q0_r * cQ_r))
+        end
+    end
 end
 
 anelastic_attenuation(f, r, path::PathParameters) = anelastic_attenuation(f, r, path.anelastic)
 anelastic_attenuation(f, r, fas::FourierParameters) = anelastic_attenuation(f, r, fas.path)
+
+
+"""
+	effective_quality_parameters(r::T, anelastic::AnelasticAttenuationParameters) where {T<:Real}
+
+Distance weighted quality parameters for segmented model.
+Returns a tuple of effective Q0, η & cQ values from a weighted sum, weighted by relative distance in each path segment.
+"""
+function effective_quality_parameters(r::T, anelastic::AnelasticAttenuationParameters) where {T<:Real}
+    PT = get_parametric_type(anelastic)
+    Q_eff = zero(PT)
+    η_eff = zero(PT)
+    cQ_eff = zero(PT)
+    jq = jη = 1
+    kq = kη = 1
+    for i = 1:length(anelastic.Qfree)
+        @inbounds Rr0 = anelastic.Rrefi[i]
+        @inbounds Rr1 = anelastic.Rrefi[i+1]
+
+        Q0_r = oneunit(PT)
+        η_r = oneunit(PT)
+        cQ_r = anelastic.cQ[i]
+
+        # get the relevant constrained or free quality factor for this path segment
+        if anelastic.Qfree[i] == 0
+            @inbounds Q0_r *= anelastic.Q0coni[jq]
+            jq += 1
+        else
+            @inbounds Q0_r *= anelastic.Q0vari[kq]
+            kq += 1
+        end
+        # get the relevant constrained of free quality exponent for this path segment
+        if anelastic.ηfree[i] == 0
+            @inbounds η_r *= anelastic.ηconi[jη]
+            jη += 1
+        else
+            @inbounds η_r *= anelastic.ηvari[kη]
+            kη += 1
+        end
+
+        if r < Rr1
+            rfrac = (r - Rr0) / r
+            Q_eff += rfrac * Q0_r
+            η_eff += rfrac * η_r
+            cQ_eff += rfrac * cQ_r
+            return (Q_eff, η_eff, cQ_eff)
+        else
+            rfrac = (Rr1 - Rr0) / r
+            Q_eff += rfrac * Q0_r
+            η_eff += rfrac * η_r
+            cQ_eff += rfrac * cQ_r
+        end
+    end
+end

@@ -13,22 +13,22 @@ Constructed with signature `SourceParameters{S<:Float64, T<:Real}` with fields:
 - `ρ::S` is the source density in units of t/m³ or g/cm³
 - `model::Symbol` identifies the type of source spectrum (`:Brune`, `:Atkinson_Silva_2000`)
 """
-struct SourceParameters{S<:Float64, T<:Real}
-	# source parameters
-	Δσ::T	# stressParameter
-	RΘϕ::S                            # radiationPattern
-	V::S                              # partitionFactor
-	F::S                              # freeSurfaceFactor
-	β::S                              # sourceVelocity
-  	ρ::S                              # sourceDensity
-	model::Symbol  					  # source spectrum model
+struct SourceParameters{S<:Float64,T<:Real}
+    # source parameters
+    Δσ::T# stressParameter
+    RΘϕ::S                            # radiationPattern
+    V::S                              # partitionFactor
+    F::S                              # freeSurfaceFactor
+    β::S                              # sourceVelocity
+    ρ::S                              # sourceDensity
+    model::Symbol    # source spectrum model
 end
 
-SourceParameters(Δσ::T) where {T<:Float64} = SourceParameters(Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, :Brune)
-SourceParameters(Δσ::T) where {T<:Real} = SourceParameters(Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, :Brune)
-SourceParameters(Δσ::T, model::Symbol) where {T<:Real} = SourceParameters(Δσ, 0.55, 1.0/sqrt(2.0), 2.0, 3.5, 2.75, model)
-SourceParameters(Δσ::T, βs::S, ρs::S) where {S<:Float64,T<:Real} = SourceParameters(Δσ, 0.55, 1.0/sqrt(2.0), 2.0, βs, ρs, :Brune)
-SourceParameters(Δσ::T, βs::T, ρs::T) where {T<:Float64} = SourceParameters(Δσ, 0.55, 1.0/sqrt(2.0), 2.0, βs, ρs, :Brune)
+SourceParameters(Δσ::T) where {T<:Float64} = SourceParameters(Δσ, 0.55, 1.0 / sqrt(2.0), 2.0, 3.5, 2.75, :Brune)
+SourceParameters(Δσ::T) where {T<:Real} = SourceParameters(Δσ, 0.55, 1.0 / sqrt(2.0), 2.0, 3.5, 2.75, :Brune)
+SourceParameters(Δσ::T, model::Symbol) where {T<:Real} = SourceParameters(Δσ, 0.55, 1.0 / sqrt(2.0), 2.0, 3.5, 2.75, model)
+SourceParameters(Δσ::T, βs::S, ρs::S) where {S<:Float64,T<:Real} = SourceParameters(Δσ, 0.55, 1.0 / sqrt(2.0), 2.0, βs, ρs, :Brune)
+SourceParameters(Δσ::T, βs::T, ρs::T) where {T<:Float64} = SourceParameters(Δσ, 0.55, 1.0 / sqrt(2.0), 2.0, βs, ρs, :Brune)
 
 """
 	get_parametric_type(src::SourceParameters{S,T}) where {S,T} = T
@@ -50,18 +50,18 @@ Holds fields:
 - `model` is a symbol defining the type of spreading model `:Piecewise`, `:CY14`, `:CY14mod`
 """
 struct GeometricSpreadingParameters{S<:Real,T<:Real,U<:AbstractVector{Bool}}
-	Rrefi::Vector{S}
-	γconi::Vector{S}
-	γvari::Vector{T}
-	γfree::U
-	model::Symbol
+    Rrefi::Vector{S}
+    γconi::Vector{S}
+    γvari::Vector{T}
+    γfree::U
+    model::Symbol
 end
 
-GeometricSpreadingParameters(Rrefi, γconi) = GeometricSpreadingParameters(Rrefi, γconi, Vector{Float64}(), BitVector(undef,length(γconi)), :Piecewise )
-GeometricSpreadingParameters(Rrefi, γconi, model) = GeometricSpreadingParameters(Rrefi, γconi, Vector{Float64}(), BitVector(undef,length(γconi)), model )
-GeometricSpreadingParameters(Rrefi::Vector{T}, γconi::Vector{T}) where T = GeometricSpreadingParameters{T,T,BitVector}(Rrefi, γconi, Vector{T}(), BitVector(undef,length(γconi)), :Piecewise )
-GeometricSpreadingParameters(Rrefi::Vector{S}, γvari::Vector{T}) where {S<:Float64,T<:Dual} = GeometricSpreadingParameters{S,T,BitVector}(Rrefi, Vector{S}(), γvari, BitVector(ones(length(γvari))), :Piecewise )
-GeometricSpreadingParameters(Rrefi::Vector{S}, γvari::Vector{T}, model::Symbol) where {S<:Float64,T<:Dual} = GeometricSpreadingParameters{S,T,BitVector}(Rrefi, Vector{S}(), γvari, BitVector(ones(length(γvari))), model )
+GeometricSpreadingParameters(Rrefi, γconi) = GeometricSpreadingParameters(Rrefi, γconi, Vector{Float64}(), BitVector(undef, length(γconi)), :Piecewise)
+GeometricSpreadingParameters(Rrefi, γconi, model) = GeometricSpreadingParameters(Rrefi, γconi, Vector{Float64}(), BitVector(undef, length(γconi)), model)
+GeometricSpreadingParameters(Rrefi::Vector{T}, γconi::Vector{T}) where {T} = GeometricSpreadingParameters{T,T,BitVector}(Rrefi, γconi, Vector{T}(), BitVector(undef, length(γconi)), :Piecewise)
+GeometricSpreadingParameters(Rrefi::Vector{S}, γvari::Vector{T}) where {S<:Float64,T<:Dual} = GeometricSpreadingParameters{S,T,BitVector}(Rrefi, Vector{S}(), γvari, BitVector(ones(length(γvari))), :Piecewise)
+GeometricSpreadingParameters(Rrefi::Vector{S}, γvari::Vector{T}, model::Symbol) where {S<:Float64,T<:Dual} = GeometricSpreadingParameters{S,T,BitVector}(Rrefi, Vector{S}(), γvari, BitVector(ones(length(γvari))), model)
 
 """
 	get_parametric_type(geo::GeometricSpreadingParameters{S,T,U}) where {S,T,U} = T
@@ -91,12 +91,12 @@ Holds fields:
 
 """
 struct NearSourceSaturationParameters{S<:Real,T<:Real,U<:AbstractVector{Bool}}
-	mRefi::Vector{S}
-	hconi::Vector{S}
-	hvari::Vector{T}
-	hfree::U
-	exponent::Int
-	model::Symbol
+    mRefi::Vector{S}
+    hconi::Vector{S}
+    hvari::Vector{T}
+    hfree::U
+    exponent::Int
+    model::Symbol
 end
 
 NearSourceSaturationParameters(model::Symbol) = NearSourceSaturationParameters(Vector{Float64}(), Vector{Float64}(), Vector{Float64}(), BitVector(), 2, model)
@@ -108,11 +108,11 @@ NearSourceSaturationParameters(mRefi::Vector{T}, hconi::Vector{T}) where {T} = N
 NearSourceSaturationParameters(mRefi::Vector{S}, hvari::Vector{T}) where {S,T} = NearSourceSaturationParameters(mRefi, Vector{S}(), hvari, BitVector(ones(length(hvari))), 2, :FullyVariable)
 
 # specialisation for a constant saturation term
-NearSourceSaturationParameters(hcon::Float64) = NearSourceSaturationParameters(Vector{Float64}(), [ hcon ], Vector{Float64}(), BitVector(undef,1), 2, :ConstantConstrained)
-NearSourceSaturationParameters(hvar::T) where {T<:Dual} = NearSourceSaturationParameters(Vector{Float64}(), Vector{Float64}(), Vector{T}([ hvar ]), BitVector([1]), 2, :ConstantVariable)
+NearSourceSaturationParameters(hcon::Float64) = NearSourceSaturationParameters(Vector{Float64}(), [hcon], Vector{Float64}(), BitVector(undef, 1), 2, :ConstantConstrained)
+NearSourceSaturationParameters(hvar::T) where {T<:Dual} = NearSourceSaturationParameters(Vector{Float64}(), Vector{Float64}(), Vector{T}([hvar]), BitVector([1]), 2, :ConstantVariable)
 # with exponents
-NearSourceSaturationParameters(hcon::Float64, exponent::Int) = NearSourceSaturationParameters(Vector{Float64}(), [ hcon ], Vector{Float64}(), BitVector(undef,1), exponent, :ConstantConstrained)
-NearSourceSaturationParameters(hvar::T, exponent::Int) where {T<:Dual} = NearSourceSaturationParameters(Vector{Float64}(), Vector{Float64}(), Vector{T}([ hvar ]), BitVector([1]), exponent, :ConstantVariable)
+NearSourceSaturationParameters(hcon::Float64, exponent::Int) = NearSourceSaturationParameters(Vector{Float64}(), [hcon], Vector{Float64}(), BitVector(undef, 1), exponent, :ConstantConstrained)
+NearSourceSaturationParameters(hvar::T, exponent::Int) where {T<:Dual} = NearSourceSaturationParameters(Vector{Float64}(), Vector{Float64}(), Vector{T}([hvar]), BitVector([1]), exponent, :ConstantVariable)
 
 
 
@@ -134,34 +134,63 @@ Holds fields:
 - `cQ` velocity (km/s) along propagation path used to determine `Q(f)`
 - `rmetric` is a symbol `:Rrup` or `:Rps` to define which distance metric is used for anelastic attenuation
 """
-struct AnelasticAttenuationParameters{S<:Real,T<:Real}
-	Q0::S
-	η::T
-	cQ::Float64
-	rmetric::Symbol
+struct AnelasticAttenuationParameters{S<:Real,T<:Real,U<:AbstractVector{Bool}}
+    Rrefi::Vector{S}
+    Q0coni::Vector{S}
+    Q0vari::Vector{T}
+    ηconi::Vector{S}
+    ηvari::Vector{T}
+    cQ::Vector{Float64}
+    Qfree::U
+    ηfree::U
+    rmetric::Symbol
 end
 
-AnelasticAttenuationParameters(Q0) = AnelasticAttenuationParameters(Q0, 0.0, 3.5, :Rps)
-AnelasticAttenuationParameters(Q0, η) = AnelasticAttenuationParameters(Q0, η, 3.5, :Rps)
-AnelasticAttenuationParameters(Q0::T, η::T) where T = AnelasticAttenuationParameters{T,T}(Q0, η, 3.5, :Rps)
-AnelasticAttenuationParameters(Q0::T, η::T, cQ::Float64) where T = AnelasticAttenuationParameters{T,T}(Q0, η, cQ, :Rps)
-AnelasticAttenuationParameters(Q0, η, rmetric) = AnelasticAttenuationParameters(Q0, η, 3.5, rmetric)
+AnelasticAttenuationParameters(Q0::T) where {T<:Float64} = AnelasticAttenuationParameters([0.0, Inf], [Q0], Vector{Float64}(), [0.0], Vector{Float64}(), [3.5], BitVector(zeros(1)), BitVector(zeros(1)), :Rps)
+AnelasticAttenuationParameters(Q0::T) where {T<:Real} = AnelasticAttenuationParameters([0.0, Inf], Vector{Float64}(), [Q0], Vector{Float64}(), [zero(T)], [3.5], BitVector(ones(1)), BitVector(zeros(1)), :Rps)
+AnelasticAttenuationParameters(Q0::T, η::T) where {T<:Float64} = AnelasticAttenuationParameters([0.0, Inf], [Q0], Vector{T}(), [η], Vector{T}(), [3.5], BitVector(zeros(1)), BitVector(zeros(1)), :Rps)
+AnelasticAttenuationParameters(Q0::T, η::T, rmetric::Symbol) where {T<:Float64} = AnelasticAttenuationParameters([0.0, Inf], [Q0], Vector{T}(), [η], Vector{T}(), [3.5], BitVector(zeros(1)), BitVector(zeros(1)), rmetric)
+AnelasticAttenuationParameters(Q0::T, η::T) where {T<:Real} = AnelasticAttenuationParameters([0.0, Inf], Vector{Float64}(), [Q0], Vector{Float64}(), [η], [3.5], BitVector(ones(1)), BitVector(ones(1)), :Rps)
+AnelasticAttenuationParameters(Q0::T, η::T, rmetric::Symbol) where {T<:Real} = AnelasticAttenuationParameters([0.0, Inf], Vector{Float64}(), [Q0], Vector{Float64}(), [η], [3.5], BitVector(ones(1)), BitVector(ones(1)), rmetric)
+AnelasticAttenuationParameters(Q0::S, η::T) where {S<:Float64,T<:Real} = AnelasticAttenuationParameters([0.0, Inf], [Q0], Vector{T}(), Vector{S}(), [η], [3.5], BitVector(zeros(1)), BitVector(ones(1)), :Rps)
+AnelasticAttenuationParameters(Q0::S, η::T, rmetric::Symbol) where {S<:Float64,T<:Real} = AnelasticAttenuationParameters([0.0, Inf], [Q0], Vector{T}(), Vector{S}(), [η], [3.5], BitVector(zeros(1)), BitVector(ones(1)), rmetric)
+AnelasticAttenuationParameters(Q0::S, η::T) where {S<:Real,T<:Float64} = AnelasticAttenuationParameters([0.0, Inf], Vector{T}(), [Q0], [η], Vector{S}(), [3.5], BitVector(ones(1)), BitVector(zeros(1)), :Rps)
+AnelasticAttenuationParameters(Q0::S, η::T, rmetric::Symbol) where {S<:Real,T<:Float64} = AnelasticAttenuationParameters([0.0, Inf], Vector{T}(), [Q0], [η], Vector{S}(), [3.5], BitVector(ones(1)), BitVector(zeros(1)), rmetric)
+
+# AnelasticAttenuationParameters(Q0::S, η) = AnelasticAttenuationParameters([0.0, Inf], [Q0], Vector{Float64}(), [η], Vector{Float64}(), [3.5], BitVector(undef, 1), BitVector(undef, 1), :Rps)
+AnelasticAttenuationParameters(Q0, η, cQ::Float64) = AnelasticAttenuationParameters([0.0, Inf], [Q0], Vector{Float64}(), [η], Vector{Float64}(), [cQ], BitVector(undef, 1), BitVector(undef, 1), :Rps)
+AnelasticAttenuationParameters(Q0, η, cQ::Float64, rmetric::Symbol) = AnelasticAttenuationParameters([0.0, Inf], [Q0], Vector{Float64}(), [η], Vector{Float64}(), [cQ], BitVector(undef, 1), BitVector(undef, 1), rmetric)
+
+AnelasticAttenuationParameters(Rrefi::Vector{T}, Q0coni::Vector{T}) where {T} = AnelasticAttenuationParameters{T,T,BitVector}(Rrefi, Q0coni, Vector{T}(), zeros(T, length(Q0coni)), Vector{T}(), 3.5 * ones(T, length(Q0coni)), BitVector(undef, length(Q0coni)), BitVector(undef, length(Q0coni)), :Rps)
+AnelasticAttenuationParameters(Rrefi::Vector{S}, Q0vari::Vector{T}) where {S<:Float64,T<:Real} = AnelasticAttenuationParameters{S,T,BitVector}(Rrefi, Vector{S}(), Q0vari, zeros(S, length(Q0vari)), Vector{S}(), 3.5 * ones(S, length(Q0coni)), BitVector(undef, length(Q0coni)), BitVector(undef, length(Q0coni)), :Rps)
+AnelasticAttenuationParameters(Rrefi::Vector{S}, Q0vari::Vector{T}, rmetric::Symbol) where {S<:Float64,T<:Real} = AnelasticAttenuationParameters{S,T,BitVector}(Rrefi, Vector{S}(), Q0vari, zeros(S, length(Q0vari)), Vector{S}(), 3.5 * ones(S, length(Q0coni)), BitVector(undef, length(Q0coni)), BitVector(undef, length(Q0coni)), rmetric)
+
+AnelasticAttenuationParameters(Rrefi::Vector{T}, Q0coni::Vector{T}, ηconi::Vector{T}) where {T<:Float64} = AnelasticAttenuationParameters{T,T,BitVector}(Rrefi, Q0coni, Vector{T}(), ηconi, Vector{T}(), 3.5 * ones(T, length(Q0coni)), BitVector(undef, length(Q0coni)), BitVector(undef, length(Q0coni)), :Rps)
+AnelasticAttenuationParameters(Rrefi::Vector{S}, Q0vari::Vector{T}, ηvari::Vector{T}) where {S<:Float64,T<:Real} = AnelasticAttenuationParameters{S,T,BitVector}(Rrefi, Vector{S}(), Q0vari, zeros(S, length(Q0vari)), ηvari, 3.5 * ones(S, length(Q0coni)), BitVector(ones(length(Q0vari))), BitVector(ones(length(ηvari))), :Rps)
+AnelasticAttenuationParameters(Rrefi::Vector{S}, Q0vari::Vector{T}, ηvari::Vector{T}, rmetric::Symbol) where {S<:Float64,T<:Real} = AnelasticAttenuationParameters{S,T,BitVector}(Rrefi, Vector{S}(), Q0vari, zeros(S, length(Q0vari)), ηvari, 3.5 * ones(S, length(Q0coni)), BitVector(ones(length(Q0vari))), BitVector(ones(length(Q0vari))), rmetric)
+
+AnelasticAttenuationParameters(Rrefi::Vector{S}, Q0coni::Vector{S}, ηvari::Vector{T}) where {S<:Float64,T<:Real} = AnelasticAttenuationParameters{S,T,BitVector}(Rrefi, Q0coni, Vector{T}(), Vector{S}(), ηvari, 3.5 * ones(S, length(Q0coni)), BitVector(zeros(length(Q0coni))), BitVector(ones(length(ηvari))), :Rps)
+AnelasticAttenuationParameters(Rrefi::Vector{S}, Q0coni::Vector{S}, ηvari::Vector{T}, rmetric::Symbol) where {S<:Float64,T<:Real} = AnelasticAttenuationParameters{S,T,BitVector}(Rrefi, Q0coni, Vector{T}(), Vector{S}(), ηvari, 3.5 * ones(S, length(Q0coni)), BitVector(zeros(length(Q0coni))), BitVector(ones(length(ηvari))), rmetric)
+AnelasticAttenuationParameters(Rrefi::Vector{S}, Q0vari::Vector{T}, ηconi::Vector{S}) where {S<:Float64,T<:Real} = AnelasticAttenuationParameters{S,T,BitVector}(Rrefi, Vector{S}(), Q0vari, ηconi, Vector{T}(), 3.5 * ones(S, length(Q0vari)), BitVector(ones(length(Q0vari))), BitVector(zeros(length(ηconi))), :Rps)
+AnelasticAttenuationParameters(Rrefi::Vector{S}, Q0vari::Vector{T}, ηconi::Vector{S}, rmetric::Symbol) where {S<:Float64,T<:Real} = AnelasticAttenuationParameters{S,T,BitVector}(Rrefi, Vector{S}(), Q0vari, ηconi, Vector{T}(), 3.5 * ones(S, length(Q0vari)), BitVector(ones(length(Q0vari))), BitVector(zeros(length(ηconi))), rmetric)
+
+
 
 """
-	get_parametric_type(anelastic::AnelasticAttenuationParameters{S,T}) where {S,T}
+	get_parametric_type(anelastic::AnelasticAttenuationParameters{S,T,U}) where {S,T,U}
 
 Extract type most elaborate type `S` or `T` from parametric `AnelasticAttenuationParameters` struct
 """
-function get_parametric_type(anelastic::AnelasticAttenuationParameters{S,T}) where {S,T}
-	if S <: Float64
-		if T <: Float64
-			return S
-		else
-			return T
-		end
-	else
-		return S
-	end
+function get_parametric_type(anelastic::AnelasticAttenuationParameters{S,T,U}) where {S,T,U}
+    if S <: Float64
+        if T <: Float64
+            return S
+        else
+            return T
+        end
+    else
+        return S
+    end
 end
 
 
@@ -180,9 +209,9 @@ The base constructor is: `PathParameters(geo::G, sat::S, ane::A) where {G<:Geome
 See also: [`FourierParameters`](@ref)
 """
 struct PathParameters{G<:GeometricSpreadingParameters,S<:NearSourceSaturationParameters,A<:AnelasticAttenuationParameters}
-	geometric::G
-	saturation::S
-	anelastic::A
+    geometric::G
+    saturation::S
+    anelastic::A
 end
 
 PathParameters(geometric::GeometricSpreadingParameters, anelastic::AnelasticAttenuationParameters) = PathParameters(geometric, NearSourceSaturationParameters(:None), anelastic)
@@ -194,18 +223,18 @@ Extract type most elaborate type from parametric `PathParameters` struct.
 This requires dropping down to lower level structs within `path`.
 """
 function get_parametric_type(path::PathParameters)
-	T = get_parametric_type(path.geometric)
-	U = get_parametric_type(path.saturation)
-	V = get_parametric_type(path.anelastic)
-	if T <: Float64
-		if U <: Float64
-			return V
-		else
-			return U
-		end
-	else
-		return T
-	end
+    T = get_parametric_type(path.geometric)
+    U = get_parametric_type(path.saturation)
+    V = get_parametric_type(path.anelastic)
+    if T <: Float64
+        if U <: Float64
+            return V
+        else
+            return U
+        end
+    else
+        return T
+    end
 end
 
 
@@ -227,8 +256,8 @@ See also: [`FourierParameters`](@ref), [`site_amplification`](@ref)
 """
 struct SiteParameters{T<:Real}
     # site parameters
-	κ0::T            	# site kappa
-	model::Symbol		# site amplification model
+    κ0::T            # site kappa
+    model::Symbol# site amplification model
 end
 
 SiteParameters(κ0::T) where {T} = SiteParameters(κ0, :AlAtik2021_cy14_760)
@@ -249,14 +278,14 @@ This type is comprised of source, path and site types, and so has a base constru
 
 See also: [`SourceParameters`](@ref), [`PathParameters`](@ref), [`SiteParameters`](@ref)
 """
-struct FourierParameters{S<:SourceParameters, T<:PathParameters, U<:SiteParameters}
-	source::S	# source parameters
-	path::T		# path parameters
-	site::U		# site parameters
+struct FourierParameters{S<:SourceParameters,T<:PathParameters,U<:SiteParameters}
+    source::S# source parameters
+    path::T# path parameters
+    site::U# site parameters
 end
 
 # initialiser focussing upon source and path response only. Uses zero kappa and unit amplification
-FourierParameters(src::S, path::T) where {S<:SourceParameters, T<:PathParameters} = FourierParameters(src, path, SiteParameters(0.0, :Unit))
+FourierParameters(src::S, path::T) where {S<:SourceParameters,T<:PathParameters} = FourierParameters(src, path, SiteParameters(0.0, :Unit))
 
 """
 	get_parametric_type(fas::FourierParameters)
@@ -265,16 +294,16 @@ Extract type most elaborate type from parametric `FourierParameters` struct.
 This requires dropping down to lower level structs within `fas`.
 """
 function get_parametric_type(fas::FourierParameters)
-	T = get_parametric_type(fas.source)
-	U = get_parametric_type(fas.path)
-	V = get_parametric_type(fas.site)
-	if T <: Float64
-		if U <: Float64
-			return V
-		else
-			return U
-		end
-	else
-		return T
-	end
+    T = get_parametric_type(fas.source)
+    U = get_parametric_type(fas.path)
+    V = get_parametric_type(fas.site)
+    if T <: Float64
+        if U <: Float64
+            return V
+        else
+            return U
+        end
+    else
+        return T
+    end
 end

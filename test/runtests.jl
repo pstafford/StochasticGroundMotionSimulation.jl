@@ -273,6 +273,37 @@ using LinearAlgebra
 
         q_r = anelastic_attenuation(1.0, 10.0, fas)
 
+        # test the vector descriptions of anelastic attenuation
+        ane_vec = AnelasticAttenuationParameters([0.0, 80.0, Inf], [200.0, 200.0], [0.4, 0.4])
+        ane_con = AnelasticAttenuationParameters(200.0, 0.4)
+
+        @test anelastic_attenuation(5.0, 50.0, ane_vec) ≈ anelastic_attenuation(5.0, 50.0, ane_con)
+        @test anelastic_attenuation(5.0, 150.0, ane_vec) ≈ anelastic_attenuation(5.0, 150.0, ane_con)
+
+        ane_vecd = AnelasticAttenuationParameters([0.0, 80.0, Inf], [Dual(200.0), Dual(200.0)], [0.4, 0.4])
+        ane_cond = AnelasticAttenuationParameters(Dual(200.0), 0.4)
+
+        @test anelastic_attenuation(5.0, 50.0, ane_vecd) ≈ anelastic_attenuation(5.0, 50.0, ane_cond)
+        @test anelastic_attenuation(5.0, 150.0, ane_vecd) ≈ anelastic_attenuation(5.0, 150.0, ane_cond)
+
+        ane_vecd = AnelasticAttenuationParameters([0.0, 80.0, Inf], [200.0, 200.0], [Dual(0.4), Dual(0.4)])
+        ane_cond = AnelasticAttenuationParameters(200.0, Dual(0.4))
+
+        @test anelastic_attenuation(5.0, 50.0, ane_vecd) ≈ anelastic_attenuation(5.0, 50.0, ane_cond)
+        @test anelastic_attenuation(5.0, 150.0, ane_vecd) ≈ anelastic_attenuation(5.0, 150.0, ane_cond)
+
+        ane_vecd = AnelasticAttenuationParameters([0.0, 80.0, Inf], [200.0], [Dual(200.0)], [0.4], [Dual(0.4)], 3.5 * ones(2), BitVector([1, 0]), BitVector([0, 1]), :Rrup)
+        ane_cond = AnelasticAttenuationParameters(200.0, 0.4)
+
+        @test anelastic_attenuation(5.0, 50.0, ane_vecd) ≈ anelastic_attenuation(5.0, 50.0, ane_cond)
+        @test anelastic_attenuation(5.0, 150.0, ane_vecd) ≈ anelastic_attenuation(5.0, 150.0, ane_cond)
+
+        ane_vecd = AnelasticAttenuationParameters([0.0, 80.0, Inf], [200.0], [Dual(200.0)], [0.4], [Dual(0.4)], 3.5 * ones(2), BitVector([0, 1]), BitVector([1, 0]), :Rrup)
+        ane_cond = AnelasticAttenuationParameters(200.0, 0.4)
+
+        @test anelastic_attenuation(5.0, 50.0, ane_vecd) ≈ anelastic_attenuation(5.0, 50.0, ane_cond)
+        @test anelastic_attenuation(5.0, 150.0, ane_vecd) ≈ anelastic_attenuation(5.0, 150.0, ane_cond)
+
     end
 
     @testset "Site" begin

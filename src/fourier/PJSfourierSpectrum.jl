@@ -421,9 +421,10 @@ Frequency at which the combined κ_r and κ_0 filters (squared versions) give a 
 `r` can be either `r_ps` or `r_rup` depending upon what matches `ane.rmetric`
 """
 function combined_kappa_frequency(r::T, Af2target::Float64, ane::AnelasticAttenuationParameters, site::SiteParameters) where T<:Real
-  	if ane.η < 0.1
+	Q0_eff, η_eff, cQ_eff = effective_quality_parameters(r, ane)
+  	if η_eff < 0.1
     	# a closed form solution exists (for effectively η=0)
-    	return log(1.0/Af2target) / ( 2π * ( r / (ane.Q0 * ane.cQ) + site.κ0 ) )
+    	return log(1.0/Af2target) / ( 2π * ( r / (Q0_eff * cQ_eff) + site.κ0 ) )
   	else
 		g(f) = Af2target - (fourier_attenuation(f, r, ane, site)^2)
 		f_0 = find_zero(g, (0.01,100.0), Bisection(); xatol=1e-2)
