@@ -158,6 +158,28 @@ using LinearAlgebra
             @test ane.rmetric == :Rps
             ane = AnelasticAttenuationParameters(200.0, 0.5, 3.5, :Rrup)
             @test ane.rmetric == :Rrup
+
+            # test the segmented versions
+            # scalar inputs (internally mapped to vectors)
+            @test typeof(AnelasticAttenuationParameters(200.0, 0.5, :Rrup)) <: AnelasticAttenuationParameters
+            @test typeof(AnelasticAttenuationParameters(200.0, Dual{Float64}(0.5), :Rrup)) <: AnelasticAttenuationParameters
+            @test typeof(AnelasticAttenuationParameters(Dual{Float64}(200.0), 0.5, :Rrup)) <: AnelasticAttenuationParameters
+            # vector inputs
+            @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [200.0, 200.0])) <: AnelasticAttenuationParameters
+            @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [200.0, 200.0], :Rrup)) <: AnelasticAttenuationParameters
+            @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [Dual{Float64}(200.0), Dual{Float64}(200.0)])) <: AnelasticAttenuationParameters
+            @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [Dual{Float64}(200.0), Dual{Float64}(200.0)], :Rrup)) <: AnelasticAttenuationParameters
+
+            @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [200.0, 200.0], [0.5, 0.5])) <: AnelasticAttenuationParameters
+            @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [200.0, 200.0], [0.5, 0.5], :Rrup)) <: AnelasticAttenuationParameters
+            @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [Dual{Float64}(200.0), Dual{Float64}(200.0)], [Dual{Float64}(0.5), Dual{Float64}(0.5)])) <: AnelasticAttenuationParameters
+            @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [Dual{Float64}(200.0), Dual{Float64}(200.0)], [Dual{Float64}(0.5), Dual{Float64}(0.5)], :Rrup)) <: AnelasticAttenuationParameters
+
+            @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [200.0, 200.0], [Dual{Float64}(0.5), Dual{Float64}(0.5)])) <: AnelasticAttenuationParameters
+            @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [200.0, 200.0], [Dual{Float64}(0.5), Dual{Float64}(0.5)], :Rrup)) <: AnelasticAttenuationParameters
+            @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [Dual{Float64}(200.0), Dual{Float64}(200.0)], [0.5, 0.5])) <: AnelasticAttenuationParameters
+            @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [Dual{Float64}(200.0), Dual{Float64}(200.0)], [0.5, 0.5], :Rrup)) <: AnelasticAttenuationParameters
+
         end
 
         Q0 = 200.0
