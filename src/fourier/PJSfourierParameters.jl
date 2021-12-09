@@ -57,9 +57,8 @@ struct GeometricSpreadingParameters{S<:Real,T<:Real,U<:AbstractVector{Bool}}
     model::Symbol
 end
 
-GeometricSpreadingParameters(Rrefi, γconi) = GeometricSpreadingParameters(Rrefi, γconi, Vector{Float64}(), BitVector(undef, length(γconi)), :Piecewise)
-GeometricSpreadingParameters(Rrefi, γconi, model) = GeometricSpreadingParameters(Rrefi, γconi, Vector{Float64}(), BitVector(undef, length(γconi)), model)
-GeometricSpreadingParameters(Rrefi::Vector{T}, γconi::Vector{T}) where {T} = GeometricSpreadingParameters{T,T,BitVector}(Rrefi, γconi, Vector{T}(), BitVector(undef, length(γconi)), :Piecewise)
+GeometricSpreadingParameters(Rrefi::Vector{T}, γconi::Vector{T}) where {T} = GeometricSpreadingParameters{T,T,BitVector}(Rrefi, γconi, Vector{T}(), BitVector(zeros(length(γconi))), :Piecewise)
+GeometricSpreadingParameters(Rrefi::Vector{T}, γconi::Vector{T}, model::Symbol) where {T} = GeometricSpreadingParameters{T,T,BitVector}(Rrefi, γconi, Vector{T}(), BitVector(zeros(length(γconi))), model)
 GeometricSpreadingParameters(Rrefi::Vector{S}, γvari::Vector{T}) where {S<:Float64,T<:Dual} = GeometricSpreadingParameters{S,T,BitVector}(Rrefi, Vector{S}(), γvari, BitVector(ones(length(γvari))), :Piecewise)
 GeometricSpreadingParameters(Rrefi::Vector{S}, γvari::Vector{T}, model::Symbol) where {S<:Float64,T<:Dual} = GeometricSpreadingParameters{S,T,BitVector}(Rrefi, Vector{S}(), γvari, BitVector(ones(length(γvari))), model)
 
@@ -160,8 +159,8 @@ AnelasticAttenuationParameters(Q0::S, η::T, rmetric::Symbol) where {S<:Real,T<:
 AnelasticAttenuationParameters(Q0, η, cQ::Float64) = AnelasticAttenuationParameters([0.0, Inf], [Q0], Vector{Float64}(), [η], Vector{Float64}(), [cQ], BitVector(zeros(1)), BitVector(zeros(1)), :Rps)
 AnelasticAttenuationParameters(Q0, η, cQ::Float64, rmetric::Symbol) = AnelasticAttenuationParameters([0.0, Inf], [Q0], Vector{Float64}(), [η], Vector{Float64}(), [cQ], BitVector(zeros(1)), BitVector(zeros(1)), rmetric)
 
-AnelasticAttenuationParameters(Rrefi::Vector{T}, Q0coni::Vector{T}) where {T} = AnelasticAttenuationParameters{T,T,BitVector}(Rrefi, Q0coni, Vector{T}(), zeros(T, length(Q0coni)), Vector{T}(), 3.5 * ones(T, length(Q0coni)), BitVector(zeros(length(Q0coni))), BitVector(zeros(length(Q0coni))), :Rps)
-AnelasticAttenuationParameters(Rrefi::Vector{T}, Q0coni::Vector{T}, rmetric::Symbol) where {T} = AnelasticAttenuationParameters{T,T,BitVector}(Rrefi, Q0coni, Vector{T}(), zeros(T, length(Q0coni)), Vector{T}(), 3.5 * ones(T, length(Q0coni)), BitVector(zeros(length(Q0coni))), BitVector(zeros(length(Q0coni))), rmetric)
+AnelasticAttenuationParameters(Rrefi::Vector{T}, Q0coni::Vector{T}) where {T<:Float64} = AnelasticAttenuationParameters{T,T,BitVector}(Rrefi, Q0coni, Vector{T}(), zeros(T, length(Q0coni)), Vector{T}(), 3.5 * ones(T, length(Q0coni)), BitVector(zeros(length(Q0coni))), BitVector(zeros(length(Q0coni))), :Rps)
+AnelasticAttenuationParameters(Rrefi::Vector{T}, Q0coni::Vector{T}, rmetric::Symbol) where {T<:Float64} = AnelasticAttenuationParameters{T,T,BitVector}(Rrefi, Q0coni, Vector{T}(), zeros(T, length(Q0coni)), Vector{T}(), 3.5 * ones(T, length(Q0coni)), BitVector(zeros(length(Q0coni))), BitVector(zeros(length(Q0coni))), rmetric)
 AnelasticAttenuationParameters(Rrefi::Vector{S}, Q0vari::Vector{T}) where {S<:Float64,T<:Real} = AnelasticAttenuationParameters{S,T,BitVector}(Rrefi, Vector{S}(), Q0vari, zeros(S, length(Q0vari)), Vector{S}(), 3.5 * ones(S, length(Q0vari)), BitVector(ones(length(Q0vari))), BitVector(zeros(length(Q0vari))), :Rps)
 AnelasticAttenuationParameters(Rrefi::Vector{S}, Q0vari::Vector{T}, rmetric::Symbol) where {S<:Float64,T<:Real} = AnelasticAttenuationParameters{S,T,BitVector}(Rrefi, Vector{S}(), Q0vari, zeros(S, length(Q0vari)), Vector{S}(), 3.5 * ones(S, length(Q0vari)), BitVector(ones(length(Q0vari))), BitVector(zeros(length(Q0vari))), rmetric)
 

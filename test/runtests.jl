@@ -164,6 +164,7 @@ using LinearAlgebra
             @test typeof(AnelasticAttenuationParameters(200.0, 0.5, :Rrup)) <: AnelasticAttenuationParameters
             @test typeof(AnelasticAttenuationParameters(200.0, Dual{Float64}(0.5), :Rrup)) <: AnelasticAttenuationParameters
             @test typeof(AnelasticAttenuationParameters(Dual{Float64}(200.0), 0.5, :Rrup)) <: AnelasticAttenuationParameters
+            @test typeof(AnelasticAttenuationParameters(Dual{Float64}(200.0), Dual{Float64}(0.5), :Rrup)) <: AnelasticAttenuationParameters
             # vector inputs
             @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [200.0, 200.0])) <: AnelasticAttenuationParameters
             @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [200.0, 200.0], :Rrup)) <: AnelasticAttenuationParameters
@@ -190,6 +191,11 @@ using LinearAlgebra
             T = StochasticGroundMotionSimulation.get_parametric_type(anef)
             @test T == Float64
             T = StochasticGroundMotionSimulation.get_parametric_type(aned)
+            @test T <: Dual
+
+            # artificial test, but for ensuring complete coverage
+            anet = AnelasticAttenuationParameters([Dual{Float64}(0.0), Dual{Float64}(Inf)], [Dual{Float64}(200.0)], Vector{Dual{Float64,Float64,0}}(), zeros(Dual{Float64,Float64,0}, 1), zeros(Dual{Float64,Float64,0}, 1), [3.5], BitVector(ones(1)), BitVector(ones(1)), :Rps)
+            T = StochasticGroundMotionSimulation.get_parametric_type(anet)
             @test T <: Dual
         end
 
