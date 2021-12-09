@@ -147,7 +147,7 @@ struct AnelasticAttenuationParameters{S<:Real,T<:Real,U<:AbstractVector{Bool}}
 end
 
 AnelasticAttenuationParameters(Q0::T) where {T<:Float64} = AnelasticAttenuationParameters([0.0, Inf], [Q0], Vector{Float64}(), [0.0], Vector{Float64}(), [3.5], BitVector(zeros(1)), BitVector(zeros(1)), :Rps)
-AnelasticAttenuationParameters(Q0::T) where {T<:Real} = AnelasticAttenuationParameters([0.0, Inf], Vector{Float64}(), [Q0], Vector{Float64}(), [zero(T)], [3.5], BitVector(ones(1)), BitVector(zeros(1)), :Rps)
+AnelasticAttenuationParameters(Q0::T) where {T<:Real} = AnelasticAttenuationParameters([0.0, Inf], Vector{Float64}(), [Q0], [0.0], Vector{T}(), [3.5], BitVector(ones(1)), BitVector(zeros(1)), :Rps)
 AnelasticAttenuationParameters(Q0::T, η::T) where {T<:Float64} = AnelasticAttenuationParameters([0.0, Inf], [Q0], Vector{T}(), [η], Vector{T}(), [3.5], BitVector(zeros(1)), BitVector(zeros(1)), :Rps)
 AnelasticAttenuationParameters(Q0::T, η::T, rmetric::Symbol) where {T<:Float64} = AnelasticAttenuationParameters([0.0, Inf], [Q0], Vector{T}(), [η], Vector{T}(), [3.5], BitVector(zeros(1)), BitVector(zeros(1)), rmetric)
 AnelasticAttenuationParameters(Q0::T, η::T) where {T<:Real} = AnelasticAttenuationParameters([0.0, Inf], Vector{Float64}(), [Q0], Vector{Float64}(), [η], [3.5], BitVector(ones(1)), BitVector(ones(1)), :Rps)
@@ -157,7 +157,6 @@ AnelasticAttenuationParameters(Q0::S, η::T, rmetric::Symbol) where {S<:Float64,
 AnelasticAttenuationParameters(Q0::S, η::T) where {S<:Real,T<:Float64} = AnelasticAttenuationParameters([0.0, Inf], Vector{T}(), [Q0], [η], Vector{S}(), [3.5], BitVector(ones(1)), BitVector(zeros(1)), :Rps)
 AnelasticAttenuationParameters(Q0::S, η::T, rmetric::Symbol) where {S<:Real,T<:Float64} = AnelasticAttenuationParameters([0.0, Inf], Vector{T}(), [Q0], [η], Vector{S}(), [3.5], BitVector(ones(1)), BitVector(zeros(1)), rmetric)
 
-# AnelasticAttenuationParameters(Q0::S, η) = AnelasticAttenuationParameters([0.0, Inf], [Q0], Vector{Float64}(), [η], Vector{Float64}(), [3.5], BitVector(undef, 1), BitVector(undef, 1), :Rps)
 AnelasticAttenuationParameters(Q0, η, cQ::Float64) = AnelasticAttenuationParameters([0.0, Inf], [Q0], Vector{Float64}(), [η], Vector{Float64}(), [cQ], BitVector(zeros(1)), BitVector(zeros(1)), :Rps)
 AnelasticAttenuationParameters(Q0, η, cQ::Float64, rmetric::Symbol) = AnelasticAttenuationParameters([0.0, Inf], [Q0], Vector{Float64}(), [η], Vector{Float64}(), [cQ], BitVector(zeros(1)), BitVector(zeros(1)), rmetric)
 
