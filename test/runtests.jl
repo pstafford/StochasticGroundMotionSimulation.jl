@@ -94,185 +94,293 @@ using LinearAlgebra
 
         Rrefi = [1.0, 50.0, Inf]
         γi = [1.0, 0.5]
+
+        @testset "Geometric Spreading Constructors" begin
+            # test floating point instantiation
+            @test typeof(GeometricSpreadingParameters(Rrefi, γi)) <: GeometricSpreadingParameters
+            # test Dual instantiation
+            @test typeof(GeometricSpreadingParameters(Rrefi, [0.5], [Dual{Float64}(1.0)], BitVector([1, 0]), :Piecewise)) <: GeometricSpreadingParameters
+
+            geo = GeometricSpreadingParameters([1.0, 50.0, Inf], [1.0, 0.5])
+            geoc = GeometricSpreadingParameters([1.0, 50.0, Inf], [1.0, 0.5], :CY14)
+            @test geo.model == :Piecewise
+            @test geoc.model == :CY14
+            geod = GeometricSpreadingParameters([1.0, 50.0, Inf], [Dual(1.0), Dual(0.5)])
+            @test geo.γconi[1] == geod.γvari[1].value
+
+        end
+
         geof = GeometricSpreadingParameters(Rrefi, γi)
         geod = GeometricSpreadingParameters(Rrefi, [0.5], [Dual{Float64}(1.0)], BitVector([1, 0]), :Piecewise)
 
-        T = StochasticGroundMotionSimulation.get_parametric_type(geof)
-        @test T == Float64
-        T = StochasticGroundMotionSimulation.get_parametric_type(geod)
-        @test T <: Dual
+        @testset "Geometric Spreading Types" begin
+            T = StochasticGroundMotionSimulation.get_parametric_type(geof)
+            @test T == Float64
+            T = StochasticGroundMotionSimulation.get_parametric_type(geod)
+            @test T <: Dual
+        end
+
+        @testset "Near Source Saturation Constructors" begin
+            # test standard instantiation with known models
+            @test typeof(NearSourceSaturationParameters(:BT15)) <: NearSourceSaturationParameters
+            @test typeof(NearSourceSaturationParameters(:YA15)) <: NearSourceSaturationParameters
+            @test typeof(NearSourceSaturationParameters(:CY14)) <: NearSourceSaturationParameters
+            @test typeof(NearSourceSaturationParameters(:CY14mod)) <: NearSourceSaturationParameters
+
+            @test typeof(NearSourceSaturationParameters(1, :BT15)) <: NearSourceSaturationParameters
+            @test typeof(NearSourceSaturationParameters([5.5, 7.0, Inf], [4.0, 6.0], :ConstantConstrained)) <: NearSourceSaturationParameters
+            @test typeof(NearSourceSaturationParameters([5.5, 7.0, Inf], [Dual(4.0), Dual(6.0)], :ConstantVariable)) <: NearSourceSaturationParameters
+            @test typeof(NearSourceSaturationParameters([5.5, 7.0, Inf], [4.0, 6.0])) <: NearSourceSaturationParameters
+            @test typeof(NearSourceSaturationParameters([5.5, 7.0, Inf], [Dual(4.0), Dual(6.0)])) <: NearSourceSaturationParameters
+            @test typeof(NearSourceSaturationParameters(5.0)) <: NearSourceSaturationParameters
+            @test typeof(NearSourceSaturationParameters(Dual(5.0))) <: NearSourceSaturationParameters
+            @test typeof(NearSourceSaturationParameters(5.0, 2)) <: NearSourceSaturationParameters
+            @test typeof(NearSourceSaturationParameters(Dual(5.0), 2)) <: NearSourceSaturationParameters
+
+        end
 
         sat = NearSourceSaturationParameters(:BT15)
+        satd = NearSourceSaturationParameters(Dual{Float64}(5.0))
 
-        T = StochasticGroundMotionSimulation.get_parametric_type(sat)
-        @test T == Float64
+        @testset "Near Source Saturation Types" begin
+            T = StochasticGroundMotionSimulation.get_parametric_type(sat)
+            @test T == Float64
+        end
+
+
+        @testset "Anelastic Attenuation Constructors" begin
+            # test floating point instantiation
+            @test typeof(AnelasticAttenuationParameters(200.0)) <: AnelasticAttenuationParameters
+            # test Dual instantiation
+            @test typeof(AnelasticAttenuationParameters(Dual{Float64}(200.0))) <: AnelasticAttenuationParameters
+
+            ane = AnelasticAttenuationParameters(200.0, 0.5, 3.5)
+            @test ane.rmetric == :Rps
+            ane = AnelasticAttenuationParameters(200.0, 0.5, 3.5, :Rrup)
+            @test ane.rmetric == :Rrup
+
+            # test the segmented versions
+            # scalar inputs (internally mapped to vectors)
+            @test typeof(AnelasticAttenuationParameters(200.0, 0.5, :Rrup)) <: AnelasticAttenuationParameters
+            @test typeof(AnelasticAttenuationParameters(200.0, Dual{Float64}(0.5), :Rrup)) <: AnelasticAttenuationParameters
+            @test typeof(AnelasticAttenuationParameters(Dual{Float64}(200.0), 0.5, :Rrup)) <: AnelasticAttenuationParameters
+            @test typeof(AnelasticAttenuationParameters(Dual{Float64}(200.0), Dual{Float64}(0.5), :Rrup)) <: AnelasticAttenuationParameters
+            # vector inputs
+            @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [200.0, 200.0])) <: AnelasticAttenuationParameters
+            @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [200.0, 200.0], :Rrup)) <: AnelasticAttenuationParameters
+            @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [Dual{Float64}(200.0), Dual{Float64}(200.0)])) <: AnelasticAttenuationParameters
+            @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [Dual{Float64}(200.0), Dual{Float64}(200.0)], :Rrup)) <: AnelasticAttenuationParameters
+
+            @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [200.0, 200.0], [0.5, 0.5])) <: AnelasticAttenuationParameters
+            @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [200.0, 200.0], [0.5, 0.5], :Rrup)) <: AnelasticAttenuationParameters
+            @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [Dual{Float64}(200.0), Dual{Float64}(200.0)], [Dual{Float64}(0.5), Dual{Float64}(0.5)])) <: AnelasticAttenuationParameters
+            @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [Dual{Float64}(200.0), Dual{Float64}(200.0)], [Dual{Float64}(0.5), Dual{Float64}(0.5)], :Rrup)) <: AnelasticAttenuationParameters
+
+            @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [200.0, 200.0], [Dual{Float64}(0.5), Dual{Float64}(0.5)])) <: AnelasticAttenuationParameters
+            @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [200.0, 200.0], [Dual{Float64}(0.5), Dual{Float64}(0.5)], :Rrup)) <: AnelasticAttenuationParameters
+            @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [Dual{Float64}(200.0), Dual{Float64}(200.0)], [0.5, 0.5])) <: AnelasticAttenuationParameters
+            @test typeof(AnelasticAttenuationParameters([0.0, 80.0, Inf], [Dual{Float64}(200.0), Dual{Float64}(200.0)], [0.5, 0.5], :Rrup)) <: AnelasticAttenuationParameters
+
+        end
 
         Q0 = 200.0
         anef = AnelasticAttenuationParameters(Q0)
         aned = AnelasticAttenuationParameters(Dual{Float64}(Q0))
 
-        T = StochasticGroundMotionSimulation.get_parametric_type(anef)
-        @test T == Float64
-        T = StochasticGroundMotionSimulation.get_parametric_type(aned)
-        @test T <: Dual
+        @testset "Anelastic Attenuation Types" begin
+            T = StochasticGroundMotionSimulation.get_parametric_type(anef)
+            @test T == Float64
+            T = StochasticGroundMotionSimulation.get_parametric_type(aned)
+            @test T <: Dual
+
+            # artificial test, but for ensuring complete coverage
+            anet = AnelasticAttenuationParameters([Dual{Float64}(0.0), Dual{Float64}(Inf)], [Dual{Float64}(200.0)], Vector{Dual{Float64,Float64,0}}(), zeros(Dual{Float64,Float64,0}, 1), zeros(Dual{Float64,Float64,0}, 1), [3.5], BitVector(ones(1)), BitVector(ones(1)), :Rps)
+            T = StochasticGroundMotionSimulation.get_parametric_type(anet)
+            @test T <: Dual
+        end
+
+        @testset "Path Constructors" begin
+            # test floating point components
+            @test typeof(PathParameters(geof, sat, anef)) <: PathParameters
+            # test Dual components
+            @test typeof(PathParameters(geod, sat, aned)) <: PathParameters
+
+            path = PathParameters(geof, anef)
+            @test path.saturation.model == :None
+
+            path = PathParameters(geof, satd, anef)
+            @test StochasticGroundMotionSimulation.get_parametric_type(path) <: Dual
+
+        end
 
         pathf = PathParameters(geof, sat, anef)
         pathd = PathParameters(geod, sat, aned)
 
-        T = StochasticGroundMotionSimulation.get_parametric_type(pathf)
-        @test T == Float64
-        T = StochasticGroundMotionSimulation.get_parametric_type(pathd)
-        @test T <: Dual
+        @testset "Path Types" begin
+            T = StochasticGroundMotionSimulation.get_parametric_type(pathf)
+            @test T == Float64
+            T = StochasticGroundMotionSimulation.get_parametric_type(pathd)
+            @test T <: Dual
+
+        end
 
         r = 10.0
         m = 6.0
 
-        geo_cy14 = GeometricSpreadingParameters([1.0, 50.0, Inf], [1.0, 0.5], :CY14)
-        geo_cy14mod = GeometricSpreadingParameters([1.0, 50.0, Inf], [1.0, 0.5], :CY14mod)
-        geo_null = GeometricSpreadingParameters([1.0, 50.0, Inf], [1.0, 0.5], :Null)
+        @testset "Geometric Spreading Functionality" begin
 
-        sat = NearSourceSaturationParameters(:BT15)
-        r_ps = equivalent_point_source_distance(r, m, sat)
+            geo_cy14 = GeometricSpreadingParameters([1.0, 50.0, Inf], [1.0, 0.5], :CY14)
+            geo_cy14mod = GeometricSpreadingParameters([1.0, 50.0, Inf], [1.0, 0.5], :CY14mod)
+            geo_null = GeometricSpreadingParameters([1.0, 50.0, Inf], [1.0, 0.5], :Null)
 
-        gr_cy14 = geometric_spreading(r_ps, m, geo_cy14, sat)
-        gr_cy14mod = geometric_spreading(r_ps, m, geo_cy14mod, sat)
-        @test gr_cy14mod < gr_cy14
-        @test isnan(geometric_spreading(r_ps, m, geo_null, sat))
+            sat = NearSourceSaturationParameters(:BT15)
+            r_ps = equivalent_point_source_distance(r, m, sat)
 
-        grp = geometric_spreading(r_ps, pathf)
-        fasf = FourierParameters(SourceParameters(50.0), pathf)
-        grf = geometric_spreading(r_ps, fasf)
-        @test grp == grf
+            gr_cy14 = geometric_spreading(r_ps, m, geo_cy14, sat)
+            gr_cy14mod = geometric_spreading(r_ps, m, geo_cy14mod, sat)
+            @test gr_cy14mod < gr_cy14
+            @test isnan(geometric_spreading(r_ps, m, geo_null, sat))
 
-        geop = GeometricSpreadingParameters([1.0, Inf], [1.0], Vector{Float64}(), BitVector(undef, 0), :Piecewise)
-        @test StochasticGroundMotionSimulation.geometric_spreading_piecewise(r_ps, geop) == 1.0
-        @test StochasticGroundMotionSimulation.geometric_spreading_piecewise(Dual(r_ps), geop) == 1.0
-        fasp = FourierParameters(SourceParameters(50.0), PathParameters(geop, sat, anef))
-        @test StochasticGroundMotionSimulation.geometric_spreading_piecewise(r_ps, fasp) == 1.0
-        @test StochasticGroundMotionSimulation.geometric_spreading_piecewise(Dual(r_ps), fasp) == 1.0
+            grp = geometric_spreading(r_ps, pathf)
+            fasf = FourierParameters(SourceParameters(50.0), pathf)
+            grf = geometric_spreading(r_ps, fasf)
+            @test grp == grf
 
-        geo_cy14d = GeometricSpreadingParameters([1.0, 50.0, Inf], [Dual(1.0), Dual(1.0)], :CY14)
-        sat = NearSourceSaturationParameters(:None)
-        r_ps = equivalent_point_source_distance(1.0, -5.0, sat)
-        fas_cy14d = FourierParameters(SourceParameters(50.0), PathParameters(geo_cy14d, sat, anef))
+            geop = GeometricSpreadingParameters([1.0, Inf], [1.0], Vector{Float64}(), BitVector(undef, 0), :Piecewise)
+            @test StochasticGroundMotionSimulation.geometric_spreading_piecewise(r_ps, geop) == 1.0
+            @test StochasticGroundMotionSimulation.geometric_spreading_piecewise(Dual(r_ps), geop) == 1.0
+            fasp = FourierParameters(SourceParameters(50.0), PathParameters(geop, sat, anef))
+            @test StochasticGroundMotionSimulation.geometric_spreading_piecewise(r_ps, fasp) == 1.0
+            @test StochasticGroundMotionSimulation.geometric_spreading_piecewise(Dual(r_ps), fasp) == 1.0
 
-        @test StochasticGroundMotionSimulation.geometric_spreading_cy14(r_ps, fas_cy14d).value ≈ 1.0
+            geo_cy14d = GeometricSpreadingParameters([1.0, 50.0, Inf], [Dual(1.0), Dual(1.0)], :CY14)
+            sat = NearSourceSaturationParameters(:None)
+            r_ps = equivalent_point_source_distance(1.0, -5.0, sat)
+            fas_cy14d = FourierParameters(SourceParameters(50.0), PathParameters(geo_cy14d, sat, anef))
 
-        geo_cy14d = GeometricSpreadingParameters([1.0, 50.0, Inf], [Dual(1.0), Dual(1.0)], :CY14mod)
-        sat = NearSourceSaturationParameters(:None)
-        r_ps = equivalent_point_source_distance(1.0, -5.0, sat)
-        fas_cy14d = FourierParameters(SourceParameters(50.0), PathParameters(geo_cy14d, sat, anef))
+            @test StochasticGroundMotionSimulation.geometric_spreading_cy14(r_ps, fas_cy14d).value ≈ 1.0
 
-        @test StochasticGroundMotionSimulation.geometric_spreading_cy14mod(r_ps, -5.0, fas_cy14d).value ≈ 1.0
+            geo_cy14d = GeometricSpreadingParameters([1.0, 50.0, Inf], [Dual(1.0), Dual(1.0)], :CY14mod)
+            sat = NearSourceSaturationParameters(:None)
+            r_ps = equivalent_point_source_distance(1.0, -5.0, sat)
+            fas_cy14d = FourierParameters(SourceParameters(50.0), PathParameters(geo_cy14d, sat, anef))
 
-        # @code_warntype near_source_saturation(m, pathf.saturation)
-        # @code_warntype near_source_saturation(m, pathd.saturation)
-        hf = near_source_saturation(m, pathf.saturation)
-        hd = near_source_saturation(m, pathd.saturation)
-        if StochasticGroundMotionSimulation.get_parametric_type(pathd.saturation) <: Dual
-            @test hf == hd.value
-        else
-            @test hf == hd
+            @test StochasticGroundMotionSimulation.geometric_spreading_cy14mod(r_ps, -5.0, fas_cy14d).value ≈ 1.0
+
+            # @code_warntype equivalent_point_source_distance(r, m, pathf)
+            # @code_warntype equivalent_point_source_distance(r, m, pathd)
+            r_psf = equivalent_point_source_distance(r, m, pathf)
+            r_psd = equivalent_point_source_distance(r, m, pathd)
+
+            # @code_warntype StochasticGroundMotionSimulation.geometric_spreading_piecewise(r, geof)
+            # @code_warntype StochasticGroundMotionSimulation.geometric_spreading_piecewise(r, geod)
+            grf = StochasticGroundMotionSimulation.geometric_spreading_piecewise(r, geof)
+            grd = StochasticGroundMotionSimulation.geometric_spreading_piecewise(r, geod)
+            @test grf == grd.value
+
+            # @code_warntype StochasticGroundMotionSimulation.geometric_spreading_cy14(r, geof)
+            # @code_warntype StochasticGroundMotionSimulation.geometric_spreading_cy14(r, geod)
+            grf = StochasticGroundMotionSimulation.geometric_spreading_cy14(r, geof)
+            grd = StochasticGroundMotionSimulation.geometric_spreading_cy14(r, geod)
+            @test grf == grd.value
+
+            # @code_warntype geometric_spreading(r, geof)
+            # @code_warntype geometric_spreading(r, geod)
+
+            grf = geometric_spreading(r, m, geof, sat)
+            grd = geometric_spreading(r, m, geod, sat)
+            @test grf == grd.value
         end
 
-        src = SourceParameters(100.0)
-        geo = GeometricSpreadingParameters([1.0, Inf], [1.0])
-        ane = AnelasticAttenuationParameters(200.0, 0.5)
-        sat_ya = NearSourceSaturationParameters(:YA15)
-        sat_cy = NearSourceSaturationParameters(:CY14)
-        sat_none = NearSourceSaturationParameters(:None)
-        sat_con = NearSourceSaturationParameters(5.0)
-        sat_var = NearSourceSaturationParameters(Dual(5.0))
-        sat_null = NearSourceSaturationParameters(:Null)
+        @testset "Near Source Saturation Functionality" begin
 
-        path_ya = PathParameters(geo, sat_ya, ane)
-        path_cy = PathParameters(geo, sat_cy, ane)
-        path_none = PathParameters(geo, sat_none, ane)
-        path_con = PathParameters(geo, sat_con, ane)
-        path_var = PathParameters(geo, sat_var, ane)
-        path_null = PathParameters(geo, sat_null, ane)
+            # @code_warntype near_source_saturation(m, pathf.saturation)
+            # @code_warntype near_source_saturation(m, pathd.saturation)
+            hf = near_source_saturation(m, pathf.saturation)
+            hd = near_source_saturation(m, pathd.saturation)
+            if StochasticGroundMotionSimulation.get_parametric_type(pathd.saturation) <: Dual
+                @test hf == hd.value
+            else
+                @test hf == hd
+            end
 
-        h_ya = near_source_saturation(5.0, sat_ya)
-        h_cy = near_source_saturation(5.0, sat_cy)
-        h_none = near_source_saturation(5.0, sat_none)
-        h_con = near_source_saturation(5.0, sat_con)
-        h_var = near_source_saturation(5.0, sat_var)
-        h_null = near_source_saturation(5.0, sat_null)
+            src = SourceParameters(100.0)
+            geo = GeometricSpreadingParameters([1.0, Inf], [1.0])
+            ane = AnelasticAttenuationParameters(200.0, 0.5)
+            sat_ya = NearSourceSaturationParameters(:YA15)
+            sat_cy = NearSourceSaturationParameters(:CY14)
+            sat_none = NearSourceSaturationParameters(:None)
+            sat_con = NearSourceSaturationParameters(5.0)
+            sat_var = NearSourceSaturationParameters(Dual(5.0))
+            sat_null = NearSourceSaturationParameters(:Null)
 
-        # @code_warntype near_source_saturation(m, pathf)
-        # @code_warntype near_source_saturation(m, pathd)
-        hf = near_source_saturation(m, pathf)
-        hd = near_source_saturation(m, pathd)
-        if StochasticGroundMotionSimulation.get_parametric_type(pathd.saturation) <: Dual
-            @test hf == hd.value
-        else
-            @test hf == hd
+            path_ya = PathParameters(geo, sat_ya, ane)
+            path_cy = PathParameters(geo, sat_cy, ane)
+            path_none = PathParameters(geo, sat_none, ane)
+            path_con = PathParameters(geo, sat_con, ane)
+            path_var = PathParameters(geo, sat_var, ane)
+            path_null = PathParameters(geo, sat_null, ane)
+
+            h_ya = near_source_saturation(5.0, sat_ya)
+            h_cy = near_source_saturation(5.0, sat_cy)
+            h_none = near_source_saturation(5.0, sat_none)
+            h_con = near_source_saturation(5.0, sat_con)
+            h_var = near_source_saturation(5.0, sat_var)
+            h_null = near_source_saturation(5.0, sat_null)
+
+            @test h_con == h_var.value
         end
 
-        # @code_warntype equivalent_point_source_distance(r, m, pathf)
-        # @code_warntype equivalent_point_source_distance(r, m, pathd)
-        r_psf = equivalent_point_source_distance(r, m, pathf)
-        r_psd = equivalent_point_source_distance(r, m, pathd)
-
-        # @code_warntype StochasticGroundMotionSimulation.geometric_spreading_piecewise(r, geof)
-        # @code_warntype StochasticGroundMotionSimulation.geometric_spreading_piecewise(r, geod)
-        grf = StochasticGroundMotionSimulation.geometric_spreading_piecewise(r, geof)
-        grd = StochasticGroundMotionSimulation.geometric_spreading_piecewise(r, geod)
-        @test grf == grd.value
-
-        # @code_warntype StochasticGroundMotionSimulation.geometric_spreading_cy14(r, geof)
-        # @code_warntype StochasticGroundMotionSimulation.geometric_spreading_cy14(r, geod)
-        grf = StochasticGroundMotionSimulation.geometric_spreading_cy14(r, geof)
-        grd = StochasticGroundMotionSimulation.geometric_spreading_cy14(r, geod)
-        @test grf == grd.value
-
-        # @code_warntype geometric_spreading(r, geof)
-        # @code_warntype geometric_spreading(r, geod)
-
-        grf = geometric_spreading(r, m, geof, sat)
-        grd = geometric_spreading(r, m, geod, sat)
-        @test grf == grd.value
 
         f = 1.0
         r = 100.0
-        # @code_warntype anelastic_attenuation(f, r, anef)
-        # @code_warntype anelastic_attenuation(f, r, aned)
-        qrf = anelastic_attenuation(f, r, anef)
-        qrd = anelastic_attenuation(f, r, aned)
-        @test qrf == qrd.value
 
+        @testset "Anelastic Attenuation Functionality" begin
+            # @code_warntype anelastic_attenuation(f, r, anef)
+            # @code_warntype anelastic_attenuation(f, r, aned)
+            qrf = anelastic_attenuation(f, r, anef)
+            qrd = anelastic_attenuation(f, r, aned)
+            @test qrf ≈ qrd.value
 
-        geo = GeometricSpreadingParameters([1.0, 50.0, Inf], [1.0, 0.5])
-        geoc = GeometricSpreadingParameters([1.0, 50.0, Inf], [1.0, 0.5], :CY14)
-        @test geo.model == :Piecewise
-        @test geoc.model == :CY14
-        geod = GeometricSpreadingParameters([1.0, 50.0, Inf], [Dual(1.0), Dual(0.5)])
-        @test geo.γconi[1] == geod.γvari[1].value
+            fas = FourierParameters(SourceParameters(100.0), pathf)
+            @test fas.site.model == :Unit
 
-        sat = NearSourceSaturationParameters(1, :BT15)
-        sat = NearSourceSaturationParameters([5.5, 7.0, Inf], [4.0, 6.0], :ConstantConstrained)
-        sat = NearSourceSaturationParameters([5.5, 7.0, Inf], [Dual(4.0), Dual(6.0)], :ConstantVariable)
-        sat = NearSourceSaturationParameters([5.5, 7.0, Inf], [4.0, 6.0])
-        sat = NearSourceSaturationParameters([5.5, 7.0, Inf], [Dual(4.0), Dual(6.0)])
-        sat = NearSourceSaturationParameters(5.0)
-        satd = NearSourceSaturationParameters(Dual(5.0))
-        sat = NearSourceSaturationParameters(5.0, 2)
-        sat = NearSourceSaturationParameters(Dual(5.0), 2)
+            q_r = anelastic_attenuation(f, r, fas)
+            @test qrf ≈ q_r
+        end
 
-        ane = AnelasticAttenuationParameters(200.0, 0.5, 3.5)
-        @test ane.rmetric == :Rps
+        @testset "Anelastic Attenuation Segmentation" begin
+            # test the vector descriptions of anelastic attenuation
+            ane_vec = AnelasticAttenuationParameters([0.0, 80.0, Inf], [200.0, 200.0], [0.4, 0.4])
+            ane_con = AnelasticAttenuationParameters(200.0, 0.4)
 
-        path = PathParameters(geo, ane)
-        @test path.saturation.model == :None
+            @test anelastic_attenuation(5.0, 50.0, ane_vec) ≈ anelastic_attenuation(5.0, 50.0, ane_con)
+            @test anelastic_attenuation(5.0, 150.0, ane_vec) ≈ anelastic_attenuation(5.0, 150.0, ane_con)
 
-        path = PathParameters(geo, satd, ane)
-        @test StochasticGroundMotionSimulation.get_parametric_type(path) <: Dual
+            ane_vecd = AnelasticAttenuationParameters([0.0, 80.0, Inf], [Dual(200.0), Dual(200.0)], [0.4, 0.4])
+            ane_cond = AnelasticAttenuationParameters(Dual(200.0), 0.4)
 
-        fas = FourierParameters(SourceParameters(100.0), path)
-        @test fas.site.model == :Unit
+            @test anelastic_attenuation(5.0, 50.0, ane_vecd) ≈ anelastic_attenuation(5.0, 50.0, ane_cond)
+            @test anelastic_attenuation(5.0, 150.0, ane_vecd) ≈ anelastic_attenuation(5.0, 150.0, ane_cond)
 
-        q_r = anelastic_attenuation(1.0, 10.0, fas)
+            ane_vecd = AnelasticAttenuationParameters([0.0, 80.0, Inf], [200.0, 200.0], [Dual(0.4), Dual(0.4)])
+            ane_cond = AnelasticAttenuationParameters(200.0, Dual(0.4))
 
+            @test anelastic_attenuation(5.0, 50.0, ane_vecd) ≈ anelastic_attenuation(5.0, 50.0, ane_cond)
+            @test anelastic_attenuation(5.0, 150.0, ane_vecd) ≈ anelastic_attenuation(5.0, 150.0, ane_cond)
+
+            ane_vecd = AnelasticAttenuationParameters([0.0, 80.0, Inf], [200.0], [Dual(200.0)], [0.4], [Dual(0.4)], 3.5 * ones(2), BitVector([1, 0]), BitVector([0, 1]), :Rrup)
+            ane_cond = AnelasticAttenuationParameters(200.0, 0.4)
+
+            @test anelastic_attenuation(5.0, 50.0, ane_vecd) ≈ anelastic_attenuation(5.0, 50.0, ane_cond)
+            @test anelastic_attenuation(5.0, 150.0, ane_vecd) ≈ anelastic_attenuation(5.0, 150.0, ane_cond)
+
+            ane_vecd = AnelasticAttenuationParameters([0.0, 80.0, Inf], [200.0], [Dual(200.0)], [0.4], [Dual(0.4)], 3.5 * ones(2), BitVector([0, 1]), BitVector([1, 0]), :Rrup)
+            ane_cond = AnelasticAttenuationParameters(200.0, 0.4)
+
+            @test anelastic_attenuation(5.0, 50.0, ane_vecd) ≈ anelastic_attenuation(5.0, 50.0, ane_cond)
+            @test anelastic_attenuation(5.0, 150.0, ane_vecd) ≈ anelastic_attenuation(5.0, 150.0, ane_cond)
+        end
     end
 
     @testset "Site" begin
