@@ -245,22 +245,41 @@ end
 Custom type defining the site parameters of a Fourier spectrum
 
 - `κ0::T where T<:Real` is the site kappa in units of s
+- `ζ0::T where T<:Real` is the Haendel et al. (2020) ζ parameter (for a reference frequency of ``f_0=1`` Hz)
+- `η::T where T<:Real` is the Haendel et al. (2020) η parameter
 - `model::Symbol` is a symbol identifying the impedance function
 
 The argument `model` is currently one of:
 - `:Unit` for a generic unit amplification
 - `:Boore2016` for the Boore (2016) amplification for ``V_{S,30}=760`` m/s
-- `:AlAtik2021_cy14` for the Al Atik & Abrahamson (2021) inversion of CY14 for ``V_{S,30}=760`` m/s  
+- `:AlAtik2021_ask14_620` for the Al Atik & Abrahamson (2021) inversion of ASK14 for ``V_{S,30}=620`` m/s
+- `:AlAtik2021_ask14_760` for the Al Atik & Abrahamson (2021) inversion of ASK14 for ``V_{S,30}=760`` m/s
+- `:AlAtik2021_ask14_1100` for the Al Atik & Abrahamson (2021) inversion of ASK14 for ``V_{S,30}=1100`` m/s
+- `:AlAtik2021_bssa14_620` for the Al Atik & Abrahamson (2021) inversion of BSSA14 for ``V_{S,30}=620`` m/s
+- `:AlAtik2021_bssa14_760` for the Al Atik & Abrahamson (2021) inversion of BSSA14 for ``V_{S,30}=760`` m/s
+- `:AlAtik2021_bssa14_1100` for the Al Atik & Abrahamson (2021) inversion of BSSA14 for ``V_{S,30}=1100`` m/s
+- `:AlAtik2021_cb14_620` for the Al Atik & Abrahamson (2021) inversion of CB14 for ``V_{S,30}=620`` m/s
+- `:AlAtik2021_cb14_760` for the Al Atik & Abrahamson (2021) inversion of CB14 for ``V_{S,30}=760`` m/s
+- `:AlAtik2021_cb14_1100` for the Al Atik & Abrahamson (2021) inversion of CB14 for ``V_{S,30}=1100`` m/s
+- `:AlAtik2021_cy14_620` for the Al Atik & Abrahamson (2021) inversion of CY14 for ``V_{S,30}=620`` m/s
+- `:AlAtik2021_cy14_760` for the Al Atik & Abrahamson (2021) inversion of CY14 for ``V_{S,30}=760`` m/s
+- `:AlAtik2021_cy14_1100` for the Al Atik & Abrahamson (2021) inversion of CY14 for ``V_{S,30}=1100`` m/s
 
 See also: [`FourierParameters`](@ref), [`site_amplification`](@ref)
 """
-struct SiteParameters{T<:Real}
+struct SiteParameters{T<:Real,U<:Real,V<:Real}
     # site parameters
-    κ0::T            # site kappa
-    model::Symbol# site amplification model
+    κ0::T           # site kappa
+    ζ0::U           # zeta parameter for f0=1 Hz
+    η::V            # eta parameter 
+    model::Symbol   # site amplification model
 end
 
-SiteParameters(κ0::T) where {T} = SiteParameters(κ0, :AlAtik2021_cy14_760)
+SiteParameters(κ0::T) where {T} = SiteParameters(κ0, NaN, NaN, :AlAtik2021_cy14_760)
+SiteParameters(κ0::T, model::Symbol) where {T} = SiteParameters(κ0, NaN, NaN, model)
+SiteParameters(ζ0::T, η::U) where {T<:Real,U<:Real} = SiteParameters(NaN, ζ0, η, :AlAtik2021_cy14_760)
+SiteParameters(ζ0::T, η::U, model::Symbol) where {T<:Real,U<:Real} = SiteParameters(NaN, ζ0, η, model)
+
 
 """
 	get_parametric_type(site::SiteParameters{T}) where {T} = T
@@ -279,9 +298,9 @@ This type is comprised of source, path and site types, and so has a base constru
 See also: [`SourceParameters`](@ref), [`PathParameters`](@ref), [`SiteParameters`](@ref)
 """
 struct FourierParameters{S<:SourceParameters,T<:PathParameters,U<:SiteParameters}
-    source::S# source parameters
-    path::T# path parameters
-    site::U# site parameters
+    source::S   # source parameters
+    path::T     # path parameters
+    site::U     # site parameters
 end
 
 # initialiser focussing upon source and path response only. Uses zero kappa and unit amplification

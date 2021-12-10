@@ -188,5 +188,11 @@ site_amplification(f, fas::FourierParameters) = site_amplification(f, fas.site)
 Kappa filter for a given frequency `f`
 """
 function kappa_filter(f, site::SiteParameters)
-    return exp(-π * f * site.κ0)
+    if isnan(site.κ0)
+        # Eq. 20 of Haendel et al. (2020) (frequency dependent kappa)
+        # specified for a reference frequency of f0=1 Hz
+        return exp(-π * site.ζ0 * (1.0 - site.η) * f^(1.0 - site.η) )
+    else
+        return exp(-π * f * site.κ0)
+    end
 end

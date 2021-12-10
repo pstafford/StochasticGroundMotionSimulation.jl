@@ -380,6 +380,9 @@ using LinearAlgebra
 
             @test anelastic_attenuation(5.0, 50.0, ane_vecd) ≈ anelastic_attenuation(5.0, 50.0, ane_cond)
             @test anelastic_attenuation(5.0, 150.0, ane_vecd) ≈ anelastic_attenuation(5.0, 150.0, ane_cond)
+
+            ane_inf = AnelasticAttenuationParameters([0.0, 80.0, Inf], [Inf], [Dual{Float64}(200.0)], [0.0], [Dual{Float64}(0.5)], 3.5 * ones(2), BitVector([0, 1]), BitVector([0, 1]), :Rrup)
+            @test anelastic_attenuation(5.0, 50.0, ane_inf) == 1.0
         end
     end
 
@@ -387,6 +390,34 @@ using LinearAlgebra
 
         κ0f = 0.039
         κ0d = Dual{Float64}(κ0f)
+        ζ0f = 0.039
+        ζ0d = Dual{Float64}(ζ0f)
+        ηf = 0.75
+        ηd = Dual{Float64}(ηf)
+
+        @testset "Site Constructors" begin
+            @test typeof(SiteParameters(κ0f)) <: SiteParameters
+            @test typeof(SiteParameters(κ0f, :AlAtik2021_cy14_760)) <: SiteParameters
+            @test typeof(SiteParameters(κ0f, :Boore2016)) <: SiteParameters
+            @test typeof(SiteParameters(κ0f, :Unit)) <: SiteParameters
+            @test typeof(SiteParameters(κ0f, :NaN)) <: SiteParameters
+
+            @test typeof(SiteParameters(κ0d)) <: SiteParameters
+            @test typeof(SiteParameters(κ0d, :AlAtik2021_cy14_760)) <: SiteParameters
+            @test typeof(SiteParameters(κ0d, :Boore2016)) <: SiteParameters
+            @test typeof(SiteParameters(κ0d, :Unit)) <: SiteParameters
+            @test typeof(SiteParameters(κ0d, :NaN)) <: SiteParameters
+
+            @test typeof(SiteParameters(ζ0f, ηf)) <: SiteParameters
+            @test typeof(SiteParameters(ζ0d, ηf)) <: SiteParameters
+            @test typeof(SiteParameters(ζ0f, ηd)) <: SiteParameters
+            @test typeof(SiteParameters(ζ0d, ηd)) <: SiteParameters
+            @test typeof(SiteParameters(ζ0f, ηf, :AlAtik2021_cy14_760)) <: SiteParameters
+            @test typeof(SiteParameters(ζ0d, ηf, :AlAtik2021_cy14_760)) <: SiteParameters
+            @test typeof(SiteParameters(ζ0f, ηd, :AlAtik2021_cy14_760)) <: SiteParameters
+            @test typeof(SiteParameters(ζ0d, ηd, :AlAtik2021_cy14_760)) <: SiteParameters
+
+        end
 
         site0f = SiteParameters(κ0f)
         siteAf = SiteParameters(κ0f, :AlAtik2021_cy14_760)
@@ -401,98 +432,120 @@ using LinearAlgebra
         siteNd = SiteParameters(κ0d, :NaN)
 
         f = 0.05
-        # @code_warntype site_amplification(f, site0f)
-        # @code_warntype site_amplification(f, site0d)
-        Sff = site_amplification(f, site0f)
-        Sfd = site_amplification(f, site0d)
-        @test Sff == Sfd
+
+        @testset "Site Amplification" begin
+            # @code_warntype site_amplification(f, site0f)
+            # @code_warntype site_amplification(f, site0d)
+            Sff = site_amplification(f, site0f)
+            Sfd = site_amplification(f, site0d)
+            @test Sff == Sfd
 
 
-        Af0f = site_amplification(f, site0f)
-        Af1f = site_amplification(f, siteAf)
-        Af2f = site_amplification(f, siteBf)
-        Af3f = site_amplification(f, siteUf)
-        Af4f = site_amplification(f, siteNf)
+            Af0f = site_amplification(f, site0f)
+            Af1f = site_amplification(f, siteAf)
+            Af2f = site_amplification(f, siteBf)
+            Af3f = site_amplification(f, siteUf)
+            Af4f = site_amplification(f, siteNf)
 
-        @test Af0f == Af1f
-        @test Af3f == 1.0
-        @test Af2f < Af1f
-        @test isnan(Af4f)
+            @test Af0f == Af1f
+            @test Af3f == 1.0
+            @test Af2f < Af1f
+            @test isnan(Af4f)
 
-        Af0d = site_amplification(f, site0d)
-        Af1d = site_amplification(f, siteAd)
-        Af2d = site_amplification(f, siteBd)
-        Af3d = site_amplification(f, siteUd)
-        Af4d = site_amplification(f, siteNd)
+            Af0d = site_amplification(f, site0d)
+            Af1d = site_amplification(f, siteAd)
+            Af2d = site_amplification(f, siteBd)
+            Af3d = site_amplification(f, siteUd)
+            Af4d = site_amplification(f, siteNd)
 
-        @test Af0d == Af1d
-        @test Af3d == 1.0
-        @test Af2d < Af1d
-        @test isnan(Af4d)
+            @test Af0d == Af1d
+            @test Af3d == 1.0
+            @test Af2d < Af1d
+            @test isnan(Af4d)
 
-        @test Af0f == Af0d
+            @test Af0f == Af0d
 
-        f0 = 80.0
-        f1 = 100.0
-        Af0 = site_amplification(f0, siteBf)
-        Af1 = site_amplification(f1, siteBf)
+            f0 = 80.0
+            f1 = 100.0
+            Af0 = site_amplification(f0, siteBf)
+            Af1 = site_amplification(f1, siteBf)
 
-        @test Af0 == Af1
+            @test Af0 == Af1
 
-        ft = 10.0
-        Af620 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_ask14_620))
-        Af760 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_ask14_760))
-        Af1100 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_ask14_1100))
+            ft = 10.0
+            Af620 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_ask14_620))
+            Af760 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_ask14_760))
+            Af1100 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_ask14_1100))
 
-        @test Af620 > Af760
-        @test Af760 > Af1100
+            @test Af620 > Af760
+            @test Af760 > Af1100
 
-        Af620 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_bssa14_620))
-        Af760 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_bssa14_760))
-        Af1100 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_bssa14_1100))
+            Af620 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_bssa14_620))
+            Af760 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_bssa14_760))
+            Af1100 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_bssa14_1100))
 
-        @test Af620 > Af760
-        @test Af760 > Af1100
+            @test Af620 > Af760
+            @test Af760 > Af1100
 
-        Af620 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_cb14_620))
-        Af760 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_cb14_760))
-        Af1100 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_cb14_1100))
+            Af620 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_cb14_620))
+            Af760 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_cb14_760))
+            Af1100 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_cb14_1100))
 
-        @test Af620 > Af760
-        @test Af760 > Af1100
+            @test Af620 > Af760
+            @test Af760 > Af1100
 
-        Af620 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_cy14_620))
-        Af760 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_cy14_760))
-        Af1100 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_cy14_1100))
+            Af620 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_cy14_620))
+            Af760 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_cy14_760))
+            Af1100 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_cy14_1100))
 
-        @test Af620 > Af760
-        @test Af760 > Af1100
-
-
-        f = 10.0
-        # @code_warntype kappa_filter(f, siteAf)
-        # @code_warntype kappa_filter(f, siteAd)
-        Kff = kappa_filter(f, siteAf)
-        Kfd = kappa_filter(f, siteAd)
-        @test Kff == Kfd.value
-
-
-        @test StochasticGroundMotionSimulation.boore_2016_generic_amplification(0.015) == 1.01
-        @test isnan(StochasticGroundMotionSimulation.boore_2016_generic_amplification(NaN))
-
-        numf = length(StochasticGroundMotionSimulation.fii_b16_760)
-        for i = 1:numf
-            fi = StochasticGroundMotionSimulation.fii_b16_760[i]
-            @test StochasticGroundMotionSimulation.boore_2016_generic_amplification(fi) == StochasticGroundMotionSimulation.Aii_b16_760[i]
+            @test Af620 > Af760
+            @test Af760 > Af1100
         end
 
-        numf = length(StochasticGroundMotionSimulation.fii_aa21_cy14_760)
-        for i = 1:numf
-            fi = StochasticGroundMotionSimulation.fii_aa21_cy14_760[i]
-            @test StochasticGroundMotionSimulation.itp_aa21_cy14_760(log(fi)) == StochasticGroundMotionSimulation.Aii_aa21_cy14_760[i]
+
+        @testset "Impedance Functions" begin
+            @test StochasticGroundMotionSimulation.boore_2016_generic_amplification(0.015) == 1.01
+            @test isnan(StochasticGroundMotionSimulation.boore_2016_generic_amplification(NaN))
+
+            numf = length(StochasticGroundMotionSimulation.fii_b16_760)
+            for i = 1:numf
+                fi = StochasticGroundMotionSimulation.fii_b16_760[i]
+                @test StochasticGroundMotionSimulation.boore_2016_generic_amplification(fi) == StochasticGroundMotionSimulation.Aii_b16_760[i]
+            end
+
+            numf = length(StochasticGroundMotionSimulation.fii_aa21_cy14_760)
+            for i = 1:numf
+                fi = StochasticGroundMotionSimulation.fii_aa21_cy14_760[i]
+                @test StochasticGroundMotionSimulation.itp_aa21_cy14_760(log(fi)) == StochasticGroundMotionSimulation.Aii_aa21_cy14_760[i]
+            end
+        end
+
+        @testset "Kappa Filter" begin
+            f = 10.0
+            # @code_warntype kappa_filter(f, siteAf)
+            # @code_warntype kappa_filter(f, siteAd)
+            Kff = kappa_filter(f, siteAf)
+            Kfd = kappa_filter(f, siteAd)
+            @test Kff == Kfd.value
+        end
+
+        @testset "Zeta Filter" begin
+            f = 10.0
+            # @code_warntype kappa_filter(f, siteAf)
+            # @code_warntype kappa_filter(f, siteAd)
+            siteAzf = SiteParameters(ζ0f, ηf)
+            siteAzd = SiteParameters(ζ0d, ηd)
+            Kff = kappa_filter(f, siteAzf)
+            Kfd = kappa_filter(f, siteAzd)
+            @test Kff == Kfd.value
+
+            # fi = [1.0, 5.0, 10.0, 15.0, 20.0, 30.0]
+            # [map(f -> kappa_filter(f, SiteParameters(0.04)), fi) map(f -> kappa_filter(f, SiteParameters(0.04, 0.1)), fi) ]
+
         end
 
     end
+
 
     @testset "Oscillator" begin
         ζ = 0.05
