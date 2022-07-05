@@ -143,6 +143,7 @@ Options for `sat.model` are:
 - `:BT15` for Boore & Thompson (2015) finite fault factor
 - `:YA15` for Yenier & Atkinson (2014) finite fault factor
 - `:CY14` for a model fitted to the Chiou & Youngs (2014) saturation lengths (over all periods)
+- `:SEA21` for the Stafford et al. (2021) saturation model obtained from inversion of Chiou & Youngs (2014)
 - `:None` for zero saturation length
 - `:ConstantConstrained` for a constant value, `sat.hconi[1]`, not subject to AD operations
 - `:ConstantVariable` for a constant value, `sat.hvari[1]`, that is subject to AD operations
@@ -162,6 +163,9 @@ function near_source_saturation(m, sat::NearSourceSaturationParameters)
     elseif sat.model == :CY14
         # use the fitted model averaging over Chiou & Youngs (2014)
         return finite_fault_factor_cy14(m) * unit
+    elseif sat.model == :SEA21 
+        # use the near-source saturation model of Stafford et al. (2021)'s inversion of CY14 
+        return finite_fault_factor_sea21(m) * unit
     elseif sat.model == :None
         return zero(get_parametric_type(sat))
     elseif sat.model == :ConstantConstrained
@@ -198,7 +202,7 @@ near_source_saturation(m, fas::FourierParameters) = near_source_saturation(m, fa
 
 Finite fault factor from Boore & Thompson (2015) used to create equivalent point-source distance.
 
-See also: [`near_source_saturation`](@ref), [`finite_fault_factor_ya15`](@ref), [`finite_fault_factor_cy14`](@ref)
+See also: [`near_source_saturation`](@ref), [`finite_fault_factor_ya15`](@ref), [`finite_fault_factor_cy14`](@ref), [`finite_fault_factor_sea21`](@ref)
 """
 function finite_fault_factor_bt15(m::T) where {T<:Real}
     Mt1 = 5.744
@@ -226,7 +230,7 @@ end
 
 Finite fault factor from Yenier & Atkinson (2015) used to create equivalent point-source distance.
 
-See also: [`near_source_saturation`](@ref), [`finite_fault_factor_bt15`](@ref), [`finite_fault_factor_cy14`](@ref)
+See also: [`near_source_saturation`](@ref), [`finite_fault_factor_bt15`](@ref), [`finite_fault_factor_cy14`](@ref), [`finite_fault_factor_sea21`](@ref)
 """
 function finite_fault_factor_ya15(m::T) where {T<:Real}
     return 10.0^(-0.405 + 0.235 * m)
@@ -239,13 +243,31 @@ end
 Finite fault factor for Chiou & Youngs (2014) used to create equivalent point-source distance.
 This is a model developed to match the average saturation length over the full period range.
 
-See also: [`near_source_saturation`](@ref), [`finite_fault_factor_bt15`](@ref), [`finite_fault_factor_ya15`](@ref)
+See also: [`near_source_saturation`](@ref), [`finite_fault_factor_bt15`](@ref), [`finite_fault_factor_ya15`](@ref), [`finite_fault_factor_sea21`](@ref)
 """
 function finite_fault_factor_cy14(m::T) where {T<:Real}
     hα = 7.308
     hβ = 0.4792
     hγ = 3.556
     return hα * cosh(hβ * max(m - hγ, 0.0))
+end
+
+
+"""
+	finite_fault_factor_sea21(m::T) where T<:Real
+
+Finite fault factor for Stafford et al. (2021) used to create equivalent point-source distance.
+
+See also: [`near_source_saturation`](@ref), [`finite_fault_factor_bt15`](@ref), [`finite_fault_factor_ya15`](@ref), [`finite_fault_factor_cy14`](@ref)
+"""
+function finite_fault_factor_sea21(m::T) where {T<:Real}
+    hα = -0.8712
+    hβ = 0.4451
+    hγ = 1.1513
+    hδ = 5.0948
+    hε = 7.2725
+    lnh = hα + hβ * m + ((hβ - hγ)/hδ) * log( 1.0 + exp(-hδ * (m - hε)) )
+    return exp(lnh)
 end
 
 

@@ -309,6 +309,7 @@ using LinearAlgebra
             ane = AnelasticAttenuationParameters(200.0, 0.5)
             sat_ya = NearSourceSaturationParameters(:YA15)
             sat_cy = NearSourceSaturationParameters(:CY14)
+            sat_sea = NearSourceSaturationParameters(:SEA21)
             sat_none = NearSourceSaturationParameters(:None)
             sat_con = NearSourceSaturationParameters(5.0)
             sat_var = NearSourceSaturationParameters(Dual(5.0))
@@ -316,6 +317,7 @@ using LinearAlgebra
 
             path_ya = PathParameters(geo, sat_ya, ane)
             path_cy = PathParameters(geo, sat_cy, ane)
+            path_sea = PathParameters(geo, sat_sea, ane)
             path_none = PathParameters(geo, sat_none, ane)
             path_con = PathParameters(geo, sat_con, ane)
             path_var = PathParameters(geo, sat_var, ane)
@@ -323,6 +325,7 @@ using LinearAlgebra
 
             h_ya = near_source_saturation(5.0, sat_ya)
             h_cy = near_source_saturation(5.0, sat_cy)
+            h_sea = near_source_saturation(5.0, sat_sea)
             h_none = near_source_saturation(5.0, sat_none)
             h_con = near_source_saturation(5.0, sat_con)
             h_var = near_source_saturation(5.0, sat_var)
@@ -720,7 +723,7 @@ using LinearAlgebra
         @test isnan(excitation_duration(m, -1.0, srcd, rvt))
         @test isnan(excitation_duration(m, Dual(-1.0), src, rvt))
 
-        c = StochasticGroundMotionSimulation.StochasticGroundMotionSimulation.boore_thompson_2012_coefs(1, 1, region = :ENA)
+        c = StochasticGroundMotionSimulation.StochasticGroundMotionSimulation.boore_thompson_2012_coefs(1, 1, region=:ENA)
         idx = 1
         @test all(isapprox(c, StochasticGroundMotionSimulation.coefs_ena_bt12[idx, 3:9]))
 
@@ -735,7 +738,7 @@ using LinearAlgebra
         @test d1d < d1a
 
 
-        c = StochasticGroundMotionSimulation.boore_thompson_2015_coefs(1, 1, region = :ENA)
+        c = StochasticGroundMotionSimulation.boore_thompson_2015_coefs(1, 1, region=:ENA)
         idx = 1
         @test all(isapprox(c, StochasticGroundMotionSimulation.coefs_ena_bt15[idx, 3:9]))
 
@@ -1190,7 +1193,7 @@ using LinearAlgebra
             intervals = 101
             x_min = 0.0
             x_max = 2π
-            xx = collect(range(x_min, stop = x_max, length = intervals))
+            xx = collect(range(x_min, stop=x_max, length=intervals))
             yy = integrand.(xx)
 
             isr = StochasticGroundMotionSimulation.simpsons_rule(xx, yy)
@@ -1218,7 +1221,7 @@ using LinearAlgebra
             intervals = 101
             x_min = sdof.f_n / 1.1
             x_max = sdof.f_n * 1.1
-            xx = collect(range(x_min, stop = x_max, length = intervals))
+            xx = collect(range(x_min, stop=x_max, length=intervals))
             yy = integrand.(xx)
 
             isr = StochasticGroundMotionSimulation.simpsons_rule(xx, yy)
@@ -1233,7 +1236,7 @@ using LinearAlgebra
             intervals = 101
             x_min = 100.0
             x_max = 200.0
-            xx = collect(range(x_min, stop = x_max, length = intervals))
+            xx = collect(range(x_min, stop=x_max, length=intervals))
             yy = integrand.(xx)
 
             isr = StochasticGroundMotionSimulation.simpsons_rule(xx, yy)
@@ -1248,7 +1251,7 @@ using LinearAlgebra
             intervals = 101
             x_min = 100.0
             x_max = 200.0
-            xx = collect(range(x_min, stop = x_max, length = intervals))
+            xx = collect(range(x_min, stop=x_max, length=intervals))
             yy = integrand.(xx)
 
             isr = StochasticGroundMotionSimulation.simpsons_rule(xx, yy)
@@ -1259,7 +1262,7 @@ using LinearAlgebra
 
             x_min = 300.0
             x_max = 500.0
-            xx = collect(range(x_min, stop = x_max, length = intervals))
+            xx = collect(range(x_min, stop=x_max, length=intervals))
             yy = integrand.(xx)
 
             isr = StochasticGroundMotionSimulation.simpsons_rule(xx, yy)
@@ -1341,14 +1344,14 @@ using LinearAlgebra
             smi = spectral_moments([0, 1, 2, 4], m, r_psf, fasf, sdof)
             smigk = StochasticGroundMotionSimulation.spectral_moments_gk([0, 1, 2, 4], m, r_psf, fasf, sdof)
 
-            @test all(isapprox.(smi, smigk, rtol = 1e-3))
+            @test all(isapprox.(smi, smigk, rtol=1e-3))
 
 
             sdof = Oscillator(1 / 3)
             smi = spectral_moments([0, 1, 2, 4], m, r_psf, fasf, sdof)
             smigk = StochasticGroundMotionSimulation.spectral_moments_gk([0, 1, 2, 4], m, r_psf, fasf, sdof)
 
-            @test all(isapprox.(smi, smigk, rtol = 1e-3))
+            @test all(isapprox.(smi, smigk, rtol=1e-3))
 
             m = Dual(6.0)
             smdi = spectral_moments([0, 1, 2, 4], m, r_psf, fasf, sdof)
@@ -1430,14 +1433,14 @@ using LinearAlgebra
             sdof = Oscillator(1.0)
 
             @time pfps = StochasticGroundMotionSimulation.peak_factor_dk80(m, r_psf, fasf, sdof)
-            @time pfpsn = StochasticGroundMotionSimulation.peak_factor_dk80(m, r_psf, fasf, sdof, nodes = 30)
+            @time pfpsn = StochasticGroundMotionSimulation.peak_factor_dk80(m, r_psf, fasf, sdof, nodes=30)
             @time pfgk = StochasticGroundMotionSimulation.peak_factor_dk80_gk(m, r_psf, fasf, sdof)
 
             @test pfps ≈ pfgk rtol = 1e-6
             @test pfpsn ≈ pfgk rtol = 1e-6
 
             @time pfps = StochasticGroundMotionSimulation.peak_factor_cl56(m, r_psf, fasf, sdof)
-            @time pfpsn = StochasticGroundMotionSimulation.peak_factor_cl56(m, r_psf, fasf, sdof, nodes = 40)
+            @time pfpsn = StochasticGroundMotionSimulation.peak_factor_cl56(m, r_psf, fasf, sdof, nodes=40)
             @time pfgk = StochasticGroundMotionSimulation.peak_factor_cl56_gk(m, r_psf, fasf, sdof)
 
             @test pfps ≈ pfgk rtol = 1e-5
@@ -1476,7 +1479,7 @@ using LinearAlgebra
             @test pfi ≈ 0.0
 
             pf0 = StochasticGroundMotionSimulation.peak_factor_cl56(10.0, 10.0)
-            pf1 = StochasticGroundMotionSimulation.peak_factor_cl56(10.0, 10.0, nodes = 50)
+            pf1 = StochasticGroundMotionSimulation.peak_factor_cl56(10.0, 10.0, nodes=50)
             @test pf0 ≈ pf1
 
         end
