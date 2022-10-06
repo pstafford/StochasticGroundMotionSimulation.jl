@@ -88,6 +88,36 @@ using LinearAlgebra
 
         @test StochasticGroundMotionSimulation.magnitude_to_moment(6.0) ≈ exp10(25.05)
 
+
+        @testset "Beresnev (2019)" begin
+            Δσ = 100.0
+            n = 1.0
+            srcb = SourceParameters(Δσ, n)
+            srcω = SourceParameters(Δσ)
+
+            f = 25.0
+            m = 5.0
+            Afb = fourier_source_shape(f, m, srcb)
+            Afω = fourier_source_shape(f, m, srcω)
+
+            @test Afb ≈ Afω
+
+            srcb1p5 = SourceParameters(Δσ, 1.5)
+            Afb1p5 = fourier_source_shape(f, m, srcb1p5)
+
+            @test Afb > Afb1p5
+
+            Δσd = Dual{Float64}(Δσ)
+            nd = Dual{Float64}(n)
+
+            srcdd = SourceParameters(Δσd, nd)
+            srcdf = SourceParameters(Δσd, n)
+
+            @test fourier_source_shape(f, m, srcdd) ≈ fourier_source_shape(f, m, srcb)
+            @test fourier_source_shape(f, m, srcdf) ≈ fourier_source_shape(f, m, srcb)
+
+        end
+
     end
 
     @testset "Path" begin

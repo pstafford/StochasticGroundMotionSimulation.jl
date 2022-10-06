@@ -13,7 +13,7 @@ Constructed with signature `SourceParameters{S<:Float64, T<:Real}` with fields:
 - `ρ::S` is the source density in units of t/m³ or g/cm³
 - `model::Symbol` identifies the type of source spectrum (`:Brune`, `:Atkinson_Silva_2000`)
 """
-struct SourceParameters{S<:Float64,T<:Real}
+struct SourceParameters{S<:Float64,T<:Real,U<:Real}
     # source parameters
     Δσ::T# stressParameter
     RΘϕ::S                            # radiationPattern
@@ -21,14 +21,18 @@ struct SourceParameters{S<:Float64,T<:Real}
     F::S                              # freeSurfaceFactor
     β::S                              # sourceVelocity
     ρ::S                              # sourceDensity
+    n::U                              # high-frequency fall-off rate for Beresnev (2019)
     model::Symbol    # source spectrum model
 end
 
-SourceParameters(Δσ::T) where {T<:Float64} = SourceParameters(Δσ, 0.55, 1.0 / sqrt(2.0), 2.0, 3.5, 2.75, :Brune)
-SourceParameters(Δσ::T) where {T<:Real} = SourceParameters(Δσ, 0.55, 1.0 / sqrt(2.0), 2.0, 3.5, 2.75, :Brune)
-SourceParameters(Δσ::T, model::Symbol) where {T<:Real} = SourceParameters(Δσ, 0.55, 1.0 / sqrt(2.0), 2.0, 3.5, 2.75, model)
-SourceParameters(Δσ::T, βs::S, ρs::S) where {S<:Float64,T<:Real} = SourceParameters(Δσ, 0.55, 1.0 / sqrt(2.0), 2.0, βs, ρs, :Brune)
-SourceParameters(Δσ::T, βs::T, ρs::T) where {T<:Float64} = SourceParameters(Δσ, 0.55, 1.0 / sqrt(2.0), 2.0, βs, ρs, :Brune)
+SourceParameters(Δσ::T) where {T<:Float64} = SourceParameters(Δσ, 0.55, 1.0 / sqrt(2.0), 2.0, 3.5, 2.75, 1.0, :Brune)
+SourceParameters(Δσ::T) where {T<:Real} = SourceParameters(Δσ, 0.55, 1.0 / sqrt(2.0), 2.0, 3.5, 2.75, 1.0, :Brune)
+SourceParameters(Δσ::T, model::Symbol) where {T<:Real} = SourceParameters(Δσ, 0.55, 1.0 / sqrt(2.0), 2.0, 3.5, 2.75, 1.0, model)
+SourceParameters(Δσ::T, βs::S, ρs::S) where {S<:Float64,T<:Real} = SourceParameters(Δσ, 0.55, 1.0 / sqrt(2.0), 2.0, βs, ρs, 1.0, :Brune)
+SourceParameters(Δσ::T, βs::T, ρs::T) where {T<:Float64} = SourceParameters(Δσ, 0.55, 1.0 / sqrt(2.0), 2.0, βs, ρs, 1.0, :Brune)
+SourceParameters(Δσ::T, n::T) where {T<:Real} = SourceParameters(Δσ, 0.55, 1.0 / sqrt(2.0), 2.0, 3.5, 2.75, n, :Beresnev_2019)
+SourceParameters(Δσ::T, n::U) where {T<:Real,U<:Real} = SourceParameters(Δσ, 0.55, 1.0 / sqrt(2.0), 2.0, 3.5, 2.75, n, :Beresnev_2019)
+
 
 """
 	get_parametric_type(src::SourceParameters{S,T}) where {S,T} = T

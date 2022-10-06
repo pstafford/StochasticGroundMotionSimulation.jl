@@ -20,6 +20,11 @@ fourier_constant(fas::FourierParameters) = fourier_constant(fas.source)
 
 Source shape of the Fourier Amplitude Spectrum of _displacement_, without the constant term or seismic moment.
 This simply includes the source spectral shape.
+
+The nature of the source spectral shape depends upon `src.model`:
+- `:Brune` gives the single corner omega-squared spectrum (this is the default)
+- `:Atkinson_Silva_2000` gives the double corner spectrum of Atkinson & Silva (2000)
+- `:Beresnev_2019` gives a single-corner spectrum with arbitrary fall off rate related to `src.n` from Beresnev (2019) 
 """
 function fourier_source_shape(f::T, m::S, src::SourceParameters) where {S<:Real,T<:Float64}
 	fa, fb, ε = corner_frequency(m, src)
@@ -29,6 +34,10 @@ function fourier_source_shape(f::T, m::S, src::SourceParameters) where {S<:Real,
 	elseif src.model == :Atkinson_Silva_2000
 		# use double corner model
 		return (1.0 - ε)/(1.0 + (f/fa)^2 ) + ε/(1.0 + (f/fb)^2)
+	elseif src.model == :Beresnev_2019
+		# include a high-frequency roll-off parameter n 
+		rolloff = (src.n + 1.0) / 2.0
+		return 1.0 / ( (1.0 + (f/fa)^2)^rolloff )
 	else
 		# use single corner, with fa=fc
 		return 1.0 / (1.0 + (f/fa)^2)
@@ -53,13 +62,17 @@ Fourier amplitude spectral shape for _displacement_ defined by corner frequencie
 
 See also: [`fourier_source_shape`](@ref)
 """
-function fourier_source_shape(f::Float64, fa::T, fb::T, ε::T, model::Symbol) where T<:Real
+function fourier_source_shape(f::Float64, fa::T, fb::T, ε::T, model::Symbol, n::U=1.0) where {T<:Real,U<:Real}
 	if model == :Brune
 		# use single corner, with fa=fc
 		return 1.0 / (1.0 + (f/fa)^2)
 	elseif model == :Atkinson_Silva_2000
 		# use double corner model
 		return (1.0 - ε)/(1.0 + (f/fa)^2 ) + ε/(1.0 + (f/fb)^2)
+	elseif src.model == :Beresnev_2019
+		# include a high-frequency roll-off parameter n 
+		rolloff = (n + 1.0) / 2.0
+		return 1.0 / ( (1.0 + (f/fa)^2)^rolloff )
 	else
 		# use single corner, with fa=fc
 		return 1.0 / (1.0 + (f/fa)^2)
