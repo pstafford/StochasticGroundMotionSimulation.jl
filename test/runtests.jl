@@ -885,12 +885,12 @@ using LinearAlgebra
 
         fa, fb, ε = corner_frequency(m, srcf)
         # @code_warntype fourier_source_shape(f, fa, fb, ε, srcf.model)
-        Afc = fourier_source_shape(f, fa, fb, ε, srcf.model)
+        Afc = fourier_source_shape(f, fa, fb, ε, srcf)
         @test Afc ≈ 1.0 atol = 1e-3
 
         fa, fb, ε = corner_frequency(m, srcd)
         # @code_warntype fourier_source_shape(f, fa, fb, ε, srcd.model)
-        Afcd = fourier_source_shape(f, fa, fb, ε, srcd.model)
+        Afcd = fourier_source_shape(f, fa, fb, ε, srcd)
         @test Afcd ≈ 1.0 atol = 1e-3
 
         src_a = SourceParameters(100.0, :Atkinson_Silva_2000)
@@ -903,10 +903,10 @@ using LinearAlgebra
         @test Af_n == Af_b
 
         fa, fb, ε = corner_frequency(m, src_a)
-        Af_a = fourier_source_shape(f, fa, fb, ε, src_a.model)
+        Af_a = fourier_source_shape(f, fa, fb, ε, src_a)
         @test Af_a ≈ 1.0 atol = 1e-3
         fa, fb, ε = corner_frequency(m, src_b)
-        Af_n = fourier_source_shape(f, fa, fb, ε, src_n.model)
+        Af_n = fourier_source_shape(f, fa, fb, ε, src_n)
         @test Af_n ≈ Af_b
 
 
@@ -995,6 +995,31 @@ using LinearAlgebra
         Am = fourier_spectral_ordinate(f, m, r_psm, fasm)
         @test Af == Ad.value
         @test Ad == Am
+
+
+        # test Beresnev source spectrum
+        srcb1p0 = SourceParameters(100.0, 1.0)
+        srcb1p5 = SourceParameters(100.0, 1.5)
+
+        fasb1p0 = FourierParameters(srcb1p0, pathf, sitef)
+        fasb1p5 = FourierParameters(srcb1p5, pathf, sitef)
+
+        f = 10.0
+        m = 6.0
+        r = 10.0
+        r_ps = equivalent_point_source_distance(r, m, fasb1p0)
+
+        Afb1p0 = fourier_spectral_ordinate(f, m, r_ps, fasb1p0)
+        Afb1p5 = fourier_spectral_ordinate(f, m, r_ps, fasb1p5)
+
+        @test Afb1p0 > Afb1p5
+
+        f = 1e-3
+        Afb1p0 = fourier_spectral_ordinate(f, m, r_ps, fasb1p0)
+        Afb1p5 = fourier_spectral_ordinate(f, m, r_ps, fasb1p5)
+
+        @test Afb1p0 ≈ Afb1p5 rtol = 1e-3
+
 
         fi = [0.01, 0.1, 1.0, 10.0, 100.0]
 
@@ -1574,6 +1599,25 @@ using LinearAlgebra
                 @test Saif[i] ≈ Said[i].value
             end
             @test all(isapprox.(Said, Saim))
+
+
+            # test Beresnev source spectrum
+            srcb1p0 = SourceParameters(100.0, 1.0)
+            srcb1p5 = SourceParameters(100.0, 1.5)
+
+            fasb1p0 = FourierParameters(srcb1p0, pathf, sitef)
+            fasb1p5 = FourierParameters(srcb1p5, pathf, sitef)
+
+            T = 0.05
+            m = 6.0
+            r = 10.0
+            r_ps = equivalent_point_source_distance(r, m, fasb1p0)
+
+            Sab1p0 = rvt_response_spectral_ordinate(T, m, r_ps, fasb1p0, rvt)
+            Sab1p5 = rvt_response_spectral_ordinate(T, m, r_ps, fasb1p5, rvt)
+            
+            @test Sab1p0 > Sab1p5
+
 
             # @code_warntype rvt_response_spectrum(Ti, m, r_psf, fasf, rvt)
             # @code_warntype rvt_response_spectrum(Ti, m, r_psd, fasd, rvt)
