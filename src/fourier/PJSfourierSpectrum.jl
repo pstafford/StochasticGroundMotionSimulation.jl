@@ -69,7 +69,7 @@ function fourier_source_shape(f::Float64, fa::T, fb::T, ε::T, model::Symbol, n:
 	elseif model == :Atkinson_Silva_2000
 		# use double corner model
 		return (1.0 - ε)/(1.0 + (f/fa)^2 ) + ε/(1.0 + (f/fb)^2)
-	elseif src.model == :Beresnev_2019
+	elseif model == :Beresnev_2019
 		# include a high-frequency roll-off parameter n 
 		rolloff = (n + 1.0) / 2.0
 		return 1.0 / ( (1.0 + (f/fa)^2)^rolloff )
