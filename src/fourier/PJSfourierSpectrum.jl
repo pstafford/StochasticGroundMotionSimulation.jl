@@ -241,7 +241,7 @@ fourier_spectral_ordinate(f::U, m::S, r_ps::T, fas::FourierParameters) where {S<
 
 
 """
-	squared_fourier_spectral_ordinate(f::U, m::S, r_ps::T, src::SourceParameters, geo::GeometricSpreadingParameters, ane::AnelasticAttenuationParameters, site::SiteParameters) where {S<:Real,T<:Real,U<:Float64}
+	squared_fourier_spectral_ordinate(f::U, m::S, r_ps::T, src::SourceParameters, geo::GeometricSpreadingParameters, ane::AnelasticAttenuationParameters, site::SiteParameters) where {S<:Real,T<:Real}
 
 Squared Fourier acceleration spectral ordinate (m^2/s^2) based upon an equivalent point source distance `r_ps`
 - `f` is frequency (Hz)
@@ -255,7 +255,7 @@ Squared Fourier acceleration spectral ordinate (m^2/s^2) based upon an equivalen
 
 See also: [`fourier_spectral_ordinate`](@ref), [`squared_fourier_spectrum`](@ref)
 """
-function squared_fourier_spectral_ordinate(f::S, m::S, r_ps::T, src::SourceParameters, geo::GeometricSpreadingParameters, sat::NearSourceSaturationParameters, ane::AnelasticAttenuationParameters, site::SiteParameters) where {S<:Real,T<:Real,U<:Float64}
+function squared_fourier_spectral_ordinate(f::S, m::S, r_ps::T, src::SourceParameters, geo::GeometricSpreadingParameters, sat::NearSourceSaturationParameters, ane::AnelasticAttenuationParameters, site::SiteParameters) where {S<:Real,T<:Real}
     return fourier_spectral_ordinate(f, m, r_ps, src, geo, sat, ane, site)^2
 end
 

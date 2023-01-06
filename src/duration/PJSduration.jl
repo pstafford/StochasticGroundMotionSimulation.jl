@@ -99,12 +99,12 @@ end
 
 
 """
-  boore_thompson_2012(m, r_ps::T, src::SourceParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
+  boore_thompson_2012(m, r_ps::T, src::SourceParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {T<:Real}
 
 Boore & Thompson (2012) rms duration model. Also outputs the excitation duration (given that its required within the rms duration calculations).
 
 """
-function boore_thompson_2012(m, r_ps::T, src::SourceParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
+function boore_thompson_2012(m, r_ps::T, src::SourceParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {T<:Real}
   # for magnitude and distance that don't match coefficient tables we need to use bilinear interpolation
   # get the excitation duration (as recommended by Boore & Thompson, 2012)
   Dex = boore_thompson_2014(m, r_ps, src)
@@ -174,11 +174,15 @@ function boore_thompson_2012(m, r_ps::T, src::SourceParameters, sdof::Oscillator
       Dr_hh = boore_thompson_2012_base(η, c_hh, ζ)
 
       # bilinear interpolation
-      D = [ log(Dr_ll) log(Dr_lh); log(Dr_hl) log(Dr_hh) ]
-      knots = ([m_lo, m_hi], [r_lo, r_hi])
-      # create interpolant
-      itp_D = interpolate(knots, D, Gridded(Linear()))
-      lnDratio = itp_D(m,r_ps)
+      # used repeated linear interpolation as the fastest method
+      Δm = m_hi - m_lo
+      Δr = r_hi - r_lo 
+      fac = 1.0 / (Δm * Δr)
+      lnDr_ll = log(Dr_ll)
+      lnDr_lh = log(Dr_lh)
+      lnDr_hl = log(Dr_hl)
+      lnDr_hh = log(Dr_hh)
+      lnDratio = fac * ( (lnDr_ll * (r_hi - r_ps) + lnDr_lh * (r_ps - r_lo)) * (m_hi - m) + (lnDr_hl * (r_hi - r_ps) + lnDr_hh * (r_ps - r_lo)) * (m - m_lo) )
       Dratio = exp(lnDratio)
     end
   end
@@ -226,12 +230,12 @@ end
 
 
 """
-  boore_thompson_2015(m, r_ps::T, src::SourceParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
+  boore_thompson_2015(m, r_ps::T, src::SourceParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {T<:Real}
 
 Boore & Thompson (2015) rms duration model. Also outputs the excitation duration (given that its required within the rms duration calculations).
 
 """
-function boore_thompson_2015(m, r_ps::T, src::SourceParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
+function boore_thompson_2015(m, r_ps::T, src::SourceParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {T<:Real}
   # for magnitude and distance that don't match coefficient tables we need to use bilinear interpolation of the log Drms values
   # get the excitation duration (as recommended by Boore & Thompson, 2015)
   Dex = boore_thompson_2014(m, r_ps, src)
@@ -301,11 +305,15 @@ function boore_thompson_2015(m, r_ps::T, src::SourceParameters, sdof::Oscillator
       Dr_hh = boore_thompson_2015_base(η, c_hh, ζ)
 
       # bilinear interpolation
-      D = [ log(Dr_ll) log(Dr_lh); log(Dr_hl) log(Dr_hh) ]
-      knots = ([m_lo, m_hi], [r_lo, r_hi])
-      # create interpolant
-      itp_D = interpolate(knots, D, Gridded(Linear()))
-      lnDratio = itp_D(m,r_ps)
+      # used repeated linear interpolation as the fastest method
+      Δm = m_hi - m_lo
+      Δr = r_hi - r_lo 
+      fac = 1.0 / (Δm * Δr)
+      lnDr_ll = log(Dr_ll)
+      lnDr_lh = log(Dr_lh)
+      lnDr_hl = log(Dr_hl)
+      lnDr_hh = log(Dr_hh)
+      lnDratio = fac * ( (lnDr_ll * (r_hi - r_ps) + lnDr_lh * (r_ps - r_lo)) * (m_hi - m) + (lnDr_hl * (r_hi - r_ps) + lnDr_hh * (r_ps - r_lo)) * (m - m_lo) )
       Dratio = exp(lnDratio)
     end
   end
@@ -319,14 +327,14 @@ boore_thompson_2015(m, r_ps, fas::FourierParameters, sdof::Oscillator, rvt::Rand
 
 
 """
-    rms_duration(m::S, r_ps::T, src::SourceParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
+    rms_duration(m::S, r_ps::T, src::SourceParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {T<:Real}
 
 Returns a 3-tuple of (Drms, Dex, Dratio), using a switch on `rvt.dur_rms`.
 Default `:BT12` makes use of the `:BT14` model for excitation duration, `Dex`.
 - `m` is magnitude
 - `r_ps` is an equivalent point source distance
 """
-function rms_duration(m, r_ps::T, src::SourceParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real}
+function rms_duration(m, r_ps::T, src::SourceParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {T<:Real}
   if rvt.dur_rms == :BT15
     return boore_thompson_2015(m, r_ps, src, sdof, rvt)
   elseif rvt.dur_rms == :BT12
