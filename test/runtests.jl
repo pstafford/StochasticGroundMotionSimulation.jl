@@ -551,6 +551,26 @@ using LinearAlgebra
                 fi = StochasticGroundMotionSimulation.fii_aa21_cy14_760[i]
                 @test StochasticGroundMotionSimulation.itp_aa21_cy14_760(fi) ≈ StochasticGroundMotionSimulation.Aii_aa21_cy14_760[i] rtol=1e-3
             end
+
+            f_hi = 500.0
+            f_max = StochasticGroundMotionSimulation.f_reg[end]
+            mms = [ :Unit, 
+                    :Boore2016, 
+                    :AlAtik2021_ask14_620, 
+                    :AlAtik2021_ask14_760, 
+                    :AlAtik2021_ask14_1100, 
+                    :AlAtik2021_bssa14_620, 
+                    :AlAtik2021_bssa14_760, 
+                    :AlAtik2021_bssa14_1100, 
+                    :AlAtik2021_cb14_620, 
+                    :AlAtik2021_cb14_760, 
+                    :AlAtik2021_cb14_1100, 
+                    :AlAtik2021_cy14_620, 
+                    :AlAtik2021_cy14_760, 
+                    :AlAtik2021_cy14_1100 ]
+            for mm in mms
+                @test site_amplification(f_hi, mm) == site_amplification(f_max, mm)
+            end
         end
 
         @testset "Kappa Filter" begin
