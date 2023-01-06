@@ -174,11 +174,15 @@ function boore_thompson_2012(m, r_ps::T, src::SourceParameters, sdof::Oscillator
       Dr_hh = boore_thompson_2012_base(η, c_hh, ζ)
 
       # bilinear interpolation
-      D = [ log(Dr_ll) log(Dr_lh); log(Dr_hl) log(Dr_hh) ]
-      knots = ([m_lo, m_hi], [r_lo, r_hi])
-      # create interpolant
-      itp_D = interpolate(knots, D, Gridded(Linear()))
-      lnDratio = itp_D(m,r_ps)
+      # used repeated linear interpolation as the fastest method
+      Δm = m_hi - m_lo
+      Δr = r_hi - r_lo 
+      fac = 1.0 / (Δm * Δr)
+      lnDr_ll = log(Dr_ll)
+      lnDr_lh = log(Dr_lh)
+      lnDr_hl = log(Dr_hl)
+      lnDr_hh = log(Dr_hh)
+      lnDratio = fac * ( (lnDr_ll * (r_hi - r_ps) + lnDr_lh * (r_ps - r_lo)) * (m_hi - m) + (lnDr_hl * (r_hi - r_ps) + lnDr_hh * (r_ps - r_lo)) * (m - m_lo) )
       Dratio = exp(lnDratio)
     end
   end
@@ -301,11 +305,15 @@ function boore_thompson_2015(m, r_ps::T, src::SourceParameters, sdof::Oscillator
       Dr_hh = boore_thompson_2015_base(η, c_hh, ζ)
 
       # bilinear interpolation
-      D = [ log(Dr_ll) log(Dr_lh); log(Dr_hl) log(Dr_hh) ]
-      knots = ([m_lo, m_hi], [r_lo, r_hi])
-      # create interpolant
-      itp_D = interpolate(knots, D, Gridded(Linear()))
-      lnDratio = itp_D(m,r_ps)
+      # used repeated linear interpolation as the fastest method
+      Δm = m_hi - m_lo
+      Δr = r_hi - r_lo 
+      fac = 1.0 / (Δm * Δr)
+      lnDr_ll = log(Dr_ll)
+      lnDr_lh = log(Dr_lh)
+      lnDr_hl = log(Dr_hl)
+      lnDr_hh = log(Dr_hh)
+      lnDratio = fac * ( (lnDr_ll * (r_hi - r_ps) + lnDr_lh * (r_ps - r_lo)) * (m_hi - m) + (lnDr_hl * (r_hi - r_ps) + lnDr_hh * (r_ps - r_lo)) * (m - m_lo) )
       Dratio = exp(lnDratio)
     end
   end
