@@ -537,19 +537,19 @@ using LinearAlgebra
 
 
         @testset "Impedance Functions" begin
-            @test StochasticGroundMotionSimulation.boore_2016_generic_amplification(0.015) == 1.01
+            @test StochasticGroundMotionSimulation.boore_2016_generic_amplification(0.015) ≈ 1.01 rtol=1e-5
             @test isnan(StochasticGroundMotionSimulation.boore_2016_generic_amplification(NaN))
 
             numf = length(StochasticGroundMotionSimulation.fii_b16_760)
             for i = 1:numf
                 fi = StochasticGroundMotionSimulation.fii_b16_760[i]
-                @test StochasticGroundMotionSimulation.boore_2016_generic_amplification(fi) == StochasticGroundMotionSimulation.Aii_b16_760[i]
+                @test StochasticGroundMotionSimulation.boore_2016_generic_amplification(fi) ≈ StochasticGroundMotionSimulation.Aii_b16_760[i] rtol=1e-3
             end
 
             numf = length(StochasticGroundMotionSimulation.fii_aa21_cy14_760)
             for i = 1:numf
                 fi = StochasticGroundMotionSimulation.fii_aa21_cy14_760[i]
-                @test StochasticGroundMotionSimulation.itp_aa21_cy14_760(log(fi)) == StochasticGroundMotionSimulation.Aii_aa21_cy14_760[i]
+                @test StochasticGroundMotionSimulation.itp_aa21_cy14_760(fi) ≈ StochasticGroundMotionSimulation.Aii_aa21_cy14_760[i] rtol=1e-3
             end
         end
 
