@@ -667,6 +667,19 @@ using LinearAlgebra
         @test StochasticGroundMotionSimulation.boore_thompson_2015(m, 0.0, fasf) ≈ Ds
         @test StochasticGroundMotionSimulation.boore_thompson_2015(m, 0.0, fasd) ≈ Ds
 
+        rti = range(0.1, stop=700.0, step=1.0)
+        m = -8.0
+        rvt_acr = RandomVibrationParameters(:DK80, :BT14, :BT15, :WNA)
+        rvt_scr = RandomVibrationParameters(:DK80, :BT15, :BT15, :ENA)
+        for i in 1:length(rti)
+            if ( rti[i] < 17.0 ) | ( rti[i] > 281.0 )
+                @test excitation_duration(m, rti[i], src, rvt_scr) .<= excitation_duration(m, rti[i], src, rvt_acr)
+            else
+                @test excitation_duration(m, rti[i], src, rvt_scr) .> excitation_duration(m, rti[i], src, rvt_acr)
+            end
+        end
+
+
         m = 6.0
         r = 7.0
         fa, fb, ε = corner_frequency(m, fasf)
