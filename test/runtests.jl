@@ -679,6 +679,7 @@ using LinearAlgebra
             end
         end
 
+        @test excitation_duration(m, 10.0, src, rvt_acr) == excitation_duration(m, 10.0, fas, rvt_acr)
 
         m = 6.0
         r = 7.0
@@ -1582,6 +1583,9 @@ using LinearAlgebra
             pf0 = StochasticGroundMotionSimulation.peak_factor_cl56(10.0, 10.0)
             pf1 = StochasticGroundMotionSimulation.peak_factor_cl56(10.0, 10.0, nodes=50)
             @test pf0 ≈ pf1
+
+            rvt = RandomVibrationParameters(:DK80)
+            @test rvt.dur_rms == :BT15
 
         end
 
