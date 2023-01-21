@@ -8,7 +8,8 @@ Struct holding parameters/methods for Random Vibration Theory.
 	- `:DK80` (default) is Der Kiureghian (1980), building on Vanmarcke (1975)
 	- `:CL56` is Cartwright Longuet-Higgins (1956)
 - `dur_ex` is the model for excitation duration
-	- `:BT14` (default) is the Boore & Thompson (2014) model - note that this is adpated to work with `r_ps`
+	- `:BT14` (default) is the Boore & Thompson (2014) model for ACRs - note that this is adpated to work with `r_ps`
+	- `:BT15` is the Boore & Thompson (2015) model for SCRs
 - `dur_rms` is the model for rms duration
 	- `:BT12` is the Boore & Thompson (2012) model
 	- `:BT15` (default) is the Boore & Thompson (2015) model
@@ -17,10 +18,10 @@ Struct holding parameters/methods for Random Vibration Theory.
 	- `:ENA` is eastern North America
 """
 struct RandomVibrationParameters
-	pf_method::Symbol
-	dur_ex::Symbol
-	dur_rms::Symbol
-	dur_region::Symbol
+    pf_method::Symbol
+    dur_ex::Symbol
+    dur_rms::Symbol
+    dur_region::Symbol
 end
 
 RandomVibrationParameters() = RandomVibrationParameters(:DK80, :BT14, :BT15, :WNA)

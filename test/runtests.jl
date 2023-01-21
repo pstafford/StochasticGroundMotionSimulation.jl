@@ -537,37 +537,37 @@ using LinearAlgebra
 
 
         @testset "Impedance Functions" begin
-            @test StochasticGroundMotionSimulation.boore_2016_generic_amplification(0.015) ≈ 1.01 rtol=1e-5
+            @test StochasticGroundMotionSimulation.boore_2016_generic_amplification(0.015) ≈ 1.01 rtol = 1e-5
             @test isnan(StochasticGroundMotionSimulation.boore_2016_generic_amplification(NaN))
 
             numf = length(StochasticGroundMotionSimulation.fii_b16_760)
             for i = 1:numf
                 fi = StochasticGroundMotionSimulation.fii_b16_760[i]
-                @test StochasticGroundMotionSimulation.boore_2016_generic_amplification(fi) ≈ StochasticGroundMotionSimulation.Aii_b16_760[i] rtol=1e-3
+                @test StochasticGroundMotionSimulation.boore_2016_generic_amplification(fi) ≈ StochasticGroundMotionSimulation.Aii_b16_760[i] rtol = 1e-3
             end
 
             numf = length(StochasticGroundMotionSimulation.fii_aa21_cy14_760)
             for i = 1:numf
                 fi = StochasticGroundMotionSimulation.fii_aa21_cy14_760[i]
-                @test StochasticGroundMotionSimulation.itp_aa21_cy14_760(fi) ≈ StochasticGroundMotionSimulation.Aii_aa21_cy14_760[i] rtol=1e-3
+                @test StochasticGroundMotionSimulation.itp_aa21_cy14_760(fi) ≈ StochasticGroundMotionSimulation.Aii_aa21_cy14_760[i] rtol = 1e-3
             end
 
             f_hi = 500.0
             f_max = StochasticGroundMotionSimulation.f_reg[end]
-            mms = [ :Unit, 
-                    :Boore2016, 
-                    :AlAtik2021_ask14_620, 
-                    :AlAtik2021_ask14_760, 
-                    :AlAtik2021_ask14_1100, 
-                    :AlAtik2021_bssa14_620, 
-                    :AlAtik2021_bssa14_760, 
-                    :AlAtik2021_bssa14_1100, 
-                    :AlAtik2021_cb14_620, 
-                    :AlAtik2021_cb14_760, 
-                    :AlAtik2021_cb14_1100, 
-                    :AlAtik2021_cy14_620, 
-                    :AlAtik2021_cy14_760, 
-                    :AlAtik2021_cy14_1100 ]
+            mms = [:Unit,
+                :Boore2016,
+                :AlAtik2021_ask14_620,
+                :AlAtik2021_ask14_760,
+                :AlAtik2021_ask14_1100,
+                :AlAtik2021_bssa14_620,
+                :AlAtik2021_bssa14_760,
+                :AlAtik2021_bssa14_1100,
+                :AlAtik2021_cb14_620,
+                :AlAtik2021_cb14_760,
+                :AlAtik2021_cb14_1100,
+                :AlAtik2021_cy14_620,
+                :AlAtik2021_cy14_760,
+                :AlAtik2021_cy14_1100]
             for mm in mms
                 @test site_amplification(f_hi, mm) == site_amplification(f_max, mm)
             end
@@ -664,6 +664,8 @@ using LinearAlgebra
         # @code_warntype StochasticGroundMotionSimulation.boore_thompson_2014(m, 0.0, fasf)
         @test StochasticGroundMotionSimulation.boore_thompson_2014(m, 0.0, fasf) ≈ Ds
         @test StochasticGroundMotionSimulation.boore_thompson_2014(m, 0.0, fasd) ≈ Ds
+        @test StochasticGroundMotionSimulation.boore_thompson_2015(m, 0.0, fasf) ≈ Ds
+        @test StochasticGroundMotionSimulation.boore_thompson_2015(m, 0.0, fasd) ≈ Ds
 
         m = 6.0
         r = 7.0
@@ -700,9 +702,14 @@ using LinearAlgebra
         @test fdg ≈ adg atol = 1e-2
 
 
-        rvt = RandomVibrationParameters(:BT14)
+        rvt = RandomVibrationParameters()
         # @code_warntype excitation_duration(m, r, fasf, rvt)
         # @code_warntype excitation_duration(m, r, fasd, rvt)
+        Dexf = excitation_duration(m, r, fasf, rvt)
+        Dexd = excitation_duration(m, r, fasd, rvt)
+        @test Dexf == Dexd.value
+
+        rvt = RandomVibrationParameters(:DK80, :BT15, :BT15, :ENA)
         Dexf = excitation_duration(m, r, fasf, rvt)
         Dexd = excitation_duration(m, r, fasd, rvt)
         @test Dexf == Dexd.value
@@ -1072,6 +1079,12 @@ using LinearAlgebra
         end
         @test all(isapprox.(Afid, Afim))
 
+        # test parallel threading of fourier spectrum computation
+        # fi = exp10.(range(-2.0, stop=2.0, length=31))
+        # Afif = fourier_spectrum(fi, m, r_psf, fasf)
+
+        # @benchmark StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afif, fi, m, r_psf, fasf)
+        # @benchmark StochasticGroundMotionSimulation.squared_fourier_spectrum_par!(Afif, fi, m, r_psf, fasf)
 
 
         ane = AnelasticAttenuationParameters(200.0, 0.0, :Rrup)
@@ -1635,7 +1648,7 @@ using LinearAlgebra
 
             Sab1p0 = rvt_response_spectral_ordinate(T, m, r_ps, fasb1p0, rvt)
             Sab1p5 = rvt_response_spectral_ordinate(T, m, r_ps, fasb1p5, rvt)
-            
+
             @test Sab1p0 > Sab1p5
 
 

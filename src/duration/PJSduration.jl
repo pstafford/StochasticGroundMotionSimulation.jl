@@ -2,7 +2,7 @@
 """
   boore_thompson_2014(m, r_ps::U, src::SourceParameters{S,T}) where {S<:Float64, T<:Real, U<:Real}
 
-Boore & Thompson (2014) excitation duration model.
+Boore & Thompson (2014) excitation duration model (for ACRs).
 """
 function boore_thompson_2014(m, r_ps::U, src::SourceParameters{S,T}) where {S<:Float64, T<:Real, U<:Real}
   # source duration
@@ -42,15 +42,64 @@ boore_thompson_2014(m, r_ps, fas::FourierParameters) = boore_thompson_2014(m, r_
 
 
 """
+  boore_thompson_2015(m, r_ps::U, src::SourceParameters{S,T}) where {S<:Float64, T<:Real, U<:Real}
+
+Boore & Thompson (2015) excitation duration model (for SCRs).
+"""
+function boore_thompson_2015(m, r_ps::U, src::SourceParameters{S,T}) where {S<:Float64, T<:Real, U<:Real}
+  # source duration
+  fa, fb, ε = corner_frequency(m, src)
+  if src.model == :Atkinson_Silva_2000
+    Ds = 0.5 / fa + 0.5 / fb
+  else
+    Ds = 1.0 / fa
+  end
+  # path duration
+  if r_ps == 0.0
+    return Ds * oneunit(U)
+  elseif r_ps > 0.0 && r_ps <= 15.0
+    return Ds + r_ps / 15.0 * 2.6
+  elseif r_ps > 15.0 && r_ps <= 35.0
+    return Ds + 2.6 + (r_ps - 15.0)/(35.0 - 15.0)*(17.5 - 2.6)
+  elseif r_ps > 35.0 && r_ps <= 50.0
+    return Ds + 17.5 + (r_ps - 35.0)/(50.0 - 35.0)*(25.1 - 17.5)
+  elseif r_ps > 50.0 && r_ps <= 125.0
+    return Ds + 25.1
+  elseif r_ps > 125.0 && r_ps <= 200.0
+    return Ds + 25.1 + (r_ps - 125.0)/(200.0 - 125.0)*(28.5 - 25.1)
+  elseif r_ps > 200.0 && r_ps <= 392.0
+    return Ds + 28.5 + (r_ps - 200.0)/(392.0 - 200.0)*(46.0 - 28.5)
+  elseif r_ps > 392.0 && r_ps <= 600.0
+    return Ds + 46.0 + (r_ps - 392.0)/(600.0 - 392.0)*(69.1 - 46.0)
+  elseif r_ps > 600.0
+    return Ds + 69.1 + 0.111 * (r_ps - 600.0)
+  else
+    if T <: Dual
+      return T(NaN)
+    elseif U <: Dual
+      return U(NaN)
+    else
+      return S(NaN)
+    end
+  end
+end
+
+boore_thompson_2015(m, r_ps, fas::FourierParameters) = boore_thompson_2015(m, r_ps, fas.source)
+
+
+"""
   excitation_duration(m, r_ps::U, src::SourceParameters{S,T}, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real,U<:Real}
 
 Generic function implementing excitation duration models.
 
-Currently, only the Boore & Thompson (2014) model is implemented.
+Currently, only the Boore & Thompson (2014, 2015) models are implemented. 
+The 2014 model is for Active Crustal Regions, while the 2015 model is for Stable Continential Regions.
 """
 function excitation_duration(m, r_ps::U, src::SourceParameters{S,T}, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real,U<:Real}
-  if rvt.dur_ex == :BT14
+  if ( rvt.dur_ex == :BT14 ) | ( rvt.dur_region == :WNA )
     return boore_thompson_2014(m, r_ps, src)
+  elseif ( rvt.dur_ex == :BT15 ) | ( rvt.dur_region == :ENA ) 
+    return boore_thompson_2015(m, r_ps, src)
   else
     if T <: Dual
       return T(NaN)

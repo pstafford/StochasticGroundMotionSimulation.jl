@@ -301,7 +301,7 @@ function fourier_spectrum(f::Vector{U}, m::S, r_ps::T, fas::FourierParameters) w
         end
 
         Af = Vector{W}(undef, numf)
-        for i in 1:numf
+        Threads.@threads for i in 1:numf
             @inbounds fi = f[i]
             # source term
             Ef = fourier_source_shape(fi, fa, fb, ε, fas)
@@ -313,7 +313,7 @@ function fourier_spectrum(f::Vector{U}, m::S, r_ps::T, fas::FourierParameters) w
             end
             # site impedance
             Sf = site_amplification(fi, fas)
-            # apply factor and convert to acceleration in appropriate units
+            # apply factor and convert to acceleration in appropriate units (m/s)
             @inbounds Af[i] = Ef * Kf * Sf * factor * fi^2
         end
         return Af
@@ -364,7 +364,7 @@ function fourier_spectrum!(Af::Vector{U}, f::Vector{V}, m::S, r_ps::T, fas::Four
             r_rup = rupture_distance_from_equivalent_point_source_distance(r_ps, m, fas)
         end
 
-        for i in 1:numf
+        Threads.@threads for i in 1:numf
             @inbounds fi = f[i]
             # source term
             Ef = fourier_source_shape(fi, fa, fb, ε, fas)
@@ -376,7 +376,7 @@ function fourier_spectrum!(Af::Vector{U}, f::Vector{V}, m::S, r_ps::T, fas::Four
             end
             # site impedance
             Sf = site_amplification(fi, fas)
-            # apply factor and convert to acceleration in appropriate units
+            # apply factor and convert to acceleration in appropriate units (m/s)
             @inbounds Af[i] = Ef * Kf * Sf * factor * fi^2
         end
     end
@@ -416,7 +416,7 @@ function squared_fourier_spectrum!(Afsq::Vector{U}, f::Vector{V}, m::S, r_ps::T,
             r_rup = rupture_distance_from_equivalent_point_source_distance(r_ps, m, fas)
         end
 
-        for i in 1:numf
+        Threads.@threads for i in 1:numf
             @inbounds fi = f[i]
             # source term
             Ef = fourier_source_shape(fi, fa, fb, ε, fas)
@@ -428,12 +428,13 @@ function squared_fourier_spectrum!(Afsq::Vector{U}, f::Vector{V}, m::S, r_ps::T,
             end
             # site impedance
             Sf = site_amplification(fi, fas)
-            # apply factor and convert to acceleration in appropriate units
+            # apply factor and convert to acceleration in appropriate units (m^2/s^2)
             @inbounds Afsq[i] = (Ef * Kf * Sf)^2 * factor * fi^4
         end
     end
     return nothing
 end
+
 
 """
 	combined_kappa_frequency(r::T, Af2target::Float64, ane::AnelasticAttenuationParameters, site::SiteParameters) where T<:Real
