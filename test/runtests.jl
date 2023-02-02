@@ -788,6 +788,19 @@ using LinearAlgebra
         @test Dexf == Dexd.value
         @test Dratiof == Dratiod.value
 
+
+        rvt = RandomVibrationParameters(:CL56, :BT14, :BT12, :WNA)
+        Drmsf, Dexf, Dratiof = rms_duration(m, r, fasf, sdof, rvt)
+        Drmsf1, Dexf1, Dratiof1 = StochasticGroundMotionSimulation.boore_thompson_2012(m, r, fasf, sdof, rvt)
+
+        @test Drmsf == Drmsf1
+        @test Dexf == Dexf1
+        @test Dratiof == Dratiof1
+
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, srcf))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, srcd))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, SourceParameters(1)))
+
         # Boore & Thompson 2014
         m = 6.0
         fa, fb, ε = corner_frequency(m, src)
