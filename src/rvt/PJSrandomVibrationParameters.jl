@@ -14,8 +14,13 @@ Struct holding parameters/methods for Random Vibration Theory.
 	- `:BT12` is the Boore & Thompson (2012) model
 	- `:BT15` (default) is the Boore & Thompson (2015) model
 - `dur_region` is the region specified for the duration model
-	- `:WNA` (default) is western North America
-	- `:ENA` is eastern North America
+	- `:ACR` (default) is active crustal regions (like western North America)
+	- `:SCR` is stable crustal regions (like eastern North America)
+
+Note that only certain combinations are meaningful:
+- `:CL56` peak factor method should be paired with `:BT12` rms duration 
+- `:DK80` peak factor method should be paired with `:BT15` rms duration
+Constructors that take only the peak factor as input, or the peak factor and duration region automatically assign the appropriate rms duration method.
 """
 struct RandomVibrationParameters
     pf_method::Symbol
@@ -24,5 +29,7 @@ struct RandomVibrationParameters
     dur_region::Symbol
 end
 
-RandomVibrationParameters() = RandomVibrationParameters(:DK80, :BT14, :BT15, :WNA)
-RandomVibrationParameters(pf) = RandomVibrationParameters(pf, :BT14, ((pf == :DK80) ? :BT15 : :BT12), :WNA)
+RandomVibrationParameters() = RandomVibrationParameters(:DK80, :BT15, :BT15, :ACR)
+RandomVibrationParameters(pf) = RandomVibrationParameters(pf, :BT15, ((pf == :DK80) ? :BT15 : :BT12), :ACR)
+RandomVibrationParameters(pf, region) = RandomVibrationParameters(pf, :BT15, ((pf == :DK80) ? :BT15 : :BT12), region)
+
