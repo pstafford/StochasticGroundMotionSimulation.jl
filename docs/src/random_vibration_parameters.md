@@ -15,7 +15,7 @@ In particular, the type stores symbols to define the:
 
 Note that the default specification is:
 ```@example
-RandomVibrationParameters() = RandomVibrationParameters(:DK80, :BT14, :BT15, :WNA)
+RandomVibrationParameters() = RandomVibrationParameters(:DK80, :BT14, :BT15, :ACR)
 ```
 However, an alternative constructor exists that takes a `pf_method` as an argument.
 For this constructor, the `rms_duration` model is linked to the peak factor method:
@@ -24,7 +24,7 @@ For this constructor, the `rms_duration` model is linked to the peak factor meth
 
 As these are currently the only two `rms_duration` models implemented, the constructor is specified as:
 ```@example
-RandomVibrationParameters(pf) = RandomVibrationParameters(pf, :BT14, ((pf == :DK80) ? :BT15 : :BT12), :WNA)
+RandomVibrationParameters(pf) = RandomVibrationParameters(pf, :BT14, ((pf == :DK80) ? :BT15 : :BT12), :ACR)
 ```
 
 In all cases, the Boore & Thompson (2014) excitation duration model is employed as that is the only model currently implemented.

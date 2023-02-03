@@ -664,14 +664,14 @@ using LinearAlgebra
         # @code_warntype StochasticGroundMotionSimulation.boore_thompson_2014(m, 0.0, fasf)
         @test StochasticGroundMotionSimulation.boore_thompson_2014(m, 0.0, fasf) ≈ Ds
         @test StochasticGroundMotionSimulation.boore_thompson_2014(m, 0.0, fasd) ≈ Ds
-        @test StochasticGroundMotionSimulation.boore_thompson_2015(m, 0.0, fasf) ≈ Ds
-        @test StochasticGroundMotionSimulation.boore_thompson_2015(m, 0.0, fasd) ≈ Ds
+        @test StochasticGroundMotionSimulation.boore_thompson_2015(m, 0.0, fasf, :ACR) ≈ Ds
+        @test StochasticGroundMotionSimulation.boore_thompson_2015(m, 0.0, fasd, :ACR) ≈ Ds
 
         rti = range(0.1, stop=700.0, step=1.0)
         m = -8.0
-        rvt_acr = RandomVibrationParameters(:DK80, :BT14, :BT15, :WNA)
-        rvt_scr = RandomVibrationParameters(:DK80, :BT15, :BT15, :ENA)
-        for i in 1:length(rti)
+        rvt_acr = RandomVibrationParameters(:DK80, :BT14, :BT15, :ACR)
+        rvt_scr = RandomVibrationParameters(:DK80, :BT15, :BT15, :SCR)
+        for i in 1:lastindex(rti)
             if (rti[i] < 17.0) | (rti[i] > 281.0)
                 @test excitation_duration(m, rti[i], src, rvt_scr) .<= excitation_duration(m, rti[i], src, rvt_acr)
             else
@@ -723,7 +723,7 @@ using LinearAlgebra
         Dexd = excitation_duration(m, r, fasd, rvt)
         @test Dexf == Dexd.value
 
-        rvt = RandomVibrationParameters(:DK80, :BT15, :BT15, :ENA)
+        rvt = RandomVibrationParameters(:DK80, :BT15, :BT15, :SCR)
         Dexf = excitation_duration(m, r, fasf, rvt)
         Dexd = excitation_duration(m, r, fasd, rvt)
         @test Dexf == Dexd.value
@@ -762,16 +762,51 @@ using LinearAlgebra
 
         @test Dex != Dex0
 
-        rvt = RandomVibrationParameters(:CL56, :BT14, :BT12, :WNA)
+
+        # test combinations of :pf_method and :dur_rms methods
+        rvt0 = RandomVibrationParameters()
+        rvt1 = RandomVibrationParameters(:DK80)
+        rvt2 = RandomVibrationParameters(:DK80, :SCR)
+        rvt3 = RandomVibrationParameters(:CL56)
+        rvt4 = RandomVibrationParameters(:CL56, :SCR)
+
+        @test rvt0 == rvt1
+        @test rvt0 != rvt2
+        @test rvt0.pf_method == rvt2.pf_method
+        @test rvt0.dur_ex == :BT15
+        @test rvt0.dur_rms == :BT15
+        @test rvt3 != rvt4
+        @test rvt3.pf_method != rvt0.pf_method
+        @test rvt3.dur_region == :ACR
+        @test rvt3.pf_method == rvt4.pf_method
+        @test rvt3.dur_rms == :BT12
+
+
+
+        # check that the excitation durations are matching
+        rvt = RandomVibrationParameters(:CL56, :BT14, :BT12, :ACR)
         Drms, Dex, Dratio = StochasticGroundMotionSimulation.boore_thompson_2012(m, r, fas, sdof, rvt)
         Dex0 = StochasticGroundMotionSimulation.boore_thompson_2014(m, r, fas)
 
         @test Dex == Dex0
 
-        rvt = RandomVibrationParameters(:DK80, :BT14, :BT12, :WNA)
+        # confirm that incorrect combinations of peak factor and rms duration gives NaN result
+        rvt = RandomVibrationParameters(:DK80, :BT14, :BT12, :ACR)
         Drms, Dex, Dratio = rms_duration(m, r, fas, sdof, rvt)
 
         @test isnan(Dex)
+
+        # check that rms and excitation duration wrapper functions work as intended
+        Dex0 = excitation_duration(m, r, fas, rvt0)
+        Drms, Dex1, Dratio = rms_duration(m, r, fas, sdof, rvt0)
+
+        @test Dex0 == Dex1
+
+        Dex0 = excitation_duration(m, r, fas, rvt2)
+        Drms, Dex1, Dratio = rms_duration(m, r, fas, sdof, rvt0)
+
+        @test Dex0 != Dex1
+
 
         # @code_warntype rms_duration(m, r, srcf, path, sdof, rvt)
         # @code_warntype rms_duration(m, r, srcd, path, sdof, rvt)
@@ -789,7 +824,7 @@ using LinearAlgebra
         @test Dratiof == Dratiod.value
 
 
-        rvt = RandomVibrationParameters(:CL56, :BT14, :BT12, :WNA)
+        rvt = RandomVibrationParameters(:CL56, :BT14, :BT12, :ACR)
         Drmsf, Dexf, Dratiof = rms_duration(m, r, fasf, sdof, rvt)
         Drmsf1, Dexf1, Dratiof1 = StochasticGroundMotionSimulation.boore_thompson_2012(m, r, fasf, sdof, rvt)
 
@@ -797,9 +832,9 @@ using LinearAlgebra
         @test Dexf == Dexf1
         @test Dratiof == Dratiof1
 
-        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, srcf))
-        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, srcd))
-        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, SourceParameters(1)))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, srcf, :ACR))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, srcd, :ACR))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, SourceParameters(1), :ACR))
 
         # Boore & Thompson 2014
         m = 6.0
@@ -819,7 +854,7 @@ using LinearAlgebra
         @test isnan(excitation_duration(m, -1.0, srcd, rvt))
         @test isnan(excitation_duration(m, Dual(-1.0), src, rvt))
 
-        c = StochasticGroundMotionSimulation.StochasticGroundMotionSimulation.boore_thompson_2012_coefs(1, 1, region=:ENA)
+        c = StochasticGroundMotionSimulation.StochasticGroundMotionSimulation.boore_thompson_2012_coefs(1, 1, region=:SCR)
         idx = 1
         @test all(isapprox(c, StochasticGroundMotionSimulation.coefs_ena_bt12[idx, 3:9]))
 
@@ -834,7 +869,7 @@ using LinearAlgebra
         @test d1d < d1a
 
 
-        c = StochasticGroundMotionSimulation.boore_thompson_2015_coefs(1, 1, region=:ENA)
+        c = StochasticGroundMotionSimulation.boore_thompson_2015_coefs(1, 1, region=:SCR)
         idx = 1
         @test all(isapprox(c, StochasticGroundMotionSimulation.coefs_ena_bt15[idx, 3:9]))
 
@@ -871,6 +906,49 @@ using LinearAlgebra
         D50 = excitation_duration(6.0, 50.0, srcf, RandomVibrationParameters())
         D150 = excitation_duration(6.0, 150.0, srcf, RandomVibrationParameters())
         @test D150 > D50
+
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2014_path_duration(-1.0))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015_path_duration_acr(-1.0))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015_path_duration_scr(-1.0))
+
+        rpi = range(0.0, stop=1000.0, step=1.0)
+        DexAi = zeros(length(rpi))
+        DexSi = zeros(length(rpi))
+        DpAi = zeros(length(rpi))
+        DpSi = zeros(length(rpi))
+        rvtA = RandomVibrationParameters(:DK80, :ACR)
+        rvtS = RandomVibrationParameters(:DK80, :SCR)
+        src = SourceParameters(100.0)
+        m = 2.0
+        fc, d1, d2 = corner_frequency(m, src)
+        Ds = 1.0 / fc
+
+        for (i, r) in enumerate(rpi)
+            DexAi[i] = excitation_duration(m, r, src, rvtA)
+            DexSi[i] = excitation_duration(m, r, src, rvtS)
+            DpAi[i] = StochasticGroundMotionSimulation.boore_thompson_2015_path_duration_acr(r)
+            DpSi[i] = StochasticGroundMotionSimulation.boore_thompson_2015_path_duration_scr(r)
+        end
+
+        @test all(isapprox.(DexAi .- Ds, DpAi))
+        @test all(isapprox.(DexSi .- Ds, DpSi))
+
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, src, rvtA))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, src, rvtS))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, src, :PJS))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, src, :PJS))
+
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, fas, rvtA))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, fas, rvtS))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, fas, :PJS))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, fas, :PJS))
+
+        src = SourceParameters(100.0, :Atkinson_Silva_2000)
+
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, src, rvtA))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, src, rvtS))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, src, :PJS))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, src, :PJS))
 
     end
 
