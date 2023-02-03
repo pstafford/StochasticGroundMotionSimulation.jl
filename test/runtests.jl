@@ -907,6 +907,49 @@ using LinearAlgebra
         D150 = excitation_duration(6.0, 150.0, srcf, RandomVibrationParameters())
         @test D150 > D50
 
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2014_path_duration(-1.0))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015_path_duration_acr(-1.0))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015_path_duration_scr(-1.0))
+
+        rpi = range(0.0, stop=1000.0, step=1.0)
+        DexAi = zeros(length(rpi))
+        DexSi = zeros(length(rpi))
+        DpAi = zeros(length(rpi))
+        DpSi = zeros(length(rpi))
+        rvtA = RandomVibrationParameters(:DK80, :ACR)
+        rvtS = RandomVibrationParameters(:DK80, :SCR)
+        src = SourceParameters(100.0)
+        m = 2.0
+        fc, d1, d2 = corner_frequency(m, src)
+        Ds = 1.0 / fc
+
+        for (i, r) in enumerate(rpi)
+            DexAi[i] = excitation_duration(m, r, src, rvtA)
+            DexSi[i] = excitation_duration(m, r, src, rvtS)
+            DpAi[i] = StochasticGroundMotionSimulation.boore_thompson_2015_path_duration_acr(r)
+            DpSi[i] = StochasticGroundMotionSimulation.boore_thompson_2015_path_duration_scr(r)
+        end
+
+        @test all(isapprox.(DexAi .- Ds, DpAi))
+        @test all(isapprox.(DexSi .- Ds, DpSi))
+
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, src, rvtA))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, src, rvtS))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, src, :PJS))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, src, :PJS))
+
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, fas, rvtA))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, fas, rvtS))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, fas, :PJS))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, fas, :PJS))
+
+        src = SourceParameters(100.0, :Atkinson_Silva_2000)
+
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, src, rvtA))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, src, rvtS))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, src, :PJS))
+        @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, src, :PJS))
+
     end
 
     @testset "Fourier" begin
