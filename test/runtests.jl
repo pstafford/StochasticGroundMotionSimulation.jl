@@ -950,6 +950,30 @@ using LinearAlgebra
         @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, src, :PJS))
         @test isnan(StochasticGroundMotionSimulation.boore_thompson_2015(m, -1.0, src, :PJS))
 
+
+        @testset "Edwards (2023) duration" begin
+            src = SourceParameters(50.0)
+            geo = GeometricSpreadingParameters([1.0, 50.0, Inf], [1.0, 0.7], :Piecewise)
+            sat = NearSourceSaturationParameters(:BT15)
+            ane = AnelasticAttenuationParameters(3000.0, 0.0)
+            path = PathParameters(geo, sat, ane)
+            site = SiteParameters(0.03, :Unit)
+            fas = FourierParameters(src, path, site)
+
+            rvt = RandomVibrationParameters(:CL56, :BE23, :LP99, :ACR)
+
+            sdof = Oscillator(1.0)
+
+            m = 6.0
+            r_rup = 10.0
+            r_ps = equivalent_point_source_distance(r_rup, m, fas)
+            Dex = excitation_duration(m, r_ps, fas, rvt)
+            (Drms, Dex0, Drat) = rms_duration(m, r_ps, fas, sdof, rvt)
+
+            @test Dex == Dex0
+
+        end
+
     end
 
     @testset "Fourier" begin

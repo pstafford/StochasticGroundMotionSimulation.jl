@@ -144,15 +144,77 @@ boore_thompson_2015(m, r_ps::U, fas::FourierParameters, rvt::RandomVibrationPara
 
 
 """
+  edwards_2023_path_duration(r_rup::T) where {T<:Real}
+
+Edwards (2023) path duration model using within South African NPP study.
+Note that the model was specified in terms of R_hyp.
+Further note that this model is apparently based upon work of Afshari & Stewart (2016) who found
+a dependence of 5-75% significant duration on distance of 0.07s/km. Edwards then found for the 
+Groningen project in the Netherlands (for induced seismicity) that the excitation duration was 
+equivalent to the 5-75% duration divided by 0.55. 
+However, in Edwards' definition, this 0.55 scale factor is supposed to apply to the 5-75% duration
+in its entirety, but he only scales the path duration (not the source duration).
+"""
+function edwards_2023_path_duration(r_rup::T) where {T<:Real}
+  # path duration
+  if r_rup <= 0.0
+    return zero(T)
+  else
+    return 0.13 * r_rup
+  end
+end
+
+
+"""
+  edwards_2023(m, r_rup::U, src::SourceParameters{S,T}) where {S<:Float64, T<:Real, U<:Real}
+
+Edwards (2023) excitation duration model proposed for use within South African NPP study.
+"""
+function edwards_2023(m, r_rup::U, src::SourceParameters{S,T}) where {S<:Float64,T<:Real,U<:Real}
+  # source duration
+  fa, fb, ε = corner_frequency(m, src)
+  # this is not explicitly considered in the Edwards model, but keep the same functionality as other models for consistency
+  if src.model == :Atkinson_Silva_2000
+    Ds = 0.5 / fa + 0.5 / fb
+  else
+    Ds = 1.0 / fa
+  end
+  # path duration
+  Dp = edwards_2023_path_duration(r_rup)
+  # checks on return type for type stability
+  if isnan(Dp)
+    if T <: Dual
+      return T(NaN)
+    elseif U <: Dual
+      return U(NaN)
+    else
+      return S(NaN)
+    end
+  else
+    return Ds + Dp
+  end
+end
+
+
+
+"""
   excitation_duration(m, r_ps::U, src::SourceParameters{S,T}, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real,U<:Real}
 
 Generic function implementing excitation duration models.
 
-Currently, only the Boore & Thompson (2014, 2015) models are implemented. 
-These are both represented within the Boore & Thompson (2015) paper, so just switch path duration based upon `rvt.dur_region`
+Currently, only the Boore & Thompson (2014, 2015) models are implemented and a project-specific model from Edwards (2023). 
+The first two are both represented within the Boore & Thompson (2015) paper, so just switch path duration based upon `rvt.dur_region`
+To activate the Edwards model, use `rvt.dur_ex == :BE23`
 """
 function excitation_duration(m, r_ps::U, src::SourceParameters{S,T}, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real,U<:Real}
-  if (rvt.dur_ex == :BT14) & (rvt.dur_region == :ACR)
+  if rvt.dur_ex == :BE23
+    # use the BT15 saturation model to obtain an r_rup from the specified r_ps
+    # Edwards actually suggested using R_{EFF}, but this metric is heavily dependent upon a particular source/site geometry
+    sat = NearSourceSaturationParameters(:BT15)
+    # compute r_rup from r_ps
+    r_rup = rupture_distance_from_equivalent_point_source_distance(r_ps, m, sat)
+    return edwards_2023(m, r_rup, src)
+  elseif (rvt.dur_ex == :BT14) & (rvt.dur_region == :ACR)
     return boore_thompson_2014(m, r_ps, src)
   elseif (rvt.dur_ex == :BT15)
     return boore_thompson_2015(m, r_ps, src, rvt)
@@ -430,6 +492,35 @@ boore_thompson_2015(m, r_ps, fas::FourierParameters, sdof::Oscillator, rvt::Rand
 
 
 
+"""
+  liu_pezeshk_1999(m, r_ps::T, fas::FourierParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {T<:Real}
+
+Liu & Pezeshk (1999) rms duration model. Also outputs the excitation duration (given that its required within the rms duration calculations).
+
+"""
+function liu_pezeshk_1999(m, r_ps::T, fas::FourierParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {T<:Real}
+  # get the excitation duration
+  Dex = excitation_duration(m, r_ps, fas, rvt)
+
+  # oscillator duration
+  Dosc = 1.0 / ( 2π * sdof.f_n * sdof.ζ_n )
+  # gamma parameter
+  γ = Dex / Dosc
+  # spectral moments, required for use within definition of α parameter
+  mi = spectral_moments([0,1,2], m, r_ps, fas, sdof)
+  m0 = mi[1]
+  m1 = mi[2]
+  m2 = mi[3]
+  # define α
+  α = sqrt( 2π * (1.0 - ( m1^2 )/( m0*m2 )) )
+  n = 2.0
+  # RMS duration
+  Drms = Dex + Dosc * (γ^n / (γ^n + α))
+  Dratio = Drms / Dex
+  return (Drms, Dex, Dratio)
+end
+
+
 
 """
     rms_duration(m::S, r_ps::T, src::SourceParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {T<:Real}
@@ -444,10 +535,19 @@ function rms_duration(m, r_ps::T, src::SourceParameters, sdof::Oscillator, rvt::
     return boore_thompson_2015(m, r_ps, src, sdof, rvt)
   elseif (rvt.dur_rms == :BT12) && (rvt.pf_method == :CL56)
     return boore_thompson_2012(m, r_ps, src, sdof, rvt)
+  elseif (rvt.dur_rms == :LP99)
+    println("Cannot pass `src::SourceParameters` for `rvt.dur_rms == :LP99`; method requires full `fas::FourierParameters` input")
+    return (T(NaN), T(NaN), T(NaN))
   else
     println("Inconsistent combination of `rvt.dur_rms` and `rvt.pf_method`")
     return (T(NaN), T(NaN), T(NaN))
   end
 end
 
-rms_duration(m, r_ps, fas::FourierParameters, sdof::Oscillator, rvt::RandomVibrationParameters) = rms_duration(m, r_ps, fas.source, sdof, rvt)
+function rms_duration(m, r_ps, fas::FourierParameters, sdof::Oscillator, rvt::RandomVibrationParameters) 
+  if (rvt.dur_rms == :LP99) && (rvt.pf_method == :CL56)
+    return liu_pezeshk_1999(m, r_ps, fas, sdof, rvt)
+  else
+    return rms_duration(m, r_ps, fas.source, sdof, rvt)
+  end
+end
