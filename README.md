@@ -7,6 +7,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4667333.svg)](https://doi.org/10.5281/zenodo.4667333)
 
 [Julia](http://www.julialang.org) package to simulate response spectral ordinates via random vibration theory.
+The package also provides general functionality for working with Fourier amplitude spectra and duration models.
 
 Package defines new custom types:
 - `FourierParameters`: representing the parameters of the Fourier amplitude spectrum
