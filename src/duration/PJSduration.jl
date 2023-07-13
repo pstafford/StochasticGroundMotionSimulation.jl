@@ -545,12 +545,10 @@ function rms_duration(m, r_ps::T, src::SourceParameters, sdof::Oscillator, rvt::
   end
 end
 
-rms_duration(m, r_ps, fas::FourierParameters, sdof::Oscillator, rvt::RandomVibrationParameters) = rms_duration(m, r_ps, fas.source, sdof, rvt)
-
-# function rms_duration(m, r_ps, fas::FourierParameters, sdof::Oscillator, rvt::RandomVibrationParameters) 
-#   if (rvt.dur_rms == :LP99) && (rvt.pf_method == :CL56)
-#     return liu_pezeshk_1999(m, r_ps, fas, sdof, rvt)
-#   else
-#     return rms_duration(m, r_ps, fas.source, sdof, rvt)
-#   end
-# end
+function rms_duration(m, r_ps, fas::FourierParameters, sdof::Oscillator, rvt::RandomVibrationParameters) 
+  if (rvt.dur_rms == :LP99) && (rvt.pf_method == :CL56)
+    return liu_pezeshk_1999(m, r_ps, fas, sdof, rvt)
+  else
+    return rms_duration(m, r_ps, fas.source, sdof, rvt)
+  end
+end
