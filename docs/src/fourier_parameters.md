@@ -25,17 +25,17 @@ PathParameters
 ```
 
 This type also hold instances of three other custom types that define aspects of the path scaling:
-- `GeometricSpreadingParameters` defined in [Geometric Spreading](@ref)
-- `NearSourceSaturationParameters` defined in [Near Source Saturation](@ref)
-- `AnelasticAttenuationParameters` defined in [Anelastic Attenuation](@ref)
+- `GeometricSpreadingParameters` defined in [Geometric Spreading Parameters](@ref)
+- `NearSourceSaturationParameters` defined in [Near Source Saturation Parameters](@ref)
+- `AnelasticAttenuationParameters` defined in [Anelastic Attenuation Parameters](@ref)
 
-### Geometric Spreading
+### Geometric Spreading Parameters
 
 ```@docs
 GeometricSpreadingParameters
 ```
 
-### Near-Source Saturation
+### Near-Source Saturation Parameters
 
 Near source saturation models are represented within the `NearSourceSaturationParameters` type.
 This type can simply identify existing models that are implemented, such as:
@@ -85,7 +85,7 @@ new_sat = NearSourceSaturationParameters(h_m)
 ```
 
 
-### Anelastic Attenuation
+### Anelastic Attenuation Parameters
 
 ```@docs
 AnelasticAttenuationParameters
