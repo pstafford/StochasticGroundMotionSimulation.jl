@@ -38,7 +38,7 @@ function spectral_moment(order::Int, m::S, r_ps::T, fas::FourierParameters, sdof
 	# compute the Gauss Legendre nodes and weights
 	xi, wi = gausslegendre(nodes)
 
-	for i in 2:length(lnflims)
+	for i in 2:lastindex(lnflims)
 		@inbounds dfac = (lnflims[i]-lnflims[i-1])/2
 		@inbounds pfac = (lnflims[i]+lnflims[i-1])/2
 		lnfi = @. dfac * xi + pfac
@@ -97,7 +97,7 @@ function spectral_moments(order::Vector{Int}, m::S, r_ps::T, fas::FourierParamet
 	sort!(order)
 	dorder = diff(order)
 
-	for i in 2:length(lnflims)
+	for i in 2:lastindex(lnflims)
 		@inbounds dfac = (lnflims[i]-lnflims[i-1])/2
 		@inbounds pfac = (lnflims[i]+lnflims[i-1])/2
 		lnfi = @. dfac * xi + pfac
