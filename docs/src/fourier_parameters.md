@@ -74,7 +74,6 @@ function bilinear_saturation(m, sat)
     return sat.hconi[3]
   end
 end
-
 ```
 
 Any subsequent calculation for a particular magnitude could then make use of this function along with a new `NearSourceSaturationParameters` instance that just contains a fixed saturation length.

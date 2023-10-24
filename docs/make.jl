@@ -28,6 +28,8 @@ makedocs(;
             "Method Index" => "method_index.md"
         ]
     ],
+    workdir = joinpath(@__DIR__, ".."),
+    # warnonly = Documenter.except(:missing_docs, :example_block),
 )
 
 deploydocs(;
