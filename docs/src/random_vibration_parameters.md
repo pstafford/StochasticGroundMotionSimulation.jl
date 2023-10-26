@@ -46,9 +46,11 @@ The main methods used to interact with `RandomVibrationParameters` are:
 ```@docs
 spectral_moment
 spectral_moments
+spectral_moments_gk
 excitation_duration
 rms_duration
 peak_factor
 rvt_response_spectral_ordinate
 rvt_response_spectrum
+rvt_response_spectrum!
 ```

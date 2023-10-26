@@ -37,7 +37,7 @@ Applies the `trapezoidal_rule` using `n` points over the frequency intervals spe
 """
 function trapezoidal(fun::Function, n, flim...)
     ii = 0.0
-    for i in 2:length(flim)
+    for i in 2:lastindex(flim)
         xi = collect(range(flim[i-1], stop=flim[i], length=n))
         yi = fun.(xi)
         ii += trapezoidal_rule(xi, yi)
@@ -66,7 +66,7 @@ Computes Gauss-Legendre integration using `n` nodes and weights of the intervals
 function gauss_intervals(fun::Function, n, flim...)
     xi, wi = gausslegendre(n)
     ii = 0.0
-    for i in 2:length(flim)
+    for i in 2:lastindex(flim)
         ii += (flim[i]-flim[i-1])/2 * dot( wi, fun.( (flim[i]-flim[i-1])/2 * xi .+ (flim[i]+flim[i-1])/2 ) )
     end
     return ii
