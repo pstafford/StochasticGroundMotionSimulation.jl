@@ -1,6 +1,8 @@
 using StochasticGroundMotionSimulation
 using Documenter
 
+DocMeta.setdocmeta!(StochasticGroundMotionSimulation, :DocTestSetup, :(using StochasticGroundMotionSimulation); recursive=true)
+
 makedocs(;
     modules=[StochasticGroundMotionSimulation],
     authors="Peter Stafford <p.stafford@me.com>",
@@ -29,7 +31,8 @@ makedocs(;
         ]
     ],
     workdir = joinpath(@__DIR__, ".."),
-    # warnonly = Documenter.except(:missing_docs, :example_block),
+    checkdocs = :exports,
+    # warnonly = Documenter.except(:missing_docs),
 )
 
 deploydocs(;

@@ -17,5 +17,7 @@ The main methods that are used to interact with `Oscillator` instances are:
 ```@docs
   period
   transfer
+  transfer!
   squared_transfer
+  squared_transfer!
 ```

@@ -53,7 +53,11 @@ Consider defining a new saturation model that was a simply bilinear model in ``\
 
 We simply pass in the various parameters that would be required for our saturation model into the available fields of `NearSourceSaturationParameters`, and then define a custom function that operates upon these fields.
 
-```@example
+```@setup ex1
+using StochasticGroundMotionSimulation
+```
+
+```@example ex1
 m_min = 3.0
 h_min = 0.5
 m_hinge = 6.0
@@ -77,7 +81,31 @@ end
 ```
 
 Any subsequent calculation for a particular magnitude could then make use of this function along with a new `NearSourceSaturationParameters` instance that just contains a fixed saturation length.
-```@example
+```@setup ex2
+using StochasticGroundMotionSimulation
+m_min = 3.0
+h_min = 0.5
+m_hinge = 6.0
+h_hinge = 5.0
+m_max = 8.0
+h_max = 30.0
+
+sat = NearSourceSaturationParameters([m_min, m_hinge, m_max], [h_min, h_hinge, h_max])
+
+function bilinear_saturation(m, sat)
+  if m <= sat.mRefi[1]
+    return sat.hconi[1]
+  elseif m <= sat.mRefi[2]
+    return sat.hconi[1] + (m - sat.mRefi[1])/(sat.mRefi[2]-sat.mRefi[1])*(sat.hconi[2] - sat.hconi[1])
+  elseif m <= sat.mRefi[3]
+    return sat.hconi[2] + (m - sat.mRefi[2])/(sat.mRefi[3]-sat.mRefi[2])*(sat.hconi[3] - sat.hconi[2])
+  else
+    return sat.hconi[3]
+  end
+end
+```
+
+```@example ex2
 m = 5.0
 h_m = bilinear_saturation(m, sat)
 new_sat = NearSourceSaturationParameters(h_m)

@@ -34,6 +34,10 @@ The alternative `:CY14mod` option combines a point-source distance in the near f
 
 In both of the above cases, the ``r_{0}`` term is the reference distance that is used to define the source spectral amplitude.
 
+The ``r_{ps}`` is the equivalent point-source distance that can be defined using:
+```@docs
+equivalent_point_source_distance
+```
 
 ## Near Source Saturation
 
