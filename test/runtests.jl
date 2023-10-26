@@ -1445,46 +1445,46 @@ using LinearAlgebra
             fas = FourierParameters(src, path, site)
             sdof = Oscillator(1.0)
 
-            integrand(f) = StochasticGroundMotionSimulation.squared_transfer(f, sdof) * fourier_spectral_ordinate(f, m, r, fas)^2
+            integrand1(f) = StochasticGroundMotionSimulation.squared_transfer(f, sdof) * fourier_spectral_ordinate(f, m, r, fas)^2
 
             intervals = 101
             x_min = sdof.f_n / 1.1
             x_max = sdof.f_n * 1.1
             xx = collect(range(x_min, stop=x_max, length=intervals))
-            yy = integrand.(xx)
+            yy = integrand1.(xx)
 
             isr = StochasticGroundMotionSimulation.simpsons_rule(xx, yy)
-            igk = quadgk(integrand, x_min, x_max)[1]
+            igk = quadgk(integrand1, x_min, x_max)[1]
 
             @test isr ≈ igk rtol = 1e-6
             @test isr ≈ igk atol = 1e-6
 
 
-            integrand(f) = StochasticGroundMotionSimulation.squared_transfer(f, sdof) * fourier_spectral_ordinate(f, m, r, fas)^2
+            integrand2(f) = StochasticGroundMotionSimulation.squared_transfer(f, sdof) * fourier_spectral_ordinate(f, m, r, fas)^2
 
             intervals = 101
             x_min = 100.0
             x_max = 200.0
             xx = collect(range(x_min, stop=x_max, length=intervals))
-            yy = integrand.(xx)
+            yy = integrand2.(xx)
 
             isr = StochasticGroundMotionSimulation.simpsons_rule(xx, yy)
-            igk = quadgk(integrand, x_min, x_max)[1]
+            igk = quadgk(integrand2, x_min, x_max)[1]
 
             @test isr ≈ igk rtol = 1e-3
             @test isr ≈ igk atol = 1e-6
 
 
-            integrand(f) = (2π * f)^4 * StochasticGroundMotionSimulation.squared_transfer(f, sdof) * fourier_spectral_ordinate(f, m, r, fas)^2
+            integrand3(f) = (2π * f)^4 * StochasticGroundMotionSimulation.squared_transfer(f, sdof) * fourier_spectral_ordinate(f, m, r, fas)^2
 
             intervals = 101
             x_min = 100.0
             x_max = 200.0
             xx = collect(range(x_min, stop=x_max, length=intervals))
-            yy = integrand.(xx)
+            yy = integrand3.(xx)
 
             isr = StochasticGroundMotionSimulation.simpsons_rule(xx, yy)
-            igk = quadgk(integrand, x_min, x_max)[1]
+            igk = quadgk(integrand3, x_min, x_max)[1]
 
             @test isr ≈ igk rtol = 1e-3
             @test isr ≈ igk atol = 1e-6
@@ -1492,10 +1492,10 @@ using LinearAlgebra
             x_min = 300.0
             x_max = 500.0
             xx = collect(range(x_min, stop=x_max, length=intervals))
-            yy = integrand.(xx)
+            yy = integrand3.(xx)
 
             isr = StochasticGroundMotionSimulation.simpsons_rule(xx, yy)
-            igk = quadgk(integrand, x_min, x_max)[1]
+            igk = quadgk(integrand3, x_min, x_max)[1]
 
             @test isr ≈ igk rtol = 1e-3
             @test isr ≈ igk atol = 1e-6
