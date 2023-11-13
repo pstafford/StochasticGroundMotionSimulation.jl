@@ -16,9 +16,9 @@ version = "0.4.4"
 
 [[deps.Adapt]]
 deps = ["LinearAlgebra", "Requires"]
-git-tree-sha1 = "68c4c187a232e7abe00ac29e3b03e09af9d77317"
+git-tree-sha1 = "02f731463748db57cc2ebfbd9fbc9ce8280d3433"
 uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
-version = "3.7.0"
+version = "3.7.1"
 weakdeps = ["StaticArrays"]
 
     [deps.Adapt.extensions]
@@ -306,9 +306,9 @@ version = "1.6.2"
 
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools", "UUIDs"]
-git-tree-sha1 = "716e24b21538abc91f6205fd1d8363f39b442851"
+git-tree-sha1 = "a935806434c9d4c506ba941871b327b96d41f2bf"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "2.7.2"
+version = "2.8.0"
 
 [[deps.Pkg]]
 deps = ["Artifacts", "Dates", "Downloads", "FileWatching", "LibGit2", "Libdl", "Logging", "Markdown", "Printf", "REPL", "Random", "SHA", "Serialization", "TOML", "Tar", "UUIDs", "p7zip_jll"]
@@ -376,9 +376,9 @@ version = "1.3.0"
 
 [[deps.Roots]]
 deps = ["ChainRulesCore", "CommonSolve", "Printf", "Setfield"]
-git-tree-sha1 = "06b5ac80ff1b88bd82df92c1c1875eea3954cd6e"
+git-tree-sha1 = "0f1d92463a020321983d04c110f476c274bafe2e"
 uuid = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
-version = "2.0.20"
+version = "2.0.22"
 
     [deps.Roots.extensions]
     RootsForwardDiffExt = "ForwardDiff"
