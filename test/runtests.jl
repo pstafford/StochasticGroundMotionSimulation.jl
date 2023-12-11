@@ -138,15 +138,20 @@ using LinearAlgebra
             geod = GeometricSpreadingParameters([1.0, 50.0, Inf], [Dual(1.0), Dual(0.5)])
             @test geo.γconi[1] == geod.γvari[1].value
 
+            geo_mix = GeometricSpreadingParameters([1.0, Dual{Float64}(50.0), Inf], [1.0, 0.5])
+            @test geo_mix.model == :Piecewise
         end
 
         geof = GeometricSpreadingParameters(Rrefi, γi)
         geod = GeometricSpreadingParameters(Rrefi, [0.5], [Dual{Float64}(1.0)], BitVector([1, 0]), :Piecewise)
+        geom = GeometricSpreadingParameters([1.0, Dual{Float64}(50.0), Inf], [1.0, 0.5])
 
         @testset "Geometric Spreading Types" begin
             T = StochasticGroundMotionSimulation.get_parametric_type(geof)
             @test T == Float64
             T = StochasticGroundMotionSimulation.get_parametric_type(geod)
+            @test T <: Dual
+            T = StochasticGroundMotionSimulation.get_parametric_type(geom)
             @test T <: Dual
         end
 
