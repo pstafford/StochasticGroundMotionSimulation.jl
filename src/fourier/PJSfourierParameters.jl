@@ -53,25 +53,25 @@ Holds fields:
 - `γfree` is a vector of `Bool` instances, or a `BitVector` that indicates which segments are constant or variable. Variable spreading rates are given `1` or `true`
 - `model` is a symbol defining the type of spreading model `:Piecewise`, `:CY14`, `:CY14mod`
 """
-struct GeometricSpreadingParameters{S<:Real,T<:Real,U<:AbstractVector{Bool}}
+struct GeometricSpreadingParameters{S<:Real,T<:Real,U<:Real,V<:AbstractVector{Bool}}
     Rrefi::Vector{S}
-    γconi::Vector{S}
-    γvari::Vector{T}
-    γfree::U
+    γconi::Vector{T}
+    γvari::Vector{U}
+    γfree::V
     model::Symbol
 end
 
-GeometricSpreadingParameters(Rrefi::Vector{T}, γconi::Vector{T}) where {T} = GeometricSpreadingParameters{T,T,BitVector}(Rrefi, γconi, Vector{T}(), BitVector(zeros(length(γconi))), :Piecewise)
-GeometricSpreadingParameters(Rrefi::Vector{T}, γconi::Vector{T}, model::Symbol) where {T} = GeometricSpreadingParameters{T,T,BitVector}(Rrefi, γconi, Vector{T}(), BitVector(zeros(length(γconi))), model)
-GeometricSpreadingParameters(Rrefi::Vector{S}, γvari::Vector{T}) where {S<:Float64,T<:Dual} = GeometricSpreadingParameters{S,T,BitVector}(Rrefi, Vector{S}(), γvari, BitVector(ones(length(γvari))), :Piecewise)
-GeometricSpreadingParameters(Rrefi::Vector{S}, γvari::Vector{T}, model::Symbol) where {S<:Float64,T<:Dual} = GeometricSpreadingParameters{S,T,BitVector}(Rrefi, Vector{S}(), γvari, BitVector(ones(length(γvari))), model)
+GeometricSpreadingParameters(Rrefi::Vector{S}, γconi::Vector{T}) where {S<:Real,T<:Real} = GeometricSpreadingParameters{S,T,Float64,BitVector}(Rrefi, γconi, Vector{Float64}(), BitVector(zeros(length(γconi))), :Piecewise)
+GeometricSpreadingParameters(Rrefi::Vector{S}, γconi::Vector{T}, model::Symbol) where {S<:Real,T<:Real} = GeometricSpreadingParameters{S,T,Float64,BitVector}(Rrefi, γconi, Vector{Float64}(), BitVector(zeros(length(γconi))), model)
+GeometricSpreadingParameters(Rrefi::Vector{S}, γvari::Vector{U}) where {S<:Real,U<:Dual} = GeometricSpreadingParameters{S,Float64,U,BitVector}(Rrefi, Vector{Float64}(), γvari, BitVector(ones(length(γvari))), :Piecewise)
+GeometricSpreadingParameters(Rrefi::Vector{S}, γvari::Vector{U}, model::Symbol) where {S<:Real,U<:Dual} = GeometricSpreadingParameters{S,Float64,U,BitVector}(Rrefi, Vector{Float64}(), γvari, BitVector(ones(length(γvari))), model)
 
 """
 	get_parametric_type(geo::GeometricSpreadingParameters{S,T,U}) where {S,T,U} = T
 
 Extract type of `T` from parametric `GeometricSpreadingParameters` struct
 """
-get_parametric_type(geo::GeometricSpreadingParameters{S,T,U}) where {S,T,U} = T
+get_parametric_type(geo::GeometricSpreadingParameters{S,T,U,V}) where {S,T,U,V} = (S <: Dual) ? S : ((T <: Dual) ? T : U)
 
 
 """

@@ -25,19 +25,19 @@ geometric_spreading(r_ps::T, fas::FourierParameters) where {T<:Real} = geometric
 
 
 """
-	geometric_spreading_piecewise(r_ps::V, geo::GeometricSpreadingParameters{S,T,U}) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}, V<:Real}
+	geometric_spreading_piecewise(r_ps::W, geo::GeometricSpreadingParameters{S,T,U,V}) where {S<:Real, T<:Real, U<:Real, V<:AbstractVector{Bool}, W<:Real}
 
 Piecewise linear (in log-log space) geometric spreading function.
 Makes use of the reference distances `Rrefi` and spreading rates `γi` in `path`.
 """
-function geometric_spreading_piecewise(r_ps::V, geo::GeometricSpreadingParameters{S,T,U}) where {S<:Float64,T<:Real,U<:AbstractVector{Bool},V<:Real}
-    z_r = oneunit(T)
+function geometric_spreading_piecewise(r_ps::W, geo::GeometricSpreadingParameters{S,T,U,V}) where {S<:Real,T<:Real,U<:Real,V<:AbstractVector{Bool},W<:Real}
+    z_r = oneunit(get_parametric_type(geo))
     j = 1
     k = 1
     for i = 1:length(geo.γfree)
         @inbounds Rr0 = geo.Rrefi[i]
         @inbounds Rr1 = geo.Rrefi[i+1]
-        γ_r = oneunit(T)
+        γ_r = oneunit(get_parametric_type(geo))
 
         if geo.γfree[i] == 0
             @inbounds γ_r *= geo.γconi[j]
@@ -62,13 +62,13 @@ geometric_spreading_piecewise(r_ps, fas::FourierParameters) = geometric_spreadin
 
 
 """
-	geometric_spreading_cy14(r_ps::V, geo::GeometricSpreadingParameters{S,T,U}) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}, V<:Real}
+	geometric_spreading_cy14(r_ps::W, geo::GeometricSpreadingParameters{S,T,U,V}) where {S<:Real, T<:Real, U<:Real, V<:AbstractVector{Bool}, W<:Real}
 
 Geometric spreading function from Chiou & Youngs (2014).
 Defines a smooth transition from one rate `γi[1]` to another `γi[2]`, with a spreading bandwidth of `Rrefi[2]` km.
 """
-function geometric_spreading_cy14(r_ps::V, geo::GeometricSpreadingParameters{S,T,U}) where {S<:Float64,T<:Real,U<:AbstractVector{Bool},V<:Real}
-    unit = oneunit(T)
+function geometric_spreading_cy14(r_ps::W, geo::GeometricSpreadingParameters{S,T,U,V}) where {S<:Real,T<:Real,U<:Real,V<:AbstractVector{Bool},W<:Real}
+    unit = oneunit(get_parametric_type(geo))
     j = 1
     k = 1
     if geo.γfree[1] == 0
@@ -96,14 +96,14 @@ geometric_spreading_cy14(r_ps, fas::FourierParameters) = geometric_spreading_cy1
 
 
 """
-	geometric_spreading_cy14mod(r_ps::V, m::S, geo::GeometricSpreadingParameters{S,T,U}, sat::NearSourceSaturationParameters) where {S<:Float64, T<:Real, U<:AbstractVector{Bool}, V<:Real, W<:Real}
+	geometric_spreading_cy14mod(r_ps::W, m::X, geo::GeometricSpreadingParameters{S,T,U,V}, sat::NearSourceSaturationParameters) where {S<:Real, T<:Real, U<:Real, V<:AbstractVector{Bool}, W<:Real, X<:Real}
 
 Geometric spreading function from Chiou & Youngs (2014).
 Modified to make use of both `r_ps` and `r_rup` so that only the first saturation term contaminates the source amplitudes.
 Defines a smooth transition from one rate `γi[1]` to another `γi[2]`, with a spreading bandwidth of `Rrefi[2]` km.
 """
-function geometric_spreading_cy14mod(r_ps::V, m::W, geo::GeometricSpreadingParameters{S,T,U}, sat::NearSourceSaturationParameters) where {S<:Float64,T<:Real,U<:AbstractVector{Bool},V<:Real,W<:Real}
-    unit = oneunit(T)
+function geometric_spreading_cy14mod(r_ps::W, m::X, geo::GeometricSpreadingParameters{S,T,U,V}, sat::NearSourceSaturationParameters) where {S<:Real,T<:Real,U<:Real,V<:AbstractVector{Bool},W<:Real,X<:Real}
+    unit = oneunit(get_parametric_type(geo))
     j = 1
     k = 1
     if geo.γfree[1] == 0
