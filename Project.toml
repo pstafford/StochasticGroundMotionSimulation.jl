@@ -16,7 +16,9 @@ SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 
 [compat]
 Documenter = "1.0"
+FastGaussQuadrature = "0.5, 1.0"
 ForwardDiff = "0.10"
+Interpolations = "0.15"
 PolynomialRoots = "1.0"
 QuadGK = "2.4"
 Roots = "2.0"
