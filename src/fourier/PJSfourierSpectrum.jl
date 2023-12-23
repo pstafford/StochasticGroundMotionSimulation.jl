@@ -302,7 +302,7 @@ function fourier_spectrum(f::Vector{U}, m::S, r_ps::T, fas::FourierParameters) w
         end
 
         Af = Vector{W}(undef, numf)
-        Threads.@threads for i in 1:numf
+        for i in 1:numf
             @inbounds fi = f[i]
             # source term
             Ef = fourier_source_shape(fi, fa, fb, ε, fas)
@@ -365,7 +365,7 @@ function fourier_spectrum!(Af::Vector{U}, f::Vector{V}, m::S, r_ps::T, fas::Four
             r_rup = rupture_distance_from_equivalent_point_source_distance(r_ps, m, fas)
         end
 
-        Threads.@threads for i in 1:numf
+        for i in 1:numf
             @inbounds fi = f[i]
             # source term
             Ef = fourier_source_shape(fi, fa, fb, ε, fas)
@@ -417,7 +417,7 @@ function squared_fourier_spectrum!(Afsq::Vector{U}, f::Vector{V}, m::S, r_ps::T,
             r_rup = rupture_distance_from_equivalent_point_source_distance(r_ps, m, fas)
         end
 
-        Threads.@threads for i in 1:numf
+        for i in 1:numf
             @inbounds fi = f[i]
             # source term
             Ef = fourier_source_shape(fi, fa, fb, ε, fas)
