@@ -3,11 +3,11 @@
 # make these frequency ranges common to all amp functions (and deliberately push them beyond typical values provided)
 const fii_min_freq = 0.001
 const fii_max_freq = 1000.0
-const num_lnfii_freqs = 1000
+const num_lnfii_freqs = 1001
 const lnfii_min_freq = log(fii_min_freq)
 
 const f_reg = exp10.(range(log10(fii_min_freq), stop=log10(fii_max_freq), length=num_lnfii_freqs))
-const Δlnf_reg = log(f_reg[2] / f_reg[1])
+const Δlnf_reg = log(fii_max_freq / fii_min_freq) / (num_lnfii_freqs-1)
 
 
 # Boore (2016) WUS generic rock amplification function (relative to β=3.5km/s and ρ=2.72g/cm^3 source properties) for Vs30 of 760 m/s
@@ -32,17 +32,16 @@ Uses linear interpolation for frequencies between the publised values, and uses 
 	Af = boore_2016_generic_amplification(f)
 ```
 """
-function boore_2016_generic_amplification(f::T) where {T<:Real}
+function boore_2016_generic_amplification(f::T; fmin=fii_min_freq, fmax=fii_b16_760[end], Δlnf=Δlnf_reg) where {T<:Real}
     if isnan(f)
-        return NaN64
+        return NaN * oneunit(T)
     else
-        if f <= fii_min_freq
-            return 1.0
-        elseif f >= fii_b16_760[end]
-            return Aii_b16_760[end]
+        if f <= fmin
+            return oneunit(T)
+        elseif f >= fmax
+            return Aii_b16_760[end]::T
         else
-            f_scaled = (log(f) - lnfii_min_freq) / Δlnf_reg + 1.0
-            return itp_b16_760_reg(f_scaled)
+            return itp_b16_760_reg(log(f / fmin) / Δlnf + 1.0)::T
         end
     end
 end
@@ -166,12 +165,12 @@ Computes the site amplification (impedance) for a given frequency `f`. Requires 
 	Af = site_amplification(f; amp_model=:Unit)
 ```
 """
-function site_amplification(f::T, model::Symbol) where {T<:Real}
-    if f <= fii_min_freq
-        return 1.0
+function site_amplification(f::T, model::Symbol; fmin=fii_min_freq, Δlnf=Δlnf_reg) where {T<:Real}
+    if f <= fmin
+        return oneunit(T)
     end
     if (model !== :Unit) | (model !== :Boore2016)
-        f_scaled = (log(f) - lnfii_min_freq) / Δlnf_reg + 1.0
+        f_scaled = log(f / fmin) / Δlnf + 1.0
     end
     if model == :Unit
         return unit_generic_amplification() * oneunit(T)
@@ -179,64 +178,64 @@ function site_amplification(f::T, model::Symbol) where {T<:Real}
         return boore_2016_generic_amplification(f)
     elseif model == :AlAtik2021_ask14_620
         if f >= fii_aa21_ask14_620[end]
-            return Aii_aa21_ask14_620[end]
+            return Aii_aa21_ask14_620[end]::T
         end
-        return itp_aa21_ask14_620_reg(f_scaled)
+        return itp_aa21_ask14_620_reg(f_scaled)::T
     elseif model == :AlAtik2021_ask14_760
         if f >= fii_aa21_ask14_760[end]
-            return Aii_aa21_ask14_760[end]
+            return Aii_aa21_ask14_760[end]::T
         end
-        return itp_aa21_ask14_760_reg(f_scaled)
+        return itp_aa21_ask14_760_reg(f_scaled)::T
     elseif model == :AlAtik2021_ask14_1100
         if f >= fii_aa21_ask14_1100[end]
-            return Aii_aa21_ask14_1100[end]
+            return Aii_aa21_ask14_1100[end]::T
         end
-        return itp_aa21_ask14_1100_reg(f_scaled)
+        return itp_aa21_ask14_1100_reg(f_scaled)::T
     elseif model == :AlAtik2021_bssa14_620
         if f >= fii_aa21_bssa14_620[end]
-            return Aii_aa21_bssa14_620[end]
+            return Aii_aa21_bssa14_620[end]::T
         end
-        return itp_aa21_bssa14_620_reg(f_scaled)
+        return itp_aa21_bssa14_620_reg(f_scaled)::T
     elseif model == :AlAtik2021_bssa14_760
         if f >= fii_aa21_bssa14_760[end]
-            return Aii_aa21_bssa14_760[end]
+            return Aii_aa21_bssa14_760[end]::T
         end
-        return itp_aa21_bssa14_760_reg(f_scaled)
+        return itp_aa21_bssa14_760_reg(f_scaled)::T
     elseif model == :AlAtik2021_bssa14_1100
         if f >= fii_aa21_bssa14_1100[end]
-            return Aii_aa21_bssa14_1100[end]
+            return Aii_aa21_bssa14_1100[end]::T
         end
-        return itp_aa21_bssa14_1100_reg(f_scaled)
+        return itp_aa21_bssa14_1100_reg(f_scaled)::T
     elseif model == :AlAtik2021_cb14_620
         if f >= fii_aa21_cb14_620[end]
-            return Aii_aa21_cb14_620[end]
+            return Aii_aa21_cb14_620[end]::T
         end
-        return itp_aa21_cb14_620_reg(f_scaled)
+        return itp_aa21_cb14_620_reg(f_scaled)::T
     elseif model == :AlAtik2021_cb14_760
         if f >= fii_aa21_cb14_760[end]
-            return Aii_aa21_cb14_760[end]
+            return Aii_aa21_cb14_760[end]::T
         end
-        return itp_aa21_cb14_760_reg(f_scaled)
+        return itp_aa21_cb14_760_reg(f_scaled)::T
     elseif model == :AlAtik2021_cb14_1100
         if f >= fii_aa21_cb14_1100[end]
-            return Aii_aa21_cb14_1100[end]
+            return Aii_aa21_cb14_1100[end]::T
         end
-        return itp_aa21_cb14_1100_reg(f_scaled)
+        return itp_aa21_cb14_1100_reg(f_scaled)::T
     elseif model == :AlAtik2021_cy14_620
         if f >= fii_aa21_cy14_620[end]
-            return Aii_aa21_cy14_620[end]
+            return Aii_aa21_cy14_620[end]::T
         end
-        return itp_aa21_cy14_620_reg(f_scaled)
+        return itp_aa21_cy14_620_reg(f_scaled)::T
     elseif model == :AlAtik2021_cy14_760
         if f >= fii_aa21_cy14_760[end]
-            return Aii_aa21_cy14_760[end]
+            return Aii_aa21_cy14_760[end]::T
         end
-        return itp_aa21_cy14_760_reg(f_scaled)
+        return itp_aa21_cy14_760_reg(f_scaled)::T
     elseif model == :AlAtik2021_cy14_1100
         if f >= fii_aa21_cy14_1100[end]
-            return Aii_aa21_cy14_1100[end]
+            return Aii_aa21_cy14_1100[end]::T
         end
-        return itp_aa21_cy14_1100_reg(f_scaled)
+        return itp_aa21_cy14_1100_reg(f_scaled)::T
     else
         return T(NaN)
     end
