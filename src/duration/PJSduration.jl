@@ -508,9 +508,9 @@ function liu_pezeshk_1999(m, r_ps::T, fas::FourierParameters, sdof::Oscillator, 
   γ = Dex / Dosc
   # spectral moments, required for use within definition of α parameter
   mi = spectral_moments([0,1,2], m, r_ps, fas, sdof)
-  m0 = mi[1]
-  m1 = mi[2]
-  m2 = mi[3]
+  m0 = mi.m0
+  m1 = mi.m1
+  m2 = mi.m2
   # define α
   α = sqrt( 2π * (1.0 - ( m1^2 )/( m0*m2 )) )
   n = 2.0

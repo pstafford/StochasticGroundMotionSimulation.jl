@@ -37,13 +37,12 @@ function peak_factor_cl56(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillato
 
 	int_sum = dfac * dot( wi, integrand.(zi) )
 
-	pf = sqrt(2.0) * int_sum
-	return pf
+	return sqrt(2.0) * int_sum
 end
 
 
 @doc raw"""
-	peak_factor_cl56(m::S, r_ps::T, Dex::U, m0::V, fas::FourierParameters, sdof::Oscillator; nodes::Int=35) where {S<:Real,T<:Real,U<:Real,V<:Real}
+	peak_factor_cl56(Dex::U, mi::SpectralMoments; nodes::Int=35) where {U<:Real}
 
 Peak factor computed using the Cartwright and Longuet-Higgins (1956) formulation, using pre-computed `Dex` and `m0` values.
 
@@ -57,11 +56,11 @@ The integral is evaluated using Gauss-Legendre integration -- and is suitable fo
 
 See also: [`peak_factor`](@ref), [`peak_factor_dk80`](@ref)
 """
-function peak_factor_cl56(m::S, r_ps::T, Dex::U, m0::V, fas::FourierParameters, sdof::Oscillator; nodes::Int=35) where {S<:Real,T<:Real,U<:Real,V<:Real}
+function peak_factor_cl56(Dex::U, mi::SpectralMoments; nodes::Int=35) where {U<:Real}
 	# get all necessary spectral moments
-	mi = spectral_moments([2, 4], m, r_ps, fas, sdof)
-	m2 = mi[1]
-	m4 = mi[2]
+	m0 = mi.m0
+	m2 = mi.m2
+	m4 = mi.m4
 	# get the peak factor
 	n_z = Dex * sqrt( m2 / m0 ) / π
 	n_e = Dex * sqrt( m4 / m2 ) / π
@@ -84,8 +83,7 @@ function peak_factor_cl56(m::S, r_ps::T, Dex::U, m0::V, fas::FourierParameters, 
 
 	int_sum = dfac * dot( wi, integrand.(zi) )
 
-	pf = sqrt(2.0) * int_sum
-	return pf
+	return sqrt(2.0) * int_sum
 end
 
 
@@ -224,9 +222,9 @@ See also: [`peak_factor`](@ref), [`peak_factor_cl56`](@ref)
 function peak_factor_dk80(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; nodes::Int=30) where {S<:Real,T<:Real}
 	# compute first three spectral moments
 	mi = spectral_moments([0, 1, 2], m, r_ps, fas, sdof)
-	m0 = mi[1]
-	m1 = mi[2]
-	m2 = mi[3]
+	m0 = mi.m0
+	m1 = mi.m1
+	m2 = mi.m2
 
 	# bandwidth, and effective bandwidth
 	δ = sqrt( 1.0 - (m1^2 / (m0*m2)) )
@@ -250,12 +248,12 @@ function peak_factor_dk80(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillato
 	# evaluate integrand
 	yy = vanmarcke_ccdf.(zi, n_z, δeff)
 
-	return int_sum = dfac * dot( wi, yy )
+	return dfac * dot( wi, yy )
 end
 
 
 @doc raw"""
-	peak_factor_dk80(m::S, r_ps::T, Dex::U, m0::V, fas::FourierParameters, sdof::Oscillator; nodes::Int=30) where {S<:Real,T<:Real,U<:Real,V<:Real}
+	peak_factor_dk80(Dex::U, mi::SpectralMoments; nodes::Int=30) where {U<:Real}
 
 Peak factor computed using the Der Kiureghian (1980)/Vanmarcke (1975) formulation, using precomputed `Dex` and `m0`.
 
@@ -277,11 +275,11 @@ The integral is evaluated using Gauss-Legendre integration -- and is suitable fo
 
 See also: [`peak_factor`](@ref), [`peak_factor_cl56`](@ref)
 """
-function peak_factor_dk80(m::S, r_ps::T, Dex::U, m0::V, fas::FourierParameters, sdof::Oscillator; nodes::Int=30) where {S<:Real,T<:Real,U<:Real,V<:Real}
+function peak_factor_dk80(Dex::U, mi::SpectralMoments; nodes::Int=30) where {U<:Real}
 	# compute first three spectral moments
-	mi = spectral_moments([1, 2], m, r_ps, fas, sdof)
-	m1 = mi[1]
-	m2 = mi[2]
+	m0 = mi.m0
+	m1 = mi.m1
+	m2 = mi.m2
 
 	# bandwidth, and effective bandwidth
 	δ = sqrt( 1.0 - (m1^2 / (m0*m2)) )
@@ -303,7 +301,7 @@ function peak_factor_dk80(m::S, r_ps::T, Dex::U, m0::V, fas::FourierParameters, 
 	# evaluate integrand
 	yy = vanmarcke_ccdf.(zi, n_z, δeff)
 
-	return int_sum = dfac * dot( wi, yy )
+	return dfac * dot( wi, yy )
 end
 
 
@@ -333,9 +331,9 @@ See also: [`peak_factor`](@ref), [`peak_factor_dk80`](@ref), [`peak_factor_cl56`
 function peak_factor_dk80_gk(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator) where {S<:Float64,T<:Real}
 	# compute first three spectral moments
 	mi = spectral_moments([0, 1, 2], m, r_ps, fas, sdof)
-	m0 = mi[1]
-	m1 = mi[2]
-	m2 = mi[3]
+	m0 = mi.m0
+	m1 = mi.m1
+	m2 = mi.m2
 
 	# bandwidth, and effective bandwidth
 	δ = sqrt( 1.0 - (m1^2 / (m0*m2)) )
@@ -356,10 +354,10 @@ end
 
 
 @doc raw"""
-	peak_factor(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; pf_method::Symbol=:DK80) where {S<:Real,T<:Real}
+	peak_factor(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; rvt::RandomVibrationParameters) where {S<:Real,T<:Real}
 
 Peak factor ``u_{max} / u_{rms}`` with a switch of `pf_method` to determine the approach adopted.
-`pf_method` can currently be one of:
+`rvt.pf_method` can currently be one of:
 	- `:CL56` for Cartright Longuet-Higgins (1956)
 	- `:DK80` for Der Kiureghian (1980), building on Vanmarcke (1975)
 
@@ -378,7 +376,7 @@ end
 
 
 """
-	peak_factor(m::S, r_ps::T, Dex::U, m0::V, fas::FourierParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Real,T<:Real,U<:Real,V<:Real}
+	peak_factor(Dex::U, m0::V, rvt::RandomVibrationParameters) where {U<:Real}
 
 Peak factor u_max / u_rms with a switch of `pf_method` to determine the approach adopted.
 `pf_method` can currently be one of:
@@ -387,18 +385,12 @@ Peak factor u_max / u_rms with a switch of `pf_method` to determine the approach
 
 Defaults to `:DK80`.
 """
-function peak_factor(m::S, r_ps::T, Dex::U, m0::V, fas::FourierParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Real,T<:Real,U<:Real,V<:Real}
+function peak_factor(Dex::U, mi::SpectralMoments, rvt::RandomVibrationParameters) where {U<:Real}
 	if rvt.pf_method == :CL56
-		return peak_factor_cl56(m, r_ps, Dex, m0, fas, sdof)
+		return peak_factor_cl56(Dex, mi)
 	elseif rvt.pf_method == :DK80
-		return peak_factor_dk80(m, r_ps, Dex, m0, fas, sdof)
+		return peak_factor_dk80(Dex, mi)
 	else
-		if S <: Dual
-			return S(NaN)
-		elseif V <: Dual
-			return V(NaN)
-		else
-			return U(NaN)
-		end
+		return U(NaN)
 	end
 end

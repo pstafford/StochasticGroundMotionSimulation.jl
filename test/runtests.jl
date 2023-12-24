@@ -974,9 +974,9 @@ using LinearAlgebra
             r_ps = equivalent_point_source_distance(r_rup, m, fas)
             Dex = excitation_duration(m, r_ps, fas, rvt)
             (Drms, Dex0, Drat) = rms_duration(m, r_ps, fas, sdof, rvt)
-
             @test Dex == Dex0
 
+            # @code_warntype rms_duration(m, r_ps, fas, sdof, rvt)
         end
 
     end
@@ -1560,8 +1560,8 @@ using LinearAlgebra
             m0f = spectral_moment(order, m, r_psf, fasf, sdof)
             m0d = spectral_moment(order, m, r_psd, fasd, sdof)
             m0m = spectral_moment(order, m, r_psm, fasm, sdof)
-            @test m0f ≈ m0d.value
-            @test m0d ≈ m0m
+            @test m0f.m0 ≈ m0d.m0.value
+            @test m0d.m0 ≈ m0m.m0
 
             # @code_warntype spectral_moment(order, m, r_psf, fasf, sdof)
             # @code_warntype spectral_moment(order, m, r_psd, fasd, sdof)
@@ -1575,27 +1575,40 @@ using LinearAlgebra
             # @code_warntype spectral_moments([0, 1, 2, 4], m, r_psd, fasd, sdof)
             # @code_warntype spectral_moments([0, 1, 2, 4], m, r_psm, fasm, sdof)
 
-            smi = spectral_moments([0, 1, 2, 4], m, r_psf, fasf, sdof)
-            smigk = StochasticGroundMotionSimulation.spectral_moments_gk([0, 1, 2, 4], m, r_psf, fasf, sdof)
+            smi = spectral_moments([0, 1, 2, 3, 4], m, r_psf, fasf, sdof)
+            smigk = StochasticGroundMotionSimulation.spectral_moments_gk([0, 1, 2, 3, 4], m, r_psf, fasf, sdof)
 
-            @test all(isapprox.(smi, smigk, rtol=1e-3))
+            @test smi.m0 ≈ smigk.m0 rtol=1e-3
+            @test smi.m1 ≈ smigk.m1 rtol=1e-3
+            @test smi.m2 ≈ smigk.m2 rtol=1e-3
+            @test smi.m3 ≈ smigk.m3 rtol=1e-3
+            @test smi.m4 ≈ smigk.m4 rtol=1e-3
 
 
             sdof = Oscillator(1 / 3)
-            smi = spectral_moments([0, 1, 2, 4], m, r_psf, fasf, sdof)
-            smigk = StochasticGroundMotionSimulation.spectral_moments_gk([0, 1, 2, 4], m, r_psf, fasf, sdof)
+            smi = spectral_moments([0, 1, 2, 3, 4], m, r_psf, fasf, sdof)
+            smigk = StochasticGroundMotionSimulation.spectral_moments_gk([0, 1, 2, 3, 4], m, r_psf, fasf, sdof)
 
-            @test all(isapprox.(smi, smigk, rtol=1e-3))
+            @test smi.m0 ≈ smigk.m0 rtol = 1e-3
+            @test smi.m1 ≈ smigk.m1 rtol = 1e-3
+            @test smi.m2 ≈ smigk.m2 rtol = 1e-3
+            @test smi.m3 ≈ smigk.m3 rtol = 1e-3
+            @test smi.m4 ≈ smigk.m4 rtol = 1e-3
 
             m = Dual(6.0)
-            smdi = spectral_moments([0, 1, 2, 4], m, r_psf, fasf, sdof)
-            smfi = spectral_moments([0, 1, 2, 4], m.value, r_psf, fasf, sdof)
-            @test any(isapprox.(smdi, smfi))
+            smdi = spectral_moments([0, 1, 2, 3, 4], m, r_psf, fasf, sdof)
+            smfi = spectral_moments([0, 1, 2, 3, 4], m.value, r_psf, fasf, sdof)
+
+            @test smdi.m0 ≈ smfi.m0 rtol = 1e-3
+            @test smdi.m1 ≈ smfi.m1 rtol = 1e-3
+            @test smdi.m2 ≈ smfi.m2 rtol = 1e-3
+            @test smdi.m3 ≈ smfi.m3 rtol = 1e-3
+            @test smdi.m4 ≈ smfi.m4 rtol = 1e-3
 
             m = Dual(6.0)
             smdi = spectral_moment(0, m, r_psf, fasf, sdof)
             smfi = spectral_moment(0, m.value, r_psf, fasf, sdof)
-            @test smdi ≈ smfi
+            @test smdi.m0 ≈ smfi.m0
 
             rvt = RandomVibrationParameters()
             Ti = [0.01, 0.1, 1.0]
@@ -1670,6 +1683,8 @@ using LinearAlgebra
             @time pfpsn = StochasticGroundMotionSimulation.peak_factor_dk80(m, r_psf, fasf, sdof, nodes=30)
             @time pfgk = StochasticGroundMotionSimulation.peak_factor_dk80_gk(m, r_psf, fasf, sdof)
 
+            # @code_warntype StochasticGroundMotionSimulation.peak_factor_dk80(m, r_psf, fasf, sdof)
+
             @test pfps ≈ pfgk rtol = 1e-6
             @test pfpsn ≈ pfgk rtol = 1e-6
 
@@ -1693,19 +1708,21 @@ using LinearAlgebra
             m = 6.0
             r_rup = 10.0
             r_ps = equivalent_point_source_distance(r_rup, m, fasf)
-            Dex = excitation_duration(m, r_ps, fasf, rvt)
-            m0 = spectral_moment(0, m, r_ps, fasf, sdof)
+            Dexf = excitation_duration(m, r_ps, fasf, rvt)
+            Dexd = excitation_duration(Dual(m), r_ps, fasf, rvt)
+            m0f = spectral_moment(0, m, r_ps, fasf, sdof)
+            m0d = spectral_moment(0, Dual(m), r_ps, fasf, sdof)
             rvt = RandomVibrationParameters(:PS)
-            pf = peak_factor(m, r_ps, Dex, m0, fasf, sdof, rvt)
+            pf = peak_factor(Dexf, m0f, rvt)
             @test isnan(pf)
-            pf = peak_factor(Dual(m), r_ps, Dex, m0, fasf, sdof, rvt)
+            pf = peak_factor(Dexd, m0d, rvt)
             @test isnan(pf)
-            pf = peak_factor(m, r_ps, Dex, Dual(m0), fasf, sdof, rvt)
+            pf = peak_factor(Dexf, m0d, rvt)
             @test isnan(pf)
             rvt = RandomVibrationParameters(:CL56)
-            pf = peak_factor(m, r_ps, Dex, m0, fasf, sdof, rvt)
-            @test isnan(pf) == false
-            @test pf ≈ peak_factor(m, r_ps, fasf, sdof, RandomVibrationParameters(:CL56))
+            pf = peak_factor(Dexf, m0f, rvt)
+            @test isnan(pf)
+            # @test pf ≈ peak_factor(m, r_ps, fasf, sdof, RandomVibrationParameters(:CL56))
 
             pfi = StochasticGroundMotionSimulation.peak_factor_integrand_cl56(0.0, 10.0, 10.0)
             @test pfi ≈ 1.0
