@@ -303,7 +303,7 @@ function fourier_spectrum(f::Vector{U}, m::S, r_ps::T, fas::FourierParameters) w
 
         Af = Vector{W}(undef, numf)
         for i in 1:numf
-            @inbounds fi = f[i]
+            fi = f[i]
             # source term
             Ef = fourier_source_shape(fi, fa, fb, ε, fas)
             # combined attenuation
@@ -315,7 +315,7 @@ function fourier_spectrum(f::Vector{U}, m::S, r_ps::T, fas::FourierParameters) w
             # site impedance
             Sf = site_amplification(fi, fas)
             # apply factor and convert to acceleration in appropriate units (m/s)
-            @inbounds Af[i] = Ef * Kf * Sf * factor * fi^2
+            Af[i] = Ef * Kf * Sf * factor * fi^2
         end
         return Af
     end
@@ -366,7 +366,7 @@ function fourier_spectrum!(Af::Vector{U}, f::Vector{V}, m::S, r_ps::T, fas::Four
         end
 
         for i in 1:numf
-            @inbounds fi = f[i]
+            fi = f[i]
             # source term
             Ef = fourier_source_shape(fi, fa, fb, ε, fas)
             # combined attenuation
@@ -378,7 +378,7 @@ function fourier_spectrum!(Af::Vector{U}, f::Vector{V}, m::S, r_ps::T, fas::Four
             # site impedance
             Sf = site_amplification(fi, fas)
             # apply factor and convert to acceleration in appropriate units (m/s)
-            @inbounds Af[i] = Ef * Kf * Sf * factor * fi^2
+            Af[i] = Ef * Kf * Sf * factor * fi^2
         end
     end
     return nothing
@@ -418,7 +418,7 @@ function squared_fourier_spectrum!(Afsq::Vector{U}, f::Vector{V}, m::S, r_ps::T,
         end
 
         for i in 1:numf
-            @inbounds fi = f[i]
+            fi = f[i]
             # source term
             Ef = fourier_source_shape(fi, fa, fb, ε, fas)
             # combined attenuation
@@ -430,7 +430,7 @@ function squared_fourier_spectrum!(Afsq::Vector{U}, f::Vector{V}, m::S, r_ps::T,
             # site impedance
             Sf = site_amplification(fi, fas)
             # apply factor and convert to acceleration in appropriate units (m^2/s^2)
-            @inbounds Afsq[i] = (Ef * Kf * Sf)^2 * factor * fi^4
+            Afsq[i] = (Ef * Kf * Sf)^2 * factor * fi^4
         end
     end
     return nothing
