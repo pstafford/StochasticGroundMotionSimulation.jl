@@ -1816,6 +1816,7 @@ using LinearAlgebra
             Sab1p5 = rvt_response_spectral_ordinate(T, m, r_ps, fasb1p5, rvt)
 
             @test Sab1p0 > Sab1p5
+            @test Sab1p5 < Sab1p0
 
 
             # @code_warntype rvt_response_spectrum(Ti, m, r_psf, fasf, rvt)
