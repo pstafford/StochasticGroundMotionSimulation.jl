@@ -32,7 +32,7 @@ Uses linear interpolation for frequencies between the publised values, and uses 
 	Af = boore_2016_generic_amplification(f)
 ```
 """
-function boore_2016_generic_amplification(f::T; fmin=fii_min_freq, fmax=fii_max_freq, Δlnf=Δlnf_reg) where {T<:Real}
+function boore_2016_generic_amplification(f::T; fmin=fii_min_freq, fmax=fii_b16_760[end], Δlnf=Δlnf_reg) where {T<:Real}
     if isnan(f)
         return NaN * oneunit(T)
     else
@@ -165,7 +165,7 @@ Computes the site amplification (impedance) for a given frequency `f`. Requires 
 	Af = site_amplification(f; amp_model=:Unit)
 ```
 """
-function site_amplification(f::T, model::Symbol; fmin=fii_min_freq, fmax=fii_max_freq, Δlnf=Δlnf_reg) where {T<:Real}
+function site_amplification(f::T, model::Symbol; fmin=fii_min_freq, Δlnf=Δlnf_reg) where {T<:Real}
     if f <= fmin
         return oneunit(T)
     end
@@ -177,62 +177,62 @@ function site_amplification(f::T, model::Symbol; fmin=fii_min_freq, fmax=fii_max
     elseif model == :Boore2016
         return boore_2016_generic_amplification(f)
     elseif model == :AlAtik2021_ask14_620
-        if f >= fmax
+        if f >= fii_aa21_ask14_620[end]
             return Aii_aa21_ask14_620[end]::T
         end
         return itp_aa21_ask14_620_reg(f_scaled)::T
     elseif model == :AlAtik2021_ask14_760
-        if f >= fmax
+        if f >= fii_aa21_ask14_760[end]
             return Aii_aa21_ask14_760[end]::T
         end
         return itp_aa21_ask14_760_reg(f_scaled)::T
     elseif model == :AlAtik2021_ask14_1100
-        if f >= fmax
+        if f >= fii_aa21_ask14_1100[end]
             return Aii_aa21_ask14_1100[end]::T
         end
         return itp_aa21_ask14_1100_reg(f_scaled)::T
     elseif model == :AlAtik2021_bssa14_620
-        if f >= fmax
+        if f >= fii_aa21_bssa14_620[end]
             return Aii_aa21_bssa14_620[end]::T
         end
         return itp_aa21_bssa14_620_reg(f_scaled)::T
     elseif model == :AlAtik2021_bssa14_760
-        if f >= fmax
+        if f >= fii_aa21_bssa14_760[end]
             return Aii_aa21_bssa14_760[end]::T
         end
         return itp_aa21_bssa14_760_reg(f_scaled)::T
     elseif model == :AlAtik2021_bssa14_1100
-        if f >= fmax
+        if f >= fii_aa21_bssa14_1100[end]
             return Aii_aa21_bssa14_1100[end]::T
         end
         return itp_aa21_bssa14_1100_reg(f_scaled)::T
     elseif model == :AlAtik2021_cb14_620
-        if f >= fmax
+        if f >= fii_aa21_cb14_620[end]
             return Aii_aa21_cb14_620[end]::T
         end
         return itp_aa21_cb14_620_reg(f_scaled)::T
     elseif model == :AlAtik2021_cb14_760
-        if f >= fmax
+        if f >= fii_aa21_cb14_760[end]
             return Aii_aa21_cb14_760[end]::T
         end
         return itp_aa21_cb14_760_reg(f_scaled)::T
     elseif model == :AlAtik2021_cb14_1100
-        if f >= fmax
+        if f >= fii_aa21_cb14_1100[end]
             return Aii_aa21_cb14_1100[end]::T
         end
         return itp_aa21_cb14_1100_reg(f_scaled)::T
     elseif model == :AlAtik2021_cy14_620
-        if f >= fmax
+        if f >= fii_aa21_cy14_620[end]
             return Aii_aa21_cy14_620[end]::T
         end
         return itp_aa21_cy14_620_reg(f_scaled)::T
     elseif model == :AlAtik2021_cy14_760
-        if f >= fmax
+        if f >= fii_aa21_cy14_760[end]
             return Aii_aa21_cy14_760[end]::T
         end
         return itp_aa21_cy14_760_reg(f_scaled)::T
     elseif model == :AlAtik2021_cy14_1100
-        if f >= fmax
+        if f >= fii_aa21_cy14_1100[end]
             return Aii_aa21_cy14_1100[end]::T
         end
         return itp_aa21_cy14_1100_reg(f_scaled)::T
