@@ -44,6 +44,8 @@ where ``\psi`` is the peak factor computed from `peak_factor`, ``m_0`` is the ze
 The main methods used to interact with `RandomVibrationParameters` are:
 
 ```@docs
+SpectralMoments
+create_spectral_moments
 spectral_moment
 spectral_moments
 spectral_moments_gk

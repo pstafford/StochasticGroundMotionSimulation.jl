@@ -19,6 +19,8 @@ export Oscillator,
 	PathParameters,
 	SiteParameters,
 	RandomVibrationParameters,
+	SpectralMoments,
+	create_spectral_moments,
     period,
     transfer,
     transfer!,
@@ -55,6 +57,7 @@ export Oscillator,
 # Write your package code here.
 include("oscillator/PJSoscillator.jl")
 include("fourier/PJSfourierParameters.jl")
+include("rvt/PJSspectralMoments.jl")
 include("rvt/PJSrandomVibrationParameters.jl")
 include("fourier/PJSsite.jl")
 include("fourier/PJSsource.jl")
