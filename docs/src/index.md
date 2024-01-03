@@ -48,7 +48,7 @@ ane = AnelasticAttenuationParameters(Q0, η)
 # use the `geo`, `sat` and `ane` instances to construct a `PathParameters` instance
 path = PathParameters(geo, sat, ane)
 # define the `SiteParameters`
-site = SiteParameters(κ0, :Boore2016)
+site = SiteParameters(κ0, SiteAmpBoore2016_760())
 
 # combine `src`, `path` and `site` instances to define the overall `FourierParameters`
 fas = FourierParameters(src, path, site)
