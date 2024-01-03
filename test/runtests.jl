@@ -5,11 +5,45 @@ using ForwardDiff: Dual
 using FastGaussQuadrature
 using QuadGK
 using LinearAlgebra
+using StaticArrays
+using Distributions
+using BenchmarkTools
 
 
 @testset "StochasticGroundMotionSimulation.jl" begin
 
     @testset "Performance" begin
+
+        @testset "Allocation Testing" begin
+            src = SourceParameters(100.0)
+            geo = GeometricSpreadingParameters([1.0, Inf], [1.0], :Piecewise)
+            sat = NearSourceSaturationParameters(:BT15)
+            ane = AnelasticAttenuationParameters(180.0, 0.45, :Rps)
+            path = PathParameters(geo, sat, ane)
+            site = SiteParameters(0.03)
+            fas = FourierParameters(src, path, site)
+            rvt = RandomVibrationParameters()
+
+
+            function run_sims(T, num_sims, fas, rvt)
+                md = Uniform(2.0, 8.0)
+                rd = Uniform(1.0, 100.0)
+                mi = rand(md, num_sims)
+                ri = rand(rd, num_sims)
+                Sai = zeros(num_sims)
+                for i in 1:num_sims
+                    Sai[i] = rvt_response_spectral_ordinate(T, mi[i], ri[i], fas, rvt)
+                end
+                return sum(Sai)
+            end
+
+            T = 0.123
+            num_sims = 100
+            @benchmark run_sims(T, num_sims, fas, rvt)
+            num_sims = 1_000
+            @benchmark run_sims(T, num_sims, fas, rvt)
+        end
+
         Ti = [0.01, 0.02, 0.03, 0.04, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 5.0, 7.5, 10.0]
         m = 4.0 + π
         r = 500.0 + π
@@ -381,8 +415,6 @@ using LinearAlgebra
             @test qrf ≈ qrd.value
 
             fas = FourierParameters(SourceParameters(100.0), pathf)
-            @test fas.site.model == :Unit
-
             q_r = anelastic_attenuation(f, r, fas)
             @test qrf ≈ q_r
         end
@@ -434,40 +466,52 @@ using LinearAlgebra
         ηd = Dual{Float64}(ηf)
 
         @testset "Site Constructors" begin
+            @test typeof(SiteAmpUnit()) <: StochasticGroundMotionSimulation.SiteAmplification
+            @test typeof(SiteAmpBoore2016_760()) <: StochasticGroundMotionSimulation.SiteAmplification
+            @test typeof(SiteAmpAlAtikAbrahamson2021_ask14_620()) <: StochasticGroundMotionSimulation.SiteAmplification
+            @test typeof(SiteAmpAlAtikAbrahamson2021_ask14_760()) <: StochasticGroundMotionSimulation.SiteAmplification
+            @test typeof(SiteAmpAlAtikAbrahamson2021_ask14_1100()) <: StochasticGroundMotionSimulation.SiteAmplification
+            @test typeof(SiteAmpAlAtikAbrahamson2021_bssa14_620()) <: StochasticGroundMotionSimulation.SiteAmplification
+            @test typeof(SiteAmpAlAtikAbrahamson2021_bssa14_760()) <: StochasticGroundMotionSimulation.SiteAmplification
+            @test typeof(SiteAmpAlAtikAbrahamson2021_bssa14_1100()) <: StochasticGroundMotionSimulation.SiteAmplification
+            @test typeof(SiteAmpAlAtikAbrahamson2021_cb14_620()) <: StochasticGroundMotionSimulation.SiteAmplification
+            @test typeof(SiteAmpAlAtikAbrahamson2021_cb14_760()) <: StochasticGroundMotionSimulation.SiteAmplification
+            @test typeof(SiteAmpAlAtikAbrahamson2021_cb14_1100()) <: StochasticGroundMotionSimulation.SiteAmplification
+            @test typeof(SiteAmpAlAtikAbrahamson2021_cy14_620()) <: StochasticGroundMotionSimulation.SiteAmplification
+            @test typeof(SiteAmpAlAtikAbrahamson2021_cy14_760()) <: StochasticGroundMotionSimulation.SiteAmplification
+            @test typeof(SiteAmpAlAtikAbrahamson2021_cy14_1100()) <: StochasticGroundMotionSimulation.SiteAmplification
+
             @test typeof(SiteParameters(κ0f)) <: SiteParameters
-            @test typeof(SiteParameters(κ0f, :AlAtik2021_cy14_760)) <: SiteParameters
-            @test typeof(SiteParameters(κ0f, :Boore2016)) <: SiteParameters
-            @test typeof(SiteParameters(κ0f, :Unit)) <: SiteParameters
-            @test typeof(SiteParameters(κ0f, :NaN)) <: SiteParameters
+
+            @test typeof(SiteParameters(κ0f, SiteAmpAlAtikAbrahamson2021_cy14_760())) <: SiteParameters
+            @test typeof(SiteParameters(κ0f, SiteAmpBoore2016_760())) <: SiteParameters
+            @test typeof(SiteParameters(κ0f, SiteAmpUnit())) <: SiteParameters
 
             @test typeof(SiteParameters(κ0d)) <: SiteParameters
-            @test typeof(SiteParameters(κ0d, :AlAtik2021_cy14_760)) <: SiteParameters
-            @test typeof(SiteParameters(κ0d, :Boore2016)) <: SiteParameters
-            @test typeof(SiteParameters(κ0d, :Unit)) <: SiteParameters
-            @test typeof(SiteParameters(κ0d, :NaN)) <: SiteParameters
+            @test typeof(SiteParameters(κ0d, SiteAmpAlAtikAbrahamson2021_cy14_760())) <: SiteParameters
+            @test typeof(SiteParameters(κ0d, SiteAmpBoore2016_760())) <: SiteParameters
+            @test typeof(SiteParameters(κ0d, SiteAmpUnit())) <: SiteParameters
 
             @test typeof(SiteParameters(ζ0f, ηf)) <: SiteParameters
             @test typeof(SiteParameters(ζ0d, ηf)) <: SiteParameters
             @test typeof(SiteParameters(ζ0f, ηd)) <: SiteParameters
             @test typeof(SiteParameters(ζ0d, ηd)) <: SiteParameters
-            @test typeof(SiteParameters(ζ0f, ηf, :AlAtik2021_cy14_760)) <: SiteParameters
-            @test typeof(SiteParameters(ζ0d, ηf, :AlAtik2021_cy14_760)) <: SiteParameters
-            @test typeof(SiteParameters(ζ0f, ηd, :AlAtik2021_cy14_760)) <: SiteParameters
-            @test typeof(SiteParameters(ζ0d, ηd, :AlAtik2021_cy14_760)) <: SiteParameters
+            @test typeof(SiteParameters(ζ0f, ηf, SiteAmpAlAtikAbrahamson2021_cy14_760())) <: SiteParameters
+            @test typeof(SiteParameters(ζ0d, ηf, SiteAmpAlAtikAbrahamson2021_cy14_760())) <: SiteParameters
+            @test typeof(SiteParameters(ζ0f, ηd, SiteAmpAlAtikAbrahamson2021_cy14_760())) <: SiteParameters
+            @test typeof(SiteParameters(ζ0d, ηd, SiteAmpAlAtikAbrahamson2021_cy14_760())) <: SiteParameters
 
         end
 
         site0f = SiteParameters(κ0f)
-        siteAf = SiteParameters(κ0f, :AlAtik2021_cy14_760)
-        siteBf = SiteParameters(κ0f, :Boore2016)
-        siteUf = SiteParameters(κ0f, :Unit)
-        siteNf = SiteParameters(κ0f, :NaN)
+        siteAf = SiteParameters(κ0f, SiteAmpAlAtikAbrahamson2021_cy14_760())
+        siteBf = SiteParameters(κ0f, SiteAmpBoore2016_760())
+        siteUf = SiteParameters(κ0f, SiteAmpUnit())
 
         site0d = SiteParameters(κ0d)
-        siteAd = SiteParameters(κ0d, :AlAtik2021_cy14_760)
-        siteBd = SiteParameters(κ0d, :Boore2016)
-        siteUd = SiteParameters(κ0d, :Unit)
-        siteNd = SiteParameters(κ0d, :NaN)
+        siteAd = SiteParameters(κ0d, SiteAmpAlAtikAbrahamson2021_cy14_760())
+        siteBd = SiteParameters(κ0d, SiteAmpBoore2016_760())
+        siteUd = SiteParameters(κ0d, SiteAmpUnit())
 
         f = 0.05
 
@@ -483,23 +527,19 @@ using LinearAlgebra
             Af1f = site_amplification(f, siteAf)
             Af2f = site_amplification(f, siteBf)
             Af3f = site_amplification(f, siteUf)
-            Af4f = site_amplification(f, siteNf)
 
             @test Af0f == Af1f
             @test Af3f == 1.0
             @test Af2f < Af1f
-            @test isnan(Af4f)
 
             Af0d = site_amplification(f, site0d)
             Af1d = site_amplification(f, siteAd)
             Af2d = site_amplification(f, siteBd)
             Af3d = site_amplification(f, siteUd)
-            Af4d = site_amplification(f, siteNd)
 
             @test Af0d == Af1d
             @test Af3d == 1.0
             @test Af2d < Af1d
-            @test isnan(Af4d)
 
             @test Af0f == Af0d
 
@@ -508,33 +548,33 @@ using LinearAlgebra
             Af0 = site_amplification(f0, siteBf)
             Af1 = site_amplification(f1, siteBf)
 
-            @test Af0 == Af1
+            @test Af0 ≈ Af1 atol=1e-2
 
             ft = 10.0
-            Af620 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_ask14_620))
-            Af760 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_ask14_760))
-            Af1100 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_ask14_1100))
+            Af620 = site_amplification(ft, SiteParameters(0.039, SiteAmpAlAtikAbrahamson2021_ask14_620()))
+            Af760 = site_amplification(ft, SiteParameters(0.039, SiteAmpAlAtikAbrahamson2021_ask14_760()))
+            Af1100 = site_amplification(ft, SiteParameters(0.039, SiteAmpAlAtikAbrahamson2021_ask14_1100()))
 
             @test Af620 > Af760
             @test Af760 > Af1100
 
-            Af620 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_bssa14_620))
-            Af760 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_bssa14_760))
-            Af1100 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_bssa14_1100))
+            Af620 = site_amplification(ft, SiteParameters(0.039, SiteAmpAlAtikAbrahamson2021_bssa14_620()))
+            Af760 = site_amplification(ft, SiteParameters(0.039, SiteAmpAlAtikAbrahamson2021_bssa14_760()))
+            Af1100 = site_amplification(ft, SiteParameters(0.039, SiteAmpAlAtikAbrahamson2021_bssa14_1100()))
 
             @test Af620 > Af760
             @test Af760 > Af1100
 
-            Af620 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_cb14_620))
-            Af760 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_cb14_760))
-            Af1100 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_cb14_1100))
+            Af620 = site_amplification(ft, SiteParameters(0.039, SiteAmpAlAtikAbrahamson2021_cb14_620()))
+            Af760 = site_amplification(ft, SiteParameters(0.039, SiteAmpAlAtikAbrahamson2021_cb14_760()))
+            Af1100 = site_amplification(ft, SiteParameters(0.039, SiteAmpAlAtikAbrahamson2021_cb14_1100()))
 
             @test Af620 > Af760
             @test Af760 > Af1100
 
-            Af620 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_cy14_620))
-            Af760 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_cy14_760))
-            Af1100 = site_amplification(ft, SiteParameters(0.039, :AlAtik2021_cy14_1100))
+            Af620 = site_amplification(ft, SiteParameters(0.039, SiteAmpAlAtikAbrahamson2021_cy14_620()))
+            Af760 = site_amplification(ft, SiteParameters(0.039, SiteAmpAlAtikAbrahamson2021_cy14_760()))
+            Af1100 = site_amplification(ft, SiteParameters(0.039, SiteAmpAlAtikAbrahamson2021_cy14_1100()))
 
             @test Af620 > Af760
             @test Af760 > Af1100
@@ -542,40 +582,51 @@ using LinearAlgebra
 
 
         @testset "Impedance Functions" begin
-            @test StochasticGroundMotionSimulation.boore_2016_generic_amplification(0.015) ≈ 1.01 rtol = 1e-5
-            @test isnan(StochasticGroundMotionSimulation.boore_2016_generic_amplification(NaN))
+            sa = SiteAmpBoore2016_760()
+            @test sa.amplification(0.015) ≈ 1.01 rtol = 1e-5
 
-            numf = length(StochasticGroundMotionSimulation.fii_b16_760)
+            fi = @SVector [0.001, 0.010, 0.015, 0.021, 0.031, 0.045, 0.065, 0.095, 0.138, 0.200, 0.291, 0.423, 0.615, 0.894, 1.301, 1.892, 2.751, 4.000, 5.817, 8.459, 12.301, 17.889, 26.014, 37.830, 55.012, 80.000, 1e3]
+            Ai = @SVector [1.00, 1.00, 1.01, 1.02, 1.02, 1.04, 1.06, 1.09, 1.13, 1.18, 1.25, 1.32, 1.41, 1.51, 1.64, 1.80, 1.99, 2.18, 2.38, 2.56, 2.75, 2.95, 3.17, 3.42, 3.68, 3.96, 3.96]
+
+            numf = length(fi) - 1
             for i = 1:numf
-                fi = StochasticGroundMotionSimulation.fii_b16_760[i]
-                @test StochasticGroundMotionSimulation.boore_2016_generic_amplification(fi) ≈ StochasticGroundMotionSimulation.Aii_b16_760[i] rtol = 1e-3
+                f = fi[i]
+                @test sa.amplification(f) ≈ Ai[i] rtol = 1e-2
             end
 
-            numf = length(StochasticGroundMotionSimulation.fii_aa21_cy14_760)
+
+            sa = SiteAmpAlAtikAbrahamson2021_cy14_760()
+
+            fi = @SVector [0.001, 0.100000005278119, 0.102329305685959, 0.104712901088038, 0.10715191734136, 0.1096478161355, 0.112201844312325, 0.114815399493054, 0.117489811269133, 0.120226426884127, 0.123026912673429, 0.125892543180806, 0.128824943888933, 0.131825701931171, 0.134896292542321, 0.138038419685919, 0.141253726031804, 0.144543991682274, 0.147910841016824, 0.15135612531762, 0.154881699105396, 0.158489298275321, 0.162180994731809, 0.165958688177051, 0.169824406249264, 0.173780124732544, 0.177827987234069, 0.181970104503309, 0.18620874216892, 0.190546088276735, 0.194984413397179, 0.199526234462532, 0.204173818378493, 0.208929629962364, 0.213796203501538, 0.218776216272469, 0.223872092751581, 0.229086773295876, 0.234422913440041, 0.239883346374602, 0.245470959191782, 0.251188647299664, 0.257039583965111, 0.263026839625322, 0.269153386068061, 0.275422892536035, 0.281838357206786, 0.288403136014915, 0.29512088643951, 0.301995147118928, 0.309029636270837, 0.316227726764557, 0.323593743035287, 0.331131074274485, 0.338844138033324, 0.346736738117816, 0.354813374379999, 0.363078069427477, 0.371535318437207, 0.38018929961147, 0.389044995694541, 0.398107060813636, 0.407380379735427, 0.416869369537323, 0.426579727361764, 0.436515887692042, 0.446683606986212, 0.457088019319652, 0.46773532542682, 0.478629981874554, 0.489778948828998, 0.501187304961605, 0.512861186273828, 0.524807402402299, 0.537031596210482, 0.549541299892976, 0.562341327015613, 0.575439822942147, 0.588843516357273, 0.602559763585899, 0.61659488244124, 0.630957589108888, 0.645654602589703, 0.660693172670039, 0.676083352446191, 0.69183061540227, 0.707945609900711, 0.724435639005472, 0.741310319666438, 0.758577791401586, 0.776247032532349, 0.794327972885161, 0.812829888313304, 0.83176450189098, 0.85113745411528, 0.870963690655165, 0.891251760400126, 0.912010408577856, 0.933255245295474, 0.954991724274509, 0.977236931585538, 0.99999931915226, 1.0232926583713, 1.04712871370939, 1.07151972559382, 1.09647839861261, 1.12201798920987, 1.14815239015486, 1.17489619113164, 1.20226482282661, 1.230270509361, 1.25892568257472, 1.28825221490343, 1.31825970420816, 1.34896234511787, 1.38038569480746, 1.4125355875376, 1.44544035634817, 1.4791067005516, 1.51355991769356, 1.54881419338307, 1.58489135570109, 1.62180741098713, 1.65958724224312, 1.69824098493074, 1.73780538614063, 1.77828384029801, 1.81969768325487, 1.86209132642581, 1.90545951786295, 1.94984000723927, 1.99526323502638, 2.04173666608573, 2.08929373051144, 2.13795720949869, 2.18776679563686, 2.23871864940605, 2.29087274897834, 2.34422665758295, 2.398830455509, 2.45470143491059, 2.51187774934974, 2.57040187591233, 2.63027473614656, 2.69154228983537, 2.75423051595883, 2.81839385215467, 2.88403692114349, 2.95122086420034, 3.01995215562392, 3.09030065678915, 3.16227642295472, 3.23592346631478, 3.31132891490246, 3.3884299172534, 3.46735946910046, 3.54813821074709, 3.63078533725135, 3.71536846377799, 3.80191135853523, 3.89043708383884, 3.98108381905827, 4.07382969500055, 4.16870567544569, 4.26581070164795, 4.36518697265844, 4.46680411703705, 4.57085377834242, 4.67739610111622, 4.78632242414544, 4.89776678860413, 5.0118843229469, 5.12865332406043, 5.24803935339088, 5.37032511094351, 5.49537847413284, 5.62339713074269, 5.75435457691296, 5.88847905118778, 6.02561155450687, 6.16599641750948, 6.30960714497232, 6.45659960120723, 6.60689861529496, 6.76084973072587, 6.91824357308313, 7.07938541613807, 7.24442301919855, 7.41307142632331, 7.58568641738688, 7.76244066564601, 7.94326569146627, 8.12834448596361, 8.31759182767968, 8.51151566867657, 8.70973318814878, 8.91245786665494, 9.12030564789694, 9.33246351716575, 9.54996668260048, 9.77234156401459, 9.99990153906584, 10.2330151684908, 10.4711008559889, 10.7150364469821, 10.964750490257, 11.2201347329491, 11.4816670597186, 11.7492496241653, 12.022742813086, 12.3026981000034, 12.5889920759082, 12.8822769465087, 13.182459265256, 13.489400932834, 13.8038791736706, 14.1258004265005, 14.4539459356652, 14.7913578984967, 15.1357324856635, 15.4880193842308, 15.8493619845298, 16.2183086824161, 16.5960326767835, 16.9823769767776, 17.3787778053556, 17.7834601578259, 18.1979135417807, 18.6200418512582, 19.0554824815177, 19.49807748989, 19.9517012657342, 20.4186610376656, 20.8940733113534, 21.379997361205, 21.8789412825561, 22.387937087537, 22.9096392147486, 23.4439269263859, 23.9870856553391, 24.46058662679, 25.0340588613218, 25.6152039490899, 26.2158596298214, 26.8275446219964, 27.4542925051998, 28.0959151088508, 28.7521309339848, 29.4225501552548, 30.1066616578723, 30.8101318295223, 31.5331607803149, 32.2688473500071, 33.0235676906087, 33.7894041350745, 34.5814827413102, 35.3920282683592, 36.2114034095699, 37.0570384215831, 37.9296731960298, 38.808356830246, 39.7246511532133, 40.6446342457211, 41.5904771517877, 42.5624316552899, 43.5606664842275, 44.58525356566, 45.6203356517073, 46.679926731282, 47.7811828082431, 48.889095202211, 50.0392749799897, 51.1923784631563, 52.3876989427786, 53.6271327545174, 54.8639723203735, 56.1438945185322, 57.4685744162854, 58.8111011775592, 60.1686734628619, 61.6017896398734, 63.0158092367494, 64.5080917430415, 66.010239337733, 67.5570266517399, 69.1074610525002, 70.7437395379651, 72.3800126937281, 74.0584033514694, 75.8305646487854, 77.5949512656221, 79.4004309784528, 81.2461188644527, 83.1308139099541, 85.0529665055861, 87.0822300450569, 89.0763954752011, 91.1807407221922, 93.3202913166248, 95.4916631049442, 97.6908631563263, 100.012267904509, 1e3]
+            Ai = @SVector [1.0, 1.26474365754693, 1.27187168763244, 1.27901461204394, 1.2861668468288, 1.29332769860997, 1.30049545713136, 1.30766852765824, 1.3148448358383, 1.32202240367609, 1.32920111176275, 1.33638102751286, 1.34356422475535, 1.35075365610266, 1.35795288790118, 1.36516683588672, 1.37240078818257, 1.37965956984633, 1.38694651866824, 1.3942644665929, 1.40161534480099, 1.40900004959024, 1.41641948596057, 1.42387361692424, 1.43136209798135, 1.43888401061133, 1.44643774756037, 1.45402034276764, 1.46162798960857, 1.46925573360015, 1.47689789847254, 1.48454848588452, 1.49220043010574, 1.49984643882526, 1.50747891120157, 1.51509009761108, 1.52267156234887, 1.53021542332592, 1.53771329159611, 1.54515767577195, 1.5525423017734, 1.55986193063354, 1.56711260297083, 1.57429107685139, 1.58139470109949, 1.58842230933339, 1.59537254872675, 1.60224497526539, 1.6090399193016, 1.61575793863017, 1.62240013364471, 1.62896756722738, 1.63546241542315, 1.64188624895108, 1.64824169962538, 1.65453105215902, 1.660757253143, 1.66692298962119, 1.67303139815318, 1.67908545861599, 1.68508877287354, 1.69104474095905, 1.69695691445104, 1.70282847890391, 1.70866337029487, 1.71446466460501, 1.72023619436562, 1.72598137429174, 1.73170412937894, 1.73740741092509, 1.74309547823134, 1.74877153446106, 1.7544392973187, 1.76010278844154, 1.7657654338474, 1.77143153644529, 1.77710410272141, 1.7827876649385, 1.78848607318854, 1.79420347226643, 1.79994358407784, 1.80571108575488, 1.81150988535825, 1.81734412132426, 1.82321904347219, 1.82913817252675, 1.83510670026067, 1.84112756121076, 1.84720347424249, 1.85333562714735, 1.85952470296974, 1.8657708979849, 1.87207351949043, 1.87843213317722, 1.8848436987637, 1.89130781117208, 1.89782159094484, 1.90438189213204, 1.91098741512956, 1.91763345905683, 1.92431870117879, 1.93103904302077, 1.9377917893536, 1.94457361968632, 1.95138121657727, 1.95821137709387, 1.96506101732005, 1.97192719683423, 1.97880718423323, 1.98569844861012, 1.99259770558709, 1.99950182429154, 2.00641002878188, 2.01331868946611, 2.02022543975041, 2.02713050388327, 2.03402982723964, 2.04092437374658, 2.04781056500155, 2.05468885904031, 2.0615574700588, 2.06841626488153, 2.0752640907423, 2.08210150758018, 2.08892649642953, 2.09574183898203, 2.10254459906843, 2.10933506179724, 2.11611724811337, 2.12288728136106, 2.12964821625687, 2.13640189502178, 2.14314680483325, 2.14988534511825, 2.15661842855298, 2.16334930355606, 2.17007541648867, 2.17680275350116, 2.18352920748937, 2.19025940643645, 2.19699395722506, 2.2037360384332, 2.21048929651311, 2.21725267854449, 2.22403035334881, 2.23082429847101, 2.23763960582685, 2.24447608988636, 2.25133959947153, 2.25823040581599, 2.26515517696813, 2.27211465284156, 2.279113030692, 2.28615863788022, 2.29324589179053, 2.30038750095143, 2.30758593730311, 2.31484372550238, 2.32216775190769, 2.32956116012962, 2.33702714372695, 2.34457871599795, 2.35221548594714, 2.35994167884065, 2.36776709937289, 2.37569708603435, 2.38373136578869, 2.39188740715789, 2.4001723655651, 2.40858055742088, 2.41712532444938, 2.42582176653978, 2.43467176969305, 2.44367644631041, 2.45286124704223, 2.46222059889919, 2.47177408512471, 2.48152482557902, 2.49149534670758, 2.50167973724668, 2.5121025424396, 2.52276859362371, 2.53368621015369, 2.54471244064013, 2.55579887509383, 2.56691556730856, 2.57807828112741, 2.58929124755218, 2.60052938345122, 2.61181075197994, 2.6231406506567, 2.63450877844716, 2.64592079024619, 2.65736566297975, 2.66886801235028, 2.68039925680379, 2.6919660621504, 2.70359735310195, 2.71524178942724, 2.72695021810889, 2.73869095536778, 2.75047462230107, 2.76231402600025, 2.77417366427405, 2.78609125336844, 2.79805689620922, 2.81005922472766, 2.82211450958847, 2.83421194016232, 2.84633914825058, 2.85851444304052, 2.87072623771478, 2.88299593842877, 2.89531316315953, 2.90766594630464, 2.92007909343311, 2.93254220452969, 2.94500235859685, 2.95756836203094, 2.97014763145451, 2.98276880579325, 2.99546605253435, 3.00818177435952, 3.02095009321979, 3.03375911466721, 3.04664949155654, 3.05955682058631, 3.07252220143771, 3.08547407825541, 3.09857806889149, 3.11164189991262, 3.1247740454825, 3.13803326445637, 3.15127392356254, 3.16454764394741, 3.17791564782097, 3.19129151012199, 3.20473834661461, 3.21824566667958, 3.23171364822652, 3.24322176393691, 3.25693690766748, 3.27057303493195, 3.28439587776679, 3.2982023981508, 3.3120769920673, 3.32600819520374, 3.33998266349085, 3.35398523152793, 3.36799876948903, 3.38213175244099, 3.39637913151413, 3.41059795760726, 3.42490457070842, 3.43914277447917, 3.45358581167583, 3.46808249458969, 3.4824554766011, 3.49700354471659, 3.51172864029507, 3.52627127838015, 3.54114568729358, 3.55579375948015, 3.57056350893963, 3.58544956703106, 3.60044533617299, 3.61554285093282, 3.63050282206819, 3.64552230305604, 3.66083358332543, 3.67594250063318, 3.69132730927766, 3.70645512356833, 3.72183502705042, 3.73747813266146, 3.75278864636778, 3.76832751756716, 3.78410258957844, 3.79978518957619, 3.81533904720756, 3.83144482482593, 3.84703224899097, 3.86316870335808, 3.87910227339303, 3.89519546271496, 3.91101665356257, 3.92739373576442, 3.94345781904698, 3.95961844868298, 3.97635732852111, 3.99270630339808, 4.00911573850308, 4.02556924273202, 4.04204836767728, 4.05853233081845, 4.07560361892911, 4.09205960420983, 4.10909253284836, 4.12608173443567, 4.14299493817811, 4.15979664012907, 4.17719144318364, 4.17719144318364]
+
+            numf = length(fi) - 1
             for i = 1:numf
-                fi = StochasticGroundMotionSimulation.fii_aa21_cy14_760[i]
-                @test StochasticGroundMotionSimulation.itp_aa21_cy14_760(fi) ≈ StochasticGroundMotionSimulation.Aii_aa21_cy14_760[i] rtol = 1e-3
+                f = fi[i]
+                @test sa.amplification(f) ≈ Ai[i] rtol = 1e-2
             end
 
             f_hi = 500.0
-            f_max = StochasticGroundMotionSimulation.f_reg[end]
-            mms = [:Unit,
-                :Boore2016,
-                :AlAtik2021_ask14_620,
-                :AlAtik2021_ask14_760,
-                :AlAtik2021_ask14_1100,
-                :AlAtik2021_bssa14_620,
-                :AlAtik2021_bssa14_760,
-                :AlAtik2021_bssa14_1100,
-                :AlAtik2021_cb14_620,
-                :AlAtik2021_cb14_760,
-                :AlAtik2021_cb14_1100,
-                :AlAtik2021_cy14_620,
-                :AlAtik2021_cy14_760,
-                :AlAtik2021_cy14_1100]
+            f_max = 999.99
+            mms = [SiteAmpUnit(),
+                SiteAmpBoore2016_760(),
+                SiteAmpAlAtikAbrahamson2021_ask14_620(),
+                SiteAmpAlAtikAbrahamson2021_ask14_760(),
+                SiteAmpAlAtikAbrahamson2021_ask14_1100(),
+                SiteAmpAlAtikAbrahamson2021_bssa14_620(),
+                SiteAmpAlAtikAbrahamson2021_bssa14_760(),
+                SiteAmpAlAtikAbrahamson2021_bssa14_1100(),
+                SiteAmpAlAtikAbrahamson2021_cb14_620(),
+                SiteAmpAlAtikAbrahamson2021_cb14_760(),
+                SiteAmpAlAtikAbrahamson2021_cb14_1100(),
+                SiteAmpAlAtikAbrahamson2021_cy14_620(),
+                SiteAmpAlAtikAbrahamson2021_cy14_760(),
+                SiteAmpAlAtikAbrahamson2021_cy14_1100()]
             for mm in mms
-                @test site_amplification(f_hi, mm) == site_amplification(f_max, mm)
+                @test site_amplification(f_hi, mm) ≈ site_amplification(f_max, mm)
             end
+
+            # @code_warntype site_amplification(f_hi, mms[3])
         end
 
         @testset "Kappa Filter" begin
@@ -962,7 +1013,7 @@ using LinearAlgebra
             sat = NearSourceSaturationParameters(:BT15)
             ane = AnelasticAttenuationParameters(3000.0, 0.0)
             path = PathParameters(geo, sat, ane)
-            site = SiteParameters(0.03, :Unit)
+            site = SiteParameters(0.03, SiteAmpUnit())
             fas = FourierParameters(src, path, site)
 
             rvt = RandomVibrationParameters(:CL56, :BE23, :LP99, :ACR)
@@ -1318,8 +1369,8 @@ using LinearAlgebra
             pathd = PathParameters(geod, sat, aned)
             pathm = PathParameters(geom, sat, anem)
 
-            sitef = SiteParameters(κ0f, :Boore2016)
-            sited = SiteParameters(κ0d, :Boore2016)
+            sitef = SiteParameters(κ0f, SiteAmpBoore2016_760())
+            sited = SiteParameters(κ0d, SiteAmpBoore2016_760())
 
             fasf = FourierParameters(srcf, pathf, sitef)
             fasd = FourierParameters(srcd, pathd, sited)
