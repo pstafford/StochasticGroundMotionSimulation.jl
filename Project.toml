@@ -17,6 +17,7 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
 Documenter = "1.0"
+StaticArrays = "1.9"
 FastGaussQuadrature = "0.5, 1.0"
 ForwardDiff = "0.10"
 Interpolations = "0.14, 0.15"
