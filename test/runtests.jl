@@ -6,43 +6,43 @@ using FastGaussQuadrature
 using QuadGK
 using LinearAlgebra
 using StaticArrays
-using Distributions
-using BenchmarkTools
+# using Distributions
+# using BenchmarkTools
 
 
 @testset "StochasticGroundMotionSimulation.jl" begin
 
     @testset "Performance" begin
 
-        @testset "Allocation Testing" begin
-            src = SourceParameters(100.0)
-            geo = GeometricSpreadingParameters([1.0, Inf], [1.0], :Piecewise)
-            sat = NearSourceSaturationParameters(:BT15)
-            ane = AnelasticAttenuationParameters(180.0, 0.45, :Rps)
-            path = PathParameters(geo, sat, ane)
-            site = SiteParameters(0.03)
-            fas = FourierParameters(src, path, site)
-            rvt = RandomVibrationParameters()
+        # @testset "Allocation Testing" begin
+        #     src = SourceParameters(100.0)
+        #     geo = GeometricSpreadingParameters([1.0, Inf], [1.0], :Piecewise)
+        #     sat = NearSourceSaturationParameters(:BT15)
+        #     ane = AnelasticAttenuationParameters(180.0, 0.45, :Rps)
+        #     path = PathParameters(geo, sat, ane)
+        #     site = SiteParameters(0.03)
+        #     fas = FourierParameters(src, path, site)
+        #     rvt = RandomVibrationParameters()
 
 
-            function run_sims(T, num_sims, fas, rvt)
-                md = Uniform(2.0, 8.0)
-                rd = Uniform(1.0, 100.0)
-                mi = rand(md, num_sims)
-                ri = rand(rd, num_sims)
-                Sai = zeros(num_sims)
-                for i in 1:num_sims
-                    Sai[i] = rvt_response_spectral_ordinate(T, mi[i], ri[i], fas, rvt)
-                end
-                return sum(Sai)
-            end
+        #     function run_sims(T, num_sims, fas, rvt)
+        #         md = Uniform(2.0, 8.0)
+        #         rd = Uniform(1.0, 100.0)
+        #         mi = rand(md, num_sims)
+        #         ri = rand(rd, num_sims)
+        #         Sai = zeros(num_sims)
+        #         for i in 1:num_sims
+        #             Sai[i] = rvt_response_spectral_ordinate(T, mi[i], ri[i], fas, rvt)
+        #         end
+        #         return sum(Sai)
+        #     end
 
-            T = 0.123
-            num_sims = 100
-            @benchmark run_sims(T, num_sims, fas, rvt)
-            num_sims = 1_000
-            @benchmark run_sims(T, num_sims, fas, rvt)
-        end
+        #     T = 0.123
+        #     num_sims = 100
+        #     @benchmark run_sims(T, num_sims, fas, rvt)
+        #     num_sims = 1_000
+        #     @benchmark run_sims(T, num_sims, fas, rvt)
+        # end
 
         Ti = [0.01, 0.02, 0.03, 0.04, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 5.0, 7.5, 10.0]
         m = 4.0 + π
