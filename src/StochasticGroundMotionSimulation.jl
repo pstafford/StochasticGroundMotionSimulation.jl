@@ -8,6 +8,7 @@ using ForwardDiff: Dual
 using QuadGK
 using FastGaussQuadrature
 using LinearAlgebra
+using StaticArrays
 
 
 export Oscillator,
@@ -18,7 +19,21 @@ export Oscillator,
 	AnelasticAttenuationParameters,
 	PathParameters,
 	SiteParameters,
-	RandomVibrationParameters,
+	SiteAmpUnit,
+    SiteAmpBoore2016_760,
+    SiteAmpAlAtikAbrahamson2021_ask14_620,
+    SiteAmpAlAtikAbrahamson2021_ask14_760,
+    SiteAmpAlAtikAbrahamson2021_ask14_1100,
+    SiteAmpAlAtikAbrahamson2021_bssa14_620,
+    SiteAmpAlAtikAbrahamson2021_bssa14_760,
+    SiteAmpAlAtikAbrahamson2021_bssa14_1100,
+    SiteAmpAlAtikAbrahamson2021_cb14_620,
+    SiteAmpAlAtikAbrahamson2021_cb14_760,
+    SiteAmpAlAtikAbrahamson2021_cb14_1100,
+    SiteAmpAlAtikAbrahamson2021_cy14_620,
+    SiteAmpAlAtikAbrahamson2021_cy14_760,
+    SiteAmpAlAtikAbrahamson2021_cy14_1100,
+    RandomVibrationParameters,
 	SpectralMoments,
 	create_spectral_moments,
     period,
@@ -56,6 +71,7 @@ export Oscillator,
 
 # Write your package code here.
 include("oscillator/PJSoscillator.jl")
+include("fourier/PJSsiteAmpStructs.jl")
 include("fourier/PJSfourierParameters.jl")
 include("rvt/PJSspectralMoments.jl")
 include("rvt/PJSrandomVibrationParameters.jl")
