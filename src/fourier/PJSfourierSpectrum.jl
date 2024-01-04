@@ -296,6 +296,8 @@ function fourier_spectrum(f::Vector{U}, m::S, r_ps::T, fas::FourierParameters) w
         fa, fb, ε = corner_frequency(m, fas)
         # geometric spreading
         Gr = geometric_spreading(r_ps, m, fas)
+        # site impedance
+        Sfi = site_amplification(f, fas)
         factor = 4π^2 * C * Mo * Gr / 100.0
         if fas.path.anelastic.rmetric == :Rrup
             r_rup = rupture_distance_from_equivalent_point_source_distance(r_ps, m, fas)
@@ -313,9 +315,9 @@ function fourier_spectrum(f::Vector{U}, m::S, r_ps::T, fas::FourierParameters) w
                 Kf = fourier_attenuation(fi, r_ps, fas)
             end
             # site impedance
-            Sf = site_amplification(fi, fas)
+            # Sf = site_amplification(fi, fas)
             # apply factor and convert to acceleration in appropriate units (m/s)
-            Af[i] = Ef * Kf * Sf * factor * fi^2
+            Af[i] = Ef * Kf * Sfi[i] * factor * fi^2
         end
         return Af
     end
@@ -360,6 +362,8 @@ function fourier_spectrum!(Af::Vector{U}, f::Vector{V}, m::S, r_ps::T, fas::Four
         fa, fb, ε = corner_frequency(m, fas)
         # geometric spreading
         Gr = geometric_spreading(r_ps, m, fas)
+        # site impedance
+        Sfi = site_amplification(f, fas)
         factor = 4π^2 * C * Mo * Gr / 100.0
         if fas.path.anelastic.rmetric == :Rrup
             r_rup = rupture_distance_from_equivalent_point_source_distance(r_ps, m, fas)
@@ -376,9 +380,9 @@ function fourier_spectrum!(Af::Vector{U}, f::Vector{V}, m::S, r_ps::T, fas::Four
                 Kf = fourier_attenuation(fi, r_ps, fas)
             end
             # site impedance
-            Sf = site_amplification(fi, fas)
+            # Sf = site_amplification(fi, fas)
             # apply factor and convert to acceleration in appropriate units (m/s)
-            Af[i] = Ef * Kf * Sf * factor * fi^2
+            Af[i] = Ef * Kf * Sfi[i] * factor * fi^2
         end
     end
     return nothing
@@ -412,6 +416,8 @@ function squared_fourier_spectrum!(Afsq::Vector{U}, f::Vector{V}, m::S, r_ps::T,
         fa, fb, ε = corner_frequency(m, fas)
         # geometric spreading
         Gr = geometric_spreading(r_ps, m, fas)
+        # site impedance
+        Sfi = site_amplification(f, fas)
         factor = (4π^2 * C * Mo * Gr / 100.0)^2
         if fas.path.anelastic.rmetric == :Rrup
             r_rup = rupture_distance_from_equivalent_point_source_distance(r_ps, m, fas)
@@ -428,9 +434,9 @@ function squared_fourier_spectrum!(Afsq::Vector{U}, f::Vector{V}, m::S, r_ps::T,
                 Kf = fourier_attenuation(fi, r_ps, fas)
             end
             # site impedance
-            Sf = site_amplification(fi, fas)
+            # Sf = site_amplification(fi, fas)
             # apply factor and convert to acceleration in appropriate units (m^2/s^2)
-            Afsq[i] = (Ef * Kf * Sf)^2 * factor * fi^4
+            Afsq[i] = (Ef * Kf * Sfi[i])^2 * factor * fi^4
         end
     end
     return nothing
