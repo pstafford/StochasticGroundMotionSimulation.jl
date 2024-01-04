@@ -1,6 +1,6 @@
 
 """
-	site_amplification(f::Real, amp_model::SiteAmplification)
+	site_amplification(f::T, amp_model::S; fmin=1e-3, fmax=999.99) where {T<:Real,S<:SiteAmplification}
 
 Computes the site amplification (impedance) for a given frequency `f`. The argument `amp_model` is a subtype of the abstract type `SiteAmplification`.
 
@@ -23,6 +23,28 @@ function site_amplification(f::T, amp_model::S; fmin=1e-3, fmax=999.99) where {T
         f = fmax
     end
     return amp_model.amplification(f)::T
+end
+
+"""
+	site_amplification(f::Vector{T}, amp_model::S; fmin=1e-3, fmax=999.99) where {T<:Real,S<:SiteAmplification}
+
+Computes the site amplification (impedance) for a given frequency `f`. The argument `amp_model` is a subtype of the abstract type `SiteAmplification`.
+
+# Examples
+```julia-repl
+	f = 5.0
+	# returns the amplification from AlAtik (2021) in both cases
+	Af = site_amplification(f)
+    Af = site_amplification(f, SiteAmpAlAtikAbrahamson2021_cy14_760())
+    # returns the Boore (2016) amplification
+	Af = site_amplification(f, SiteAmpBoore2016_760())
+	# returns 1.0
+	Af = site_amplification(f, SiteAmpUnit())
+```
+"""
+function site_amplification(f::Vector{T}, amp_model::S; fmin=1e-3, fmax=999.99) where {T<:Real,S<:SiteAmplification}
+    clamp!(f, fmin, fmax)
+    return amp_model.amplification.(f)::Vector{T}
 end
 
 
