@@ -319,36 +319,40 @@ function anelastic_attenuation(f::S, r::T, anelastic::AnelasticAttenuationParame
     Qfilt = oneunit(PT)
     jq = jη = 1
     kq = kη = 1
-    for i = 1:length(anelastic.Qfree)
-        @inbounds Rr0 = anelastic.Rrefi[i]
-        @inbounds Rr1 = anelastic.Rrefi[i+1]
-
-        Q0_r = oneunit(PT)
-        η_r = oneunit(PT)
+    nsegs = length(anelastic.Qfree)
+    @inbounds for i = 1:nsegs
+        Rr0 = anelastic.Rrefi[i]
+        Rr1 = anelastic.Rrefi[i+1]
         cQ_r = anelastic.cQ[i]
 
         # get the relevant constrained or free quality factor for this path segment
         if anelastic.Qfree[i] == 0
-            @inbounds Q0_r *= anelastic.Q0coni[jq]
+            Q0_r = anelastic.Q0coni[jq]
             jq += 1
         else
-            @inbounds Q0_r *= anelastic.Q0vari[kq]
+            Q0_r = anelastic.Q0vari[kq]
             kq += 1
         end
         # get the relevant constrained of free quality exponent for this path segment
         if anelastic.ηfree[i] == 0
-            @inbounds η_r *= anelastic.ηconi[jη]
+            η_r = anelastic.ηconi[jη]
             jη += 1
         else
-            @inbounds η_r *= anelastic.ηvari[kη]
+            η_r = anelastic.ηvari[kη]
             kη += 1
         end
 
+        if nsegs == 1
+            fpow = f^(1.0 - η_r)
+        else
+            # this avoids f^(1-η)
+            fpow = exp((1.0 - η_r) * log(f))
+        end
         if r < Rr1
-            Qfilt *= exp(-π * f^(1.0 - η_r) * (r - Rr0) / (Q0_r * cQ_r))
+            Qfilt *= exp(-π * fpow * (r - Rr0) / (Q0_r * cQ_r))
             return Qfilt
         else
-            Qfilt *= exp(-π * f^(1.0 - η_r) * (Rr1 - Rr0) / (Q0_r * cQ_r))
+            Qfilt *= exp(-π * fpow * (Rr1 - Rr0) / (Q0_r * cQ_r))
         end
     end
 end
@@ -356,6 +360,179 @@ end
 anelastic_attenuation(f, r, path::PathParameters) = anelastic_attenuation(f, r, path.anelastic)
 anelastic_attenuation(f, r, fas::FourierParameters) = anelastic_attenuation(f, r, fas.path)
 
+"""
+	anelastic_attenuation(f::Vector{S}, r::T, anelastic::AnelasticAttenuationParameters) where {S<:Float64,T<:Real}
+
+Anelastic attenuation filter, computed using equivalent point source distance metric or a standard rupture distance.
+"""
+function anelastic_attenuation(f::Vector{S}, r::T, anelastic::AnelasticAttenuationParameters) where {S<:Float64,T<:Real}
+    PT = promote_type(get_parametric_type(anelastic), T)
+    nf = length(f)
+    Qfilt = ones(PT, nf)
+    jq = jη = 1
+    kq = kη = 1
+    nsegs = length(anelastic.Qfree)
+    @inbounds for i = 1:nsegs
+        Rr0 = anelastic.Rrefi[i]
+        Rr1 = anelastic.Rrefi[i+1]
+        cQ_r = anelastic.cQ[i]
+
+        # get the relevant constrained or free quality factor for this path segment
+        if anelastic.Qfree[i] == 0
+            Q0_r = anelastic.Q0coni[jq]
+            jq += 1
+        else
+            Q0_r = anelastic.Q0vari[kq]
+            kq += 1
+        end
+        # get the relevant constrained of free quality exponent for this path segment
+        if anelastic.ηfree[i] == 0
+            η_r = anelastic.ηconi[jη]
+            jη += 1
+        else
+            η_r = anelastic.ηvari[kη]
+            kη += 1
+        end
+
+        if nsegs == 1
+            fpow = f .^ (1.0 - η_r)
+        else
+            # this avoids f^(1-η)
+            fpow = @. exp((1.0 - η_r) * log(f))
+        end
+        if r < Rr1
+            for i in 1:nf
+                Qfilt[i] *= exp(-π * fpow[i] * (r - Rr0) / (Q0_r * cQ_r))
+            end
+            return Qfilt
+        else
+            for i in 1:nf
+                Qfilt[i] *= exp(-π * fpow[i] * (Rr1 - Rr0) / (Q0_r * cQ_r))
+            end
+        end
+    end
+end
+
+"""
+	anelastic_attenuation!(Qfilt::Vector{U}, f::Vector{S}, r::T, anelastic::AnelasticAttenuationParameters) where {S<:Float64,T<:Real,U<:Real}
+
+Anelastic attenuation filter, computed using equivalent point source distance metric or a standard rupture distance.
+"""
+function anelastic_attenuation!(Qfilt::Vector{U}, f::Vector{S}, r::T, anelastic::AnelasticAttenuationParameters) where {S<:Float64,T<:Real,U<:Real}
+    length(Qfilt) == length(f) || error("length of frequency vector must match the filter vector length")
+    jq = jη = 1
+    kq = kη = 1
+    nsegs = length(anelastic.Qfree)
+    for i = 1:nsegs
+        @inbounds Rr0 = anelastic.Rrefi[i]
+        @inbounds Rr1 = anelastic.Rrefi[i+1]
+        @inbounds cQ_r = anelastic.cQ[i]
+
+        # get the relevant constrained or free quality factor for this path segment
+        if anelastic.Qfree[i] == 0
+            @inbounds Q0_r = anelastic.Q0coni[jq]
+            jq += 1
+        else
+            @inbounds Q0_r = anelastic.Q0vari[kq]
+            kq += 1
+        end
+        # get the relevant constrained of free quality exponent for this path segment
+        if anelastic.ηfree[i] == 0
+            @inbounds η_r = anelastic.ηconi[jη]
+            jη += 1
+        else
+            @inbounds η_r = anelastic.ηvari[kη]
+            kη += 1
+        end
+
+        if nsegs == 1
+            fpow = @. f^(1.0 - η_r)
+        else
+            # this avoids f^(1-η)
+            fpow = @. exp((1.0 - η_r) * log(f))
+        end
+        if r < Rr1
+            if i == 1
+                Qfilt .= @. exp(-π * fpow * (r - Rr0) / (Q0_r * cQ_r))
+            else
+                Qfilt .*= @. exp(-π * fpow * (r - Rr0) / (Q0_r * cQ_r))
+            end
+            return Qfilt
+        else
+            if i == 1
+                Qfilt .= @. exp(-π * fpow * (Rr1 - Rr0) / (Q0_r * cQ_r))
+            else
+                Qfilt .*= @. exp(-π * fpow * (Rr1 - Rr0) / (Q0_r * cQ_r))
+            end
+        end
+    end
+end
+
+"""
+	apply_anelastic_attenuation!(Af::Vector{T}, f::Vector{U}, r::V, anelastic::AnelasticAttenuationParameters) where {T<:Real,U<:Real,V<:Real}
+
+Apply an anelastic attenuation filter to a FAS, computed using equivalent point source distance metric or a standard rupture distance.
+"""
+function apply_anelastic_attenuation!(Af::Vector{T}, f::Vector{U}, r::V, anelastic::AnelasticAttenuationParameters) where {T<:Real,U<:Real,V<:Real}
+    numAf = length(Af)
+    numf = length(f)
+    numAf == numf || error("length of vector `f` must match the length of vector `Af`")
+    jq = jη = 1
+    kq = kη = 1
+    nsegs = length(anelastic.Qfree)
+    exp_arg = zeros(T, numf)
+    for i = 1:nsegs
+        @inbounds Rr0 = anelastic.Rrefi[i]
+        @inbounds Rr1 = anelastic.Rrefi[i+1]
+        @inbounds cQ_r = anelastic.cQ[i]
+
+        # get the relevant constrained or free quality factor for this path segment
+        @inbounds if anelastic.Qfree[i] == 0
+            @inbounds Q0_r = anelastic.Q0coni[jq]
+            jq += 1
+        else
+            @inbounds Q0_r = anelastic.Q0vari[kq]
+            kq += 1
+        end
+        # get the relevant constrained of free quality exponent for this path segment
+        @inbounds if anelastic.ηfree[i] == 0
+            @inbounds η_r = anelastic.ηconi[jη]
+            jη += 1
+        else
+            @inbounds η_r = anelastic.ηvari[kη]
+            kη += 1
+        end
+
+        if η_r ≈ 0.0
+            fpow = f
+        else
+            if nsegs == 1
+                fpow = @. f^(1.0 - η_r)
+            else
+                # this avoids f^(1-η)
+                fpow = @. exp((1.0 - η_r) * log(f))
+            end
+        end
+        if r < Rr1
+            rlim = r
+        else
+            rlim = Rr1
+        end
+        for (j, fp) in pairs(fpow)
+            @inbounds exp_arg[j] += -π * fp * (rlim - Rr0) / (Q0_r * cQ_r)
+        end
+        # for (j, fp) in pairs(fpow)
+        #     @inbounds Af[j] *= exp(-π * fp * (rlim - Rr0) / (Q0_r * cQ_r))
+        # end
+    end
+    for (i, ea) in pairs(exp_arg)
+        @inbounds Af[i] *= exp(ea)
+    end
+    return nothing
+end
+
+apply_anelastic_attenuation!(Af::Vector{T}, f::Vector{U}, r::V, path::PathParameters) where {T<:Real,U<:Real,V<:Real} = apply_anelastic_attenuation!(Af, f, r, path.anelastic)
+apply_anelastic_attenuation!(Af::Vector{T}, f::Vector{U}, r::V, fas::FourierParameters) where {T<:Real,U<:Real,V<:Real} = apply_anelastic_attenuation!(Af, f, r, fas.path)
 
 """
 	effective_quality_parameters(r::T, anelastic::AnelasticAttenuationParameters) where {T<:Real}
