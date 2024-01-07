@@ -1310,7 +1310,17 @@ using StaticArrays
 
         Afid = fourier_spectrum(fi, m, r_ps, fas)
         fourier_spectrum!(Afid, fi, m, r_ps, fas)
-        StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afid, fi, m, r_ps, fas)
+        StochasticGroundMotionSimulation.get_parametric_type(fas)
+        StochasticGroundMotionSimulation.get_parametric_type(fas.path.anelastic)
+
+        fi = exp.(range(log(1e-2), stop=log(1e2), length=1000))
+        Afid = fourier_spectrum(fi, m, r_ps, fas)
+        # @benchmark StochasticGroundMotionSimulation.fourier_spectrum!(Afid, fi, m, r_ps, fas)
+        # @benchmark StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afid, fi, m, r_ps, fas)
+        # @ballocated StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afid, fi, m, r_ps, fas)
+        # @profview @benchmark StochasticGroundMotionSimulation.fourier_spectrum!(Afid, fi, m, r_ps, fas)
+        # @profview @benchmark StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afid, fi, m, r_ps, fas)
+        # @benchmark Afsqid = StochasticGroundMotionSimulation.squared_fourier_spectrum(fi, m, r_ps, fas)
 
         # @code_warntype StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afif, fi, m, r_psf, fasf)
         # @code_warntype StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afid, fi, m, r_psf, fasd)
@@ -1638,7 +1648,17 @@ using StaticArrays
 
             sdof = Oscillator(1 / 3)
             smi = spectral_moments([0, 1, 2, 3, 4], m, r_psf, fasf, sdof)
+            # smai = spectral_moments_alt([0, 1, 2, 3, 4], m, r_psf, fasf, sdof)
             smigk = StochasticGroundMotionSimulation.spectral_moments_gk([0, 1, 2, 3, 4], m, r_psf, fasf, sdof)
+
+            # @code_warntype spectral_moments([0, 1, 2, 3, 4], m, r_psf, fasf, sdof)
+            # @code_warntype spectral_moments_alt([0, 1, 2, 3, 4], m, r_psf, fasf, sdof)
+
+            # @benchmark spectral_moments([0, 1, 2, 3, 4], m, r_psf, fasf, sdof)
+            # @benchmark spectral_moments_alt([0, 1, 2, 3, 4], m, r_psf, fasf, sdof)
+
+            # @benchmark spectral_moments([0, 1, 2, 3, 4], m, r_psf, fasf, sdof)
+            # @profview @benchmark spectral_moments_alt([0, 1, 2, 3, 4], m, r_psf, fasf, sdof)
 
             @test smi.m0 ≈ smigk.m0 rtol = 1e-3
             @test smi.m1 ≈ smigk.m1 rtol = 1e-3

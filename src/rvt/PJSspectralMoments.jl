@@ -99,58 +99,68 @@ The integration domain is partitioned over the `control_freqs` as well as two in
 
 See also: [`spectral_moment`](@ref), [`spectral_moments_gk`](@ref)
 """
-function spectral_moments(order::Vector{Int}, m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; nodes::Int=31, control_freqs::Vector{Float64}=[1e-3, 1e-1, 1.0, 10.0, 100.0, 300.0] ) where {S<:Real,T<:Real}
-	# pre-allocate for squared fourier amplitude spectrum
-	if S <: Dual
-		Af2 = Vector{S}(undef, nodes)
-		Hf2 = Vector{S}(undef, nodes)
-		int_sumi = zeros(S, length(order))
-	else
-		U = get_parametric_type(fas)
-		Af2 = Vector{U}(undef, nodes)
-		Hf2 = Vector{U}(undef, nodes)
-		int_sumi = zeros(U, length(order))
+function spectral_moments(order::Vector{Int}, m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; nodes::Int=31, control_freqs::Vector{Float64}=[1e-3, 1e-1, 1.0, 10.0, 100.0, 300.0]) where {S<:Real,T<:Real}
+    # partition the integration domain to make sure the integral captures the key change in the integrand
+    f_n = sdof.f_n
+    # note that we start slightly above zero to avoid a numerical issue with the frequency dependent Q(f) gradients
+    fidLO = findall(control_freqs .< f_n / 1.5)
+    fidHI = findall(control_freqs .> f_n * 1.5)
+    # perform the integration with a logarithmic transformation
+    lnflims = log.([control_freqs[fidLO]; f_n / 1.5; f_n * 1.5; control_freqs[fidHI]])
+	# number of frequency segments
+	num_freq_segs = length(lnflims) - 1
+
+    # compute the Gauss Legendre nodes and weights
+    xi, wi = gausslegendre(nodes)
+
+    # pre-allocate for squared fourier amplitude spectrum
+    if S <: Dual
+        Af2 = Vector{S}(undef, nodes * num_freq_segs)
+        Hf2 = Vector{S}(undef, nodes * num_freq_segs)
+        int_sumi = zeros(S, length(order))
+    else
+        U = get_parametric_type(fas)
+        Af2 = Vector{U}(undef, nodes * num_freq_segs)
+        Hf2 = Vector{U}(undef, nodes * num_freq_segs)
+        int_sumi = zeros(U, length(order))
+    end
+
+    # make sure the orders are listed as increasing for the following loop approach
+    sort!(order)
+    dorder = diff(order)
+
+	# generate a single set of frequencies and weights
+	dfaci = diff(lnflims) / 2
+	pfaci = (lnflims[1:(end-1)] .+ lnflims[2:end]) / 2
+	lnfii = zeros(nodes * num_freq_segs)
+    wii = zeros(nodes * num_freq_segs)
+	j = 1
+	for i in 1:num_freq_segs
+		k = j + nodes - 1
+		lnfii[j:k] .= @. dfaci[i] * xi + pfaci[i]
+		wii[j:k] .= @. dfaci[i] * wi
+		j = k + 1
 	end
-	# partition the integration domain to make sure the integral captures the key change in the integrand
-	f_n = sdof.f_n
- 	# note that we start slightly above zero to avoid a numerical issue with the frequency dependent Q(f) gradients
-	fidLO = findall(control_freqs .< f_n/1.5)
-	fidHI = findall(control_freqs .> f_n*1.5)
-	# perform the integration with a logarithmic transformation
-	lnflims = log.([ control_freqs[fidLO]; f_n/1.5; f_n*1.5; control_freqs[fidHI] ])
+	fi = exp.(lnfii)
+	# now populate FAS and transfer function for these frequencies
+    squared_transfer!(Hf2, fi, sdof)
+    squared_fourier_spectrum!(Af2, fi, m, r_ps, fas)
+    # compute default zeroth order integrand amplitude
+    # note that the integrand here is scaled by exp(lnfi)=fi for the logarithmic transformation of the integrand
+    Yf2 = @. Hf2 * Af2 * fi
 
-	# compute the Gauss Legendre nodes and weights
-	xi, wi = gausslegendre(nodes)
-
-	# make sure the orders are listed as increasing for the following loop approach
-	sort!(order)
-	dorder = diff(order)
-
-	for i in 2:lastindex(lnflims)
-		@inbounds dfac = (lnflims[i]-lnflims[i-1])/2
-		@inbounds pfac = (lnflims[i]+lnflims[i-1])/2
-		lnfi = @. dfac * xi + pfac
-		fi = exp.(lnfi)
-		squared_transfer!(Hf2, fi, sdof)
-		squared_fourier_spectrum!(Af2, fi, m, r_ps, fas)
-		# compute default zeroth order integrand amplitude
-		# note that the integrand here is scaled by exp(lnfi)=fi for the logarithmic transformation of the integrand
-		Yf2 = @. Hf2 * Af2 * fi
-
-		for (idx, o) in enumerate(order)
-			if idx == 1
-				Yf2 .*= (2π * fi).^o
-			else
-				@inbounds Yf2 .*= (2π * fi).^(dorder[idx-1])
-			end
-			# weighted combination of amplitudes with Gauss-Legendre weights
-			@inbounds int_sumi[idx] += dfac * dot( wi, Yf2 )
-		end
-	end
-    # return 2.0 * int_sumi
+    for (idx, o) in enumerate(order)
+        if idx == 1
+            Yf2 .*= (2π * fi) .^ o
+        else
+            @inbounds Yf2 .*= (2π * fi) .^ (dorder[idx-1])
+        end
+        # weighted combination of amplitudes with Gauss-Legendre weights
+        @inbounds int_sumi[idx] = dot(wii, Yf2)
+    end
+	# return the spectral moments in a named tuple using the `create_spectral_moments` function
     return create_spectral_moments(order, 2.0 * int_sumi)
 end
-
 
 
 @doc raw"""
