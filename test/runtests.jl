@@ -440,6 +440,13 @@ using StaticArrays
             StochasticGroundMotionSimulation.apply_anelastic_attenuation!(Aff, f, r, fasf)
             StochasticGroundMotionSimulation.apply_anelastic_attenuation!(Afd, f, r, fasd)
             @test Aff ≈ map(a -> a.value, Afd)
+
+            Qff = ones(nf)
+            Qfd = ones(eltype(qrd), nf)
+            StochasticGroundMotionSimulation.anelastic_attenuation!(Qff, f, r, anef)
+            StochasticGroundMotionSimulation.anelastic_attenuation!(Qfd, f, r, aned)
+            @test Qff ≈ map(a -> a.value, Qfd)
+
         end
 
         @testset "Anelastic Attenuation Segmentation" begin
@@ -502,6 +509,13 @@ using StaticArrays
             Kfc = ones(nf)
             StochasticGroundMotionSimulation.anelastic_attenuation!(Kfv, f_vec, 200.0, ane_vec)
             StochasticGroundMotionSimulation.anelastic_attenuation!(Kfc, f_vec, 200.0, ane_con)
+            @test Kfv ≈ Kfc
+            @test Kfv ≈ Afv
+
+            Kfv = anelastic_attenuation(f_vec, 200.0, ane_vecd)
+            Kfc = anelastic_attenuation(f_vec, 200.0, ane_cond)
+            StochasticGroundMotionSimulation.anelastic_attenuation!(Kfv, f_vec, 200.0, ane_vecd)
+            StochasticGroundMotionSimulation.anelastic_attenuation!(Kfc, f_vec, 200.0, ane_cond)
             @test Kfv ≈ Kfc
             @test Kfv ≈ Afv
 
@@ -1447,6 +1461,37 @@ using StaticArrays
         end
         @test all(isapprox.(Afid, Afim))
 
+        StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afif, fi, m, r_psf, fasf)
+        StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afid, fi, m, r_psf, fasd)
+        StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afim, fi, m, r_psd, fasm)
+        for i = 1:length(fi)
+            @test Afif[i] == Afid[i].value
+        end
+        @test all(isapprox.(Afid, Afim))
+
+
+        
+
+        anef = AnelasticAttenuationParameters(Q0f, ηf, :Rrup)
+        aned = AnelasticAttenuationParameters(Q0d, ηd, :Rrup)
+        anem = AnelasticAttenuationParameters(Q0f, ηd, :Rrup)
+
+        pathf = PathParameters(geof, sat, anef)
+        pathd = PathParameters(geod, sat, aned)
+        pathm = PathParameters(geom, sat, anem)
+
+        fasf = FourierParameters(srcf, pathf, sitef)
+        fasd = FourierParameters(srcd, pathd, sited)
+        fasm = FourierParameters(srcf, pathm, sited)
+
+        
+        r_psf = equivalent_point_source_distance(r, m, fasf)
+        r_psd = equivalent_point_source_distance(r, m, fasd)
+        r_psm = equivalent_point_source_distance(r, m, fasm)
+
+        Afif = fourier_spectrum(fi, m, r_psf, fasf)
+        Afid = fourier_spectrum(fi, m, r_psf, fasd)
+        Afim = fourier_spectrum(fi, m, r_psd, fasm)
         StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afif, fi, m, r_psf, fasf)
         StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afid, fi, m, r_psf, fasd)
         StochasticGroundMotionSimulation.squared_fourier_spectrum!(Afim, fi, m, r_psd, fasm)
