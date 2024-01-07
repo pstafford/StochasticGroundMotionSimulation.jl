@@ -1241,43 +1241,48 @@ using StaticArrays
 
         end
 
-        # @code_warntype fourier_source(f, m, srcf)
-        # @code_warntype fourier_source(f, m, srcd)
-        Afs = fourier_source(f, m, srcf)
-        Aff = fourier_source(f, m, fasf)
-        @test Afs == Aff
-        # @time fourier_source(f, m, srcd)
-        # @time fourier_source(f, m, fasd)
+        @testset "Fourier Source" begin
+            f = 0.001
+            # @code_warntype fourier_source(f, m, srcf)
+            # @code_warntype fourier_source(f, m, srcd)
+            Afs = fourier_source(f, m, srcf)
+            Aff = fourier_source(f, m, fasf)
+            @test Afs == Aff
+            # @time fourier_source(f, m, srcd)
+            # @time fourier_source(f, m, fasd)
+        end
 
-        f = 10.0
-        r = 100.0
-        m = 6.0
+        @testset "Fourier Path" begin
+            f = 10.0
+            r = 100.0
+            m = 6.0
 
-        ane = AnelasticAttenuationParameters(200.0, 0.5, :Rrup)
-        Pfr = fourier_path(f, r, m, geof, sat, ane)
-        path = PathParameters(geof, sat, ane)
-        Pfp = fourier_path(f, r, m, path)
-        fas = FourierParameters(SourceParameters(100.0), path)
-        Pff = fourier_path(f, r, m, fas)
-        @test Pfr == Pfp
-        @test Pfr == Pff
+            ane = AnelasticAttenuationParameters(200.0, 0.5, :Rrup)
+            Pfr = fourier_path(f, r, m, geof, sat, ane)
+            path = PathParameters(geof, sat, ane)
+            Pfp = fourier_path(f, r, m, path)
+            fas = FourierParameters(SourceParameters(100.0), path)
+            Pff = fourier_path(f, r, m, fas)
+            @test Pfr == Pfp
+            @test Pfr == Pff
 
 
-        # @code_warntype fourier_path(f, r, geof, anef)
-        # @code_warntype fourier_path(f, r, geod, aned)
-        # @code_warntype fourier_path(f, r, geom, anef)
-        # @code_warntype fourier_path(f, r, pathf)
-        # @code_warntype fourier_path(f, r, pathd)
-        # @code_warntype fourier_path(f, r, pathm)
-        # @code_warntype fourier_path(f, r, fasf)
-        # @code_warntype fourier_path(f, r, fasd)
-        # @code_warntype fourier_path(f, r, fasm)
+            # @code_warntype fourier_path(f, r, geof, anef)
+            # @code_warntype fourier_path(f, r, geod, aned)
+            # @code_warntype fourier_path(f, r, geom, anef)
+            # @code_warntype fourier_path(f, r, pathf)
+            # @code_warntype fourier_path(f, r, pathd)
+            # @code_warntype fourier_path(f, r, pathm)
+            # @code_warntype fourier_path(f, r, fasf)
+            # @code_warntype fourier_path(f, r, fasd)
+            # @code_warntype fourier_path(f, r, fasm)
 
-        Pf = fourier_path(f, r, fasf)
-        Pd = fourier_path(f, r, fasd)
-        Pm = fourier_path(f, r, fasm)
-        @test Pf == Pd.value
-        @test Pd == Pm
+            Pf = fourier_path(f, r, fasf)
+            Pd = fourier_path(f, r, fasd)
+            Pm = fourier_path(f, r, fasm)
+            @test Pf == Pd.value
+            @test Pd == Pm
+        end
 
 
         @testset "Fourier attenuation" begin
@@ -1320,23 +1325,30 @@ using StaticArrays
         end
 
 
-        # @code_warntype fourier_site(f, sitef)
-        # @code_warntype fourier_site(f, sited)
-        # @time fourier_site(f, sitef)
-        # @time fourier_site(f, sited)
+        @testset "Fourier site" begin
+            # @code_warntype fourier_site(f, sitef)
+            # @code_warntype fourier_site(f, sited)
+            # @time fourier_site(f, sitef)
+            # @time fourier_site(f, sited)
+            f = 0.5
 
-        Sf = fourier_site(f, fasf)
-        Sd = fourier_site(f, fasd)
-        Sm = fourier_site(f, fasm)
-        @test Sf == Sd.value
-        @test Sd == Sm
+            Sf = fourier_site(f, fasf)
+            Sd = fourier_site(f, fasd)
+            Sm = fourier_site(f, fasm)
+            @test Sf == Sd.value
+            @test Sd == Sm
+        end
 
-        f = 1.0
-        m = 6.0
-        r = 10.0
-        r_psf = equivalent_point_source_distance(r, m, fasf)
-        r_psd = equivalent_point_source_distance(r, m, fasd)
-        r_psm = equivalent_point_source_distance(r, m, fasm)
+        @testset "Point source distance" begin
+            f = 1.0
+            m = 6.0
+            r = 10.0
+            r_psf = equivalent_point_source_distance(r, m, fasf)
+            r_psd = equivalent_point_source_distance(r, m, fasd)
+            r_psm = equivalent_point_source_distance(r, m, fasm)
+            @test r_psf ≈ r_psd
+            @test r_psf ≈ r_psm
+        end
 
         # @code_warntype fourier_spectral_ordinate(f, m, r_psf, fasf)
         # @code_warntype fourier_spectral_ordinate(f, m, r_psd, fasd)
