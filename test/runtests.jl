@@ -424,7 +424,8 @@ using StaticArrays
             qrd = anelastic_attenuation(f, r, aned)
             @test qrf ≈ map(q -> q.value, qrd)
 
-            fas = FourierParameters(SourceParameters(100.0), pathf)
+            fasf = FourierParameters(SourceParameters(100.0), pathf)
+            fasd = FourierParameters(SourceParameters(100.0), pathd)
             q_r = anelastic_attenuation(f, r, fas)
             @test qrf ≈ q_r
 
@@ -1085,7 +1086,6 @@ using StaticArrays
     end
 
     @testset "Fourier" begin
-
         Δσf = 100.0
         γ1f = 1.0
         γ2f = 0.5
@@ -1234,15 +1234,16 @@ using StaticArrays
             Af = fourier_source_shape(f, fa, fb, ε, src)
             @test Af[1] ≈ 1.0 atol = 1e-3
 
-            fasf = FourierParameters(src, pathf, sitef)
-            fa, fb, ε = corner_frequency(m, fasf)
-            Af = fourier_source_shape(f, fa, fb, ε, fasf)
+            fasbf = FourierParameters(src, pathf, sitef)
+            fa, fb, ε = corner_frequency(m, fasbf)
+            Af = fourier_source_shape(f, fa, fb, ε, fasbf)
             @test Af[1] ≈ 1.0 atol = 1e-3
 
         end
 
         @testset "Fourier Source" begin
             f = 0.001
+            m = 6.0
             # @code_warntype fourier_source(f, m, srcf)
             # @code_warntype fourier_source(f, m, srcd)
             Afs = fourier_source(f, m, srcf)
@@ -1287,6 +1288,7 @@ using StaticArrays
 
         @testset "Fourier attenuation" begin
             f = 10.0
+            r = 200.0
             # @code_warntype fourier_attenuation(f, r, anef, sitef)
             # @code_warntype fourier_attenuation(f, r, aned, sited)
             # @code_warntype fourier_attenuation(f, r, anef, sited)
@@ -1353,6 +1355,13 @@ using StaticArrays
         # @code_warntype fourier_spectral_ordinate(f, m, r_psf, fasf)
         # @code_warntype fourier_spectral_ordinate(f, m, r_psd, fasd)
         # @code_warntype fourier_spectral_ordinate(f, m, r_psm, fasm)
+
+        f = 1.0
+        m = 6.0
+        r = 10.0
+        r_psf = equivalent_point_source_distance(r, m, fasf)
+        r_psd = equivalent_point_source_distance(r, m, fasd)
+        r_psm = equivalent_point_source_distance(r, m, fasm)
 
         Af = fourier_spectral_ordinate(f, m, r_psf, fasf)
         Ad = fourier_spectral_ordinate(f, m, r_psd, fasd)
