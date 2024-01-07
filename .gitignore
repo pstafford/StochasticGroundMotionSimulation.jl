@@ -5,3 +5,5 @@
 /test/scratch.jl
 Manifest.toml
 /docs/Manifest.toml
+gmt.history
+.vscode/*
