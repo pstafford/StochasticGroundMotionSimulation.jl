@@ -476,7 +476,37 @@ using StaticArrays
 
             ane_inf = AnelasticAttenuationParameters([0.0, 80.0, Inf], [Inf], [Dual{Float64}(200.0)], [0.0], [Dual{Float64}(0.5)], 3.5 * ones(2), BitVector([0, 1]), BitVector([0, 1]), :Rrup)
             @test anelastic_attenuation(5.0, 50.0, ane_inf) == 1.0
+
+            f_vec = [0.1, 1.0, 10.0, 100.0]
+            nf = length(f_vec)
+            q_vec = anelastic_attenuation(f_vec, 200.0, ane_vec)
+            q_con = anelastic_attenuation(f_vec, 200.0, ane_con)
+            @test q_vec ≈ q_con
+
+            Afv = ones(nf)
+            Afc = ones(nf)
+            ζ0f = 0.039
+            ηf = 0.75
+            site = SiteParameters(ζ0f, ηf)
+            StochasticGroundMotionSimulation.apply_fourier_path_and_site_attenuation!(Afv, f_vec, 200.0, ane_vec, site)
+            StochasticGroundMotionSimulation.apply_fourier_path_and_site_attenuation!(Afc, f_vec, 200.0, ane_con, site)
+            @test Afv ≈ Afc
+
+            Afv = ones(nf)
+            Afc = ones(nf)
+            StochasticGroundMotionSimulation.apply_anelastic_attenuation!(Afv, f_vec, 200.0, ane_vec)
+            StochasticGroundMotionSimulation.apply_anelastic_attenuation!(Afc, f_vec, 200.0, ane_con)
+            @test Afv ≈ Afc
+
+            Kfv = ones(nf)
+            Kfc = ones(nf)
+            StochasticGroundMotionSimulation.anelastic_attenuation!(Kfv, f_vec, 200.0, ane_vec)
+            StochasticGroundMotionSimulation.anelastic_attenuation!(Kfc, f_vec, 200.0, ane_con)
+            @test Kfv ≈ Kfc
+            @test Kfv ≈ Afv
+
         end
+
     end
 
     @testset "Site" begin
