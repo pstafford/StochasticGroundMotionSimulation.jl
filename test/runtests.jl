@@ -417,6 +417,28 @@ using StaticArrays
             fas = FourierParameters(SourceParameters(100.0), pathf)
             q_r = anelastic_attenuation(f, r, fas)
             @test qrf ≈ q_r
+
+            f = [0.01, 0.1, 1.0, 10.0, 100.0]
+            nf = length(f)
+            qrf = anelastic_attenuation(f, r, anef)
+            qrd = anelastic_attenuation(f, r, aned)
+            @test qrf ≈ map(q -> q.value, qrd)
+
+            fas = FourierParameters(SourceParameters(100.0), pathf)
+            q_r = anelastic_attenuation(f, r, fas)
+            @test qrf ≈ q_r
+
+            Aff = ones(eltype(qrf), nf)
+            Afd = ones(eltype(qrd), nf)
+            StochasticGroundMotionSimulation.apply_anelastic_attenuation!(Aff, f, r, anef)
+            StochasticGroundMotionSimulation.apply_anelastic_attenuation!(Afd, f, r, aned)
+            @test Aff ≈ map(a -> a.value, Afd)
+
+            Aff = ones(eltype(qrf), nf)
+            Afd = ones(eltype(qrd), nf)
+            StochasticGroundMotionSimulation.apply_anelastic_attenuation!(Aff, f, r, fasf)
+            StochasticGroundMotionSimulation.apply_anelastic_attenuation!(Afd, f, r, fasd)
+            @test Aff ≈ map(a -> a.value, Afd)
         end
 
         @testset "Anelastic Attenuation Segmentation" begin
@@ -636,6 +658,23 @@ using StaticArrays
             Kff = kappa_filter(f, siteAf)
             Kfd = kappa_filter(f, siteAd)
             @test Kff == Kfd.value
+
+            nf = 100
+            fi = exp.(range(log(1e-2), stop=log(1e2), length=nf))
+            Kf0fi = kappa_filter(fi, siteAf)
+            Kf0di = kappa_filter(fi, siteAd)
+            for i in 1:nf
+                @test Kf0fi[i] == Kf0di[i].value
+            end
+            
+            Affi = ones(eltype(Kf0fi), nf)
+            Afdi = ones(eltype(Kf0di), nf)
+            StochasticGroundMotionSimulation.apply_kappa_filter!(Affi, fi, siteAf)
+            StochasticGroundMotionSimulation.apply_kappa_filter!(Afdi, fi, siteAd)
+            for i in 1:nf
+                @test Affi[i] == Afdi[i].value
+            end
+
         end
 
         @testset "Zeta Filter" begin
@@ -648,8 +687,21 @@ using StaticArrays
             Kfd = kappa_filter(f, siteAzd)
             @test Kff == Kfd.value
 
-            # fi = [1.0, 5.0, 10.0, 15.0, 20.0, 30.0]
-            # [map(f -> kappa_filter(f, SiteParameters(0.04)), fi) map(f -> kappa_filter(f, SiteParameters(0.04, 0.1)), fi) ]
+            nf = 100
+            fi = exp.(range(log(1e-2), stop=log(1e2), length=nf))
+            Kf0fi = kappa_filter(fi, siteAzf)
+            Kf0di = kappa_filter(fi, siteAzd)
+            for i in 1:nf
+                @test Kf0fi[i] == Kf0di[i].value
+            end
+
+            Affi = ones(eltype(Kf0fi), nf)
+            Afdi = ones(eltype(Kf0di), nf)
+            StochasticGroundMotionSimulation.apply_kappa_filter!(Affi, fi, siteAzf)
+            StochasticGroundMotionSimulation.apply_kappa_filter!(Afdi, fi, siteAzd)
+            for i in 1:nf
+                @test Affi[i] == Afdi[i].value
+            end
 
         end
 
@@ -1091,48 +1143,103 @@ using StaticArrays
         Cffd = fourier_constant(fasd)
         @test Cfsd == Cffd
 
-        f = 0.001
-        m = 6.0
+        @testset "Fourier Source Shape" begin
+            f = 0.001
+            m = 6.0
 
-        # @code_warntype fourier_source_shape(f, m, srcf)
-        # @code_warntype fourier_source_shape(f, m, srcd)
-        Affs = fourier_source_shape(f, m, srcf)
-        Afff = fourier_source_shape(f, m, fasf)
-        Afds = fourier_source_shape(f, m, srcd)
-        Afdf = fourier_source_shape(f, m, fasd)
-        @test Affs == Afds.value
-        @test Afff == Afdf.value
-        @test Affs == Afff
-        @test Afds == Afdf
+            # @code_warntype fourier_source_shape(f, m, srcf)
+            # @code_warntype fourier_source_shape(f, m, srcd)
+            Affs = fourier_source_shape(f, m, srcf)
+            Afff = fourier_source_shape(f, m, fasf)
+            Afds = fourier_source_shape(f, m, srcd)
+            Afdf = fourier_source_shape(f, m, fasd)
+            @test Affs == Afds.value
+            @test Afff == Afdf.value
+            @test Affs == Afff
+            @test Afds == Afdf
 
-        @test Afff ≈ 1.0 atol = 1e-3
+            @test Afff ≈ 1.0 atol = 1e-3
 
-        fa, fb, ε = corner_frequency(m, srcf)
-        # @code_warntype fourier_source_shape(f, fa, fb, ε, srcf.model)
-        Afc = fourier_source_shape(f, fa, fb, ε, srcf)
-        @test Afc ≈ 1.0 atol = 1e-3
+            fa, fb, ε = corner_frequency(m, srcf)
+            # @code_warntype fourier_source_shape(f, fa, fb, ε, srcf.model)
+            Afc = fourier_source_shape(f, fa, fb, ε, srcf)
+            @test Afc ≈ 1.0 atol = 1e-3
 
-        fa, fb, ε = corner_frequency(m, srcd)
-        # @code_warntype fourier_source_shape(f, fa, fb, ε, srcd.model)
-        Afcd = fourier_source_shape(f, fa, fb, ε, srcd)
-        @test Afcd ≈ 1.0 atol = 1e-3
+            fa, fb, ε = corner_frequency(m, srcd)
+            # @code_warntype fourier_source_shape(f, fa, fb, ε, srcd.model)
+            Afcd = fourier_source_shape(f, fa, fb, ε, srcd)
+            @test Afcd ≈ 1.0 atol = 1e-3
 
-        src_a = SourceParameters(100.0, :Atkinson_Silva_2000)
-        Af_a = fourier_source_shape(f, m, src_a)
-        @test Af_a ≈ 1.0 atol = 1e-3
-        src_n = SourceParameters(100.0, :Null)
-        Af_n = fourier_source_shape(f, m, src_n)
-        src_b = SourceParameters(100.0)
-        Af_b = fourier_source_shape(f, m, src_b)
-        @test Af_n == Af_b
+            src_a = SourceParameters(100.0, :Atkinson_Silva_2000)
+            Af_a = fourier_source_shape(f, m, src_a)
+            @test Af_a ≈ 1.0 atol = 1e-3
+            src_n = SourceParameters(100.0, :Null)
+            Af_n = fourier_source_shape(f, m, src_n)
+            src_b = SourceParameters(100.0)
+            Af_b = fourier_source_shape(f, m, src_b)
+            @test Af_n == Af_b
 
-        fa, fb, ε = corner_frequency(m, src_a)
-        Af_a = fourier_source_shape(f, fa, fb, ε, src_a)
-        @test Af_a ≈ 1.0 atol = 1e-3
-        fa, fb, ε = corner_frequency(m, src_b)
-        Af_n = fourier_source_shape(f, fa, fb, ε, src_n)
-        @test Af_n ≈ Af_b
+            fa, fb, ε = corner_frequency(m, src_a)
+            Af_a = fourier_source_shape(f, fa, fb, ε, src_a)
+            @test Af_a ≈ 1.0 atol = 1e-3
+            fa, fb, ε = corner_frequency(m, src_b)
+            Af_n = fourier_source_shape(f, fa, fb, ε, src_n)
+            @test Af_n ≈ Af_b
 
+
+            f = [0.001, 0.01, 0.1, 1.0, 10.0, 100.0]
+            nf = length(f)
+
+            # @code_warntype fourier_source_shape(f, m, srcf)
+            # @code_warntype fourier_source_shape(f, m, srcd)
+            Affs = fourier_source_shape(f, m, srcf)
+            Afff = fourier_source_shape(f, m, fasf)
+            Afds = fourier_source_shape(f, m, srcd)
+            Afdf = fourier_source_shape(f, m, fasd)
+            for i in 1:nf
+                @test Affs[i] == Afds[i].value
+                @test Afff[i] == Afdf[i].value
+                @test Affs[i] == Afff[i]
+                @test Afds[i] == Afdf[i]
+            end
+
+            fa, fb, ε = corner_frequency(m, srcf)
+            # @code_warntype fourier_source_shape(f, fa, fb, ε, srcf.model)
+            Afc = fourier_source_shape(f, fa, fb, ε, srcf)
+            @test Afc[1] ≈ 1.0 atol = 1e-3
+
+            fa, fb, ε = corner_frequency(m, srcd)
+            # @code_warntype fourier_source_shape(f, fa, fb, ε, srcd.model)
+            Afcd = fourier_source_shape(f, fa, fb, ε, srcd)
+            @test Afcd[1] ≈ 1.0 atol = 1e-3
+
+            src_a = SourceParameters(100.0, :Atkinson_Silva_2000)
+            Af_a = fourier_source_shape(f, m, src_a)
+            @test Af_a[1] ≈ 1.0 atol = 1e-3
+            src_n = SourceParameters(100.0, :Null)
+            Af_n = fourier_source_shape(f, m, src_n)
+            src_b = SourceParameters(100.0)
+            Af_b = fourier_source_shape(f, m, src_b)
+            @test Af_n == Af_b
+
+            fa, fb, ε = corner_frequency(m, src_a)
+            Af_a = fourier_source_shape(f, fa, fb, ε, src_a)
+            @test Af_a[1] ≈ 1.0 atol = 1e-3
+            fa, fb, ε = corner_frequency(m, src_b)
+            Af_n = fourier_source_shape(f, fa, fb, ε, src_n)
+            @test Af_n ≈ Af_b
+
+            src = SourceParameters(100.0, :Beresnev_2019)
+            fa, fb, ε = corner_frequency(m, src)
+            Af = fourier_source_shape(f, fa, fb, ε, src)
+            @test Af[1] ≈ 1.0 atol = 1e-3
+
+            fasf = FourierParameters(src, pathf, sitef)
+            fa, fb, ε = corner_frequency(m, fasf)
+            Af = fourier_source_shape(f, fa, fb, ε, fasf)
+            @test Af[1] ≈ 1.0 atol = 1e-3
+
+        end
 
         # @code_warntype fourier_source(f, m, srcf)
         # @code_warntype fourier_source(f, m, srcd)
@@ -1173,24 +1280,45 @@ using StaticArrays
         @test Pd == Pm
 
 
-        f = 10.0
-        # @code_warntype fourier_attenuation(f, r, anef, sitef)
-        # @code_warntype fourier_attenuation(f, r, aned, sited)
-        # @code_warntype fourier_attenuation(f, r, anef, sited)
-        # @code_warntype fourier_attenuation(f, r, pathf, sitef)
-        # @code_warntype fourier_attenuation(f, r, pathd, sited)
-        # @code_warntype fourier_attenuation(f, r, pathm, sited)
-        # @code_warntype fourier_attenuation(f, r, fasf)
-        # @code_warntype fourier_attenuation(f, r, fasd)
-        # @code_warntype fourier_attenuation(f, r, fasm)
+        @testset "Fourier attenuation" begin
+            f = 10.0
+            # @code_warntype fourier_attenuation(f, r, anef, sitef)
+            # @code_warntype fourier_attenuation(f, r, aned, sited)
+            # @code_warntype fourier_attenuation(f, r, anef, sited)
+            # @code_warntype fourier_attenuation(f, r, pathf, sitef)
+            # @code_warntype fourier_attenuation(f, r, pathd, sited)
+            # @code_warntype fourier_attenuation(f, r, pathm, sited)
+            # @code_warntype fourier_attenuation(f, r, fasf)
+            # @code_warntype fourier_attenuation(f, r, fasd)
+            # @code_warntype fourier_attenuation(f, r, fasm)
 
-        Qf = fourier_attenuation(f, r, fasf)
-        Qd = fourier_attenuation(f, r, fasd)
-        Qm = fourier_attenuation(f, r, fasm)
-        @test Qf == Qd.value
-        @test Qd == Qm
+            Qf = fourier_attenuation(f, r, fasf)
+            Qd = fourier_attenuation(f, r, fasd)
+            Qm = fourier_attenuation(f, r, fasm)
+            @test Qf == Qd.value
+            @test Qd == Qm
 
-        @test fourier_attenuation(-1.0, r, fasf) == 1.0
+            @test fourier_attenuation(-1.0, r, fasf) == 1.0
+
+            f = [0.01, 0.1, 1.0, 10.0, 100.0]
+            nf = length(f)
+            Qf = fourier_attenuation(f, r, fasf)
+            Qd = fourier_attenuation(f, r, fasd)
+            Qm = fourier_attenuation(f, r, fasm)
+            @test Qf == map(q -> q.value, Qd)
+            @test Qd == Qm
+
+            Aff = ones(eltype(Qf), nf)
+            Afd = ones(eltype(Qd), nf)
+            Afm = ones(eltype(Qm), nf)
+            StochasticGroundMotionSimulation.apply_fourier_attenuation!(Aff, f, r, fasf)
+            StochasticGroundMotionSimulation.apply_fourier_attenuation!(Afd, f, r, fasd)
+            StochasticGroundMotionSimulation.apply_fourier_attenuation!(Afm, f, r, fasm)
+            @test Aff == map(a -> a.value, Afd)
+            @test Aff == map(a -> a.value, Afm)
+
+        end
+
 
         # @code_warntype fourier_site(f, sitef)
         # @code_warntype fourier_site(f, sited)

@@ -535,6 +535,9 @@ function apply_anelastic_attenuation!(Af::Vector{T}, f::Vector{U}, r::V, anelast
     return nothing
 end
 
+apply_anelastic_attenuation!(Af::Vector{T}, f::Vector{U}, r::V, path::PathParameters) where {T<:Real,U<:Real,V<:Real} = apply_anelastic_attenuation!(Af, f, r, path.anelastic)
+apply_anelastic_attenuation!(Af::Vector{T}, f::Vector{U}, r::V, fas::FourierParameters) where {T<:Real,U<:Real,V<:Real} = apply_anelastic_attenuation!(Af, f, r, fas.path)
+
 """
 	effective_quality_parameters(r::T, anelastic::AnelasticAttenuationParameters) where {T<:Real}
 
