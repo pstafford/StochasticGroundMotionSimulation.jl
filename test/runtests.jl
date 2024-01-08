@@ -2030,27 +2030,27 @@ using StaticArrays
             @test isnan(pf)
             pf = peak_factor(Dexf, m0d, rvt)
             @test isnan(pf)
-
-            m0f = spectral_moments([0, 1, 2, 3, 4], m, r_ps, fasf, sdof)
-            m0d = spectral_moments([0, 1, 2, 3, 4], Dual(m), r_ps, fasf, sdof)
-            pf = peak_factor(Dexf, m0f, rvt)
-            @test isnan(pf)
-            pf = peak_factor(Dexd, m0d, rvt)
-            @test isnan(pf)
-            pf = peak_factor(Dexf, m0d, rvt)
-            @test isnan(pf)
             rvt = RandomVibrationParameters(:CL56)
             pf = peak_factor(Dexf, m0f, rvt)
             @test isnan(pf)
             # @test pf ≈ peak_factor(m, r_ps, fasf, sdof, RandomVibrationParameters(:CL56))
 
+            m0f = spectral_moments([0, 1, 2, 3, 4], m, r_ps, fasf, sdof)
+            m0d = spectral_moments([0, 1, 2, 3, 4], Dual(m), r_ps, fasf, sdof)
+            pff = peak_factor(Dexf, m0f, rvt)
+            pfd = peak_factor(Dexd, m0d, rvt)
+            pfm = peak_factor(Dexf, m0d, rvt)
+            @test pff ≈ pfd.value
+            @test pff ≈ pfm.value
+
             pfi = StochasticGroundMotionSimulation.peak_factor_integrand_cl56(0.0, 10.0, 10.0)
             @test pfi ≈ 1.0
             pfi = StochasticGroundMotionSimulation.peak_factor_integrand_cl56(Inf, 10.0, 10.0)
             @test pfi ≈ 0.0
-            pfi = StochasticGroundMotionSimulation.peak_factor_integrand_cl56(0.0, 10.0, 10.0, nodes=50)
+
+            pfi = StochasticGroundMotionSimulation.peak_factor_integrand_cl56(0.0, 10.0, 10.0)
             @test pfi ≈ 1.0
-            pfi = StochasticGroundMotionSimulation.peak_factor_integrand_cl56(Inf, 10.0, 10.0, nodes=50)
+            pfi = StochasticGroundMotionSimulation.peak_factor_integrand_cl56(Inf, 10.0, 10.0)
             @test pfi ≈ 0.0
 
             pf0 = StochasticGroundMotionSimulation.peak_factor_cl56(10.0, 10.0)
