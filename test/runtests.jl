@@ -1848,6 +1848,13 @@ using StaticArrays
             @test m0f.m0 ≈ m0d.m0.value
             @test m0d.m0 ≈ m0m.m0
 
+            order = 0
+            m0f = spectral_moment(order, m, r_psf, fasf, sdof, nodes=50)
+            m0d = spectral_moment(order, m, r_psd, fasd, sdof, nodes=50)
+            m0m = spectral_moment(order, m, r_psm, fasm, sdof, nodes=50)
+            @test m0f.m0 ≈ m0d.m0.value
+            @test m0d.m0 ≈ m0m.m0
+
             # @code_warntype spectral_moment(order, m, r_psf, fasf, sdof)
             # @code_warntype spectral_moment(order, m, r_psd, fasd, sdof)
             # @code_warntype spectral_moment(order, m, r_psm, fasm, sdof)
@@ -1868,6 +1875,15 @@ using StaticArrays
             @test smi.m2 ≈ smigk.m2 rtol=1e-3
             @test smi.m3 ≈ smigk.m3 rtol=1e-3
             @test smi.m4 ≈ smigk.m4 rtol=1e-3
+
+            smi = spectral_moments([0, 1, 2, 3, 4], m, r_psf, fasf, sdof, nodes=50)
+            smigk = StochasticGroundMotionSimulation.spectral_moments_gk([0, 1, 2, 3, 4], m, r_psf, fasf, sdof)
+
+            @test smi.m0 ≈ smigk.m0 rtol = 1e-5
+            @test smi.m1 ≈ smigk.m1 rtol = 1e-5
+            @test smi.m2 ≈ smigk.m2 rtol = 1e-5
+            @test smi.m3 ≈ smigk.m3 rtol = 1e-5
+            @test smi.m4 ≈ smigk.m4 rtol = 1e-5
 
 
             sdof = Oscillator(1 / 3)
@@ -2014,6 +2030,15 @@ using StaticArrays
             @test isnan(pf)
             pf = peak_factor(Dexf, m0d, rvt)
             @test isnan(pf)
+
+            m0f = spectral_moments([0, 1, 2, 3, 4], m, r_ps, fasf, sdof)
+            m0d = spectral_moments([0, 1, 2, 3, 4], Dual(m), r_ps, fasf, sdof)
+            pf = peak_factor(Dexf, m0f, rvt)
+            @test isnan(pf)
+            pf = peak_factor(Dexd, m0d, rvt)
+            @test isnan(pf)
+            pf = peak_factor(Dexf, m0d, rvt)
+            @test isnan(pf)
             rvt = RandomVibrationParameters(:CL56)
             pf = peak_factor(Dexf, m0f, rvt)
             @test isnan(pf)
@@ -2022,6 +2047,10 @@ using StaticArrays
             pfi = StochasticGroundMotionSimulation.peak_factor_integrand_cl56(0.0, 10.0, 10.0)
             @test pfi ≈ 1.0
             pfi = StochasticGroundMotionSimulation.peak_factor_integrand_cl56(Inf, 10.0, 10.0)
+            @test pfi ≈ 0.0
+            pfi = StochasticGroundMotionSimulation.peak_factor_integrand_cl56(0.0, 10.0, 10.0, nodes=50)
+            @test pfi ≈ 1.0
+            pfi = StochasticGroundMotionSimulation.peak_factor_integrand_cl56(Inf, 10.0, 10.0, nodes=50)
             @test pfi ≈ 0.0
 
             pf0 = StochasticGroundMotionSimulation.peak_factor_cl56(10.0, 10.0)
