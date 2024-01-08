@@ -2057,6 +2057,14 @@ using StaticArrays
             pf1 = StochasticGroundMotionSimulation.peak_factor_cl56(10.0, 10.0, nodes=50)
             @test pf0 ≈ pf1 rtol=1e-7
 
+            pf2 = StochasticGroundMotionSimulation.peak_factor_cl56(10.0, m0f)
+            pf3 = StochasticGroundMotionSimulation.peak_factor_cl56(10.0, m0f, nodes=50)
+            @test pf2 ≈ pf3 rtol=1e-6
+
+            pf4 = StochasticGroundMotionSimulation.peak_factor_dk80(10.0, m0f)
+            pf5 = StochasticGroundMotionSimulation.peak_factor_dk80(10.0, m0f, nodes=50)
+            @test pf4 ≈ pf5 rtol = 1e-7
+
             rvt = RandomVibrationParameters(:DK80)
             @test rvt.dur_rms == :BT15
 
