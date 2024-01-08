@@ -43,7 +43,7 @@ The integration domain is partitioned over the `control_freqs` as well as two in
 
 See also: [`spectral_moments`](@ref)
 """
-function spectral_moment(order::Int, m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; nodes::Int=31, control_freqs::Vector{Float64}=[1e-3, 1e-1, 1.0, 10.0, 100.0, 300.0] ) where {S<:Real,T<:Real}
+function spectral_moment(order::Int, m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; glxi::Vector{Float64}=xn31i, glwi::Vector{Float64}=wn31i, nodes::Int = length(glxi), control_freqs::Vector{Float64}=[1e-3, 1e-1, 1.0, 10.0, 100.0, 300.0]) where {S<:Real,T<:Real}
 	# pre-allocate for squared fourier amplitude spectrum
 	if S <: Dual
 		Af2 = Vector{S}(undef, nodes)
@@ -64,19 +64,21 @@ function spectral_moment(order::Int, m::S, r_ps::T, fas::FourierParameters, sdof
 	lnflims = log.([ control_freqs[fidLO]; f_n/1.5; f_n*1.5; control_freqs[fidHI] ])
 
 	# compute the Gauss Legendre nodes and weights
-	xi, wi = gausslegendre(nodes)
+	if nodes != length(glxi)
+		glxi, glwi = gausslegendre(nodes)
+	end
 
 	for i in 2:lastindex(lnflims)
 		@inbounds dfac = (lnflims[i]-lnflims[i-1])/2
 		@inbounds pfac = (lnflims[i]+lnflims[i-1])/2
-		lnfi = @. dfac * xi + pfac
+		lnfi = @. dfac * glxi + pfac
 		fi = exp.(lnfi)
 		squared_transfer!(Hf2, fi, sdof)
 		squared_fourier_spectrum!(Af2, fi, m, r_ps, fas)
 		# note that the integrand here is scaled by exp(lnfi)=fi for the logarithmic transformation of the integrand
 		Yf2 = @. (2π * fi)^order * Hf2 * Af2 * fi
 		# weighted combination of amplitudes with Gauss-Legendre weights
-		int_sum += dfac * dot( wi, Yf2 )
+		int_sum += dfac * dot( glwi, Yf2 )
 	end
     # return 2.0 * int_sum
 	return create_spectral_moments([order], [2.0 * int_sum])
@@ -84,7 +86,7 @@ end
 
 
 @doc raw"""
-	spectral_moments(order::Vector{Int}, m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; nodes::Int=31, control_freqs::Vector{Float64}=[1e-3, 1e-1, 1.0, 10.0, 100.0, 300.0] ) where {S<:Real,T<:Real}
+	spectral_moments(order::Vector{Int}, m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; glxi::Vector{Float64}=xn31i, glwi::Vector{Float64}=wn31i, nodes::Int=length(glxi), control_freqs::Vector{Float64}=[1e-3, 1e-1, 1.0, 10.0, 100.0, 300.0] ) where {S<:Real,T<:Real}
 
 Compute a vector of spectral moments for the specified `order`.
 
@@ -99,7 +101,7 @@ The integration domain is partitioned over the `control_freqs` as well as two in
 
 See also: [`spectral_moment`](@ref), [`spectral_moments_gk`](@ref)
 """
-function spectral_moments(order::Vector{Int}, m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; nodes::Int=31, control_freqs::Vector{Float64}=[1e-3, 1e-1, 1.0, 10.0, 100.0, 300.0]) where {S<:Real,T<:Real}
+function spectral_moments(order::Vector{Int}, m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; glxi::Vector{Float64}=xn31i, glwi::Vector{Float64}=wn31i, nodes::Int=length(glxi), control_freqs::Vector{Float64}=[1e-3, 1e-1, 1.0, 10.0, 100.0, 300.0]) where {S<:Real,T<:Real}
     # partition the integration domain to make sure the integral captures the key change in the integrand
     f_n = sdof.f_n
     # note that we start slightly above zero to avoid a numerical issue with the frequency dependent Q(f) gradients
@@ -111,7 +113,9 @@ function spectral_moments(order::Vector{Int}, m::S, r_ps::T, fas::FourierParamet
 	num_freq_segs = length(lnflims) - 1
 
     # compute the Gauss Legendre nodes and weights
-    xi, wi = gausslegendre(nodes)
+    if nodes != length(glxi)
+        glxi, glwi = gausslegendre(nodes)
+    end
 
     # pre-allocate for squared fourier amplitude spectrum
     if S <: Dual
@@ -137,8 +141,8 @@ function spectral_moments(order::Vector{Int}, m::S, r_ps::T, fas::FourierParamet
 	j = 1
 	for i in 1:num_freq_segs
 		k = j + nodes - 1
-		lnfii[j:k] .= @. dfaci[i] * xi + pfaci[i]
-		wii[j:k] .= @. dfaci[i] * wi
+		lnfii[j:k] .= @. dfaci[i] * glxi + pfaci[i]
+		wii[j:k] .= @. dfaci[i] * glwi
 		j = k + 1
 	end
 	fi = exp.(lnfii)

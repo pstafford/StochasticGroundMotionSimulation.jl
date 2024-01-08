@@ -3,4 +3,7 @@
 *.jl.mem
 /docs/build/
 /test/scratch.jl
-Manifest.jl
+Manifest.toml
+/docs/Manifest.toml
+gmt.history
+.vscode/*

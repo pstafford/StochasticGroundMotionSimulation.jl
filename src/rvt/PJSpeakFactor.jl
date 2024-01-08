@@ -1,6 +1,6 @@
 
 @doc raw"""
-	peak_factor_cl56(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; nodes::Int=35) where {S<:Real,T<:Real}
+	peak_factor_cl56(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; glxi::Vector{Float64}=xn31i, glwi::Vector{Float64}=wn31i, nodes::Int=length(glxi)) where {S<:Real,T<:Real}
 
 Peak factor computed using the Cartwright and Longuet-Higgins (1956) formulation.
 
@@ -14,7 +14,7 @@ The integral is evaluated using Gauss-Legendre integration -- and is suitable fo
 
 See also: [`peak_factor`](@ref), [`peak_factor_dk80`](@ref)
 """
-function peak_factor_cl56(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; nodes::Int=35) where {S<:Real,T<:Real}
+function peak_factor_cl56(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; glxi::Vector{Float64}=xn31i, glwi::Vector{Float64}=wn31i, nodes::Int=length(glxi)) where {S<:Real,T<:Real}
 	# get the numbers of zero crossing and extrema
 	rvt = RandomVibrationParameters(:CL56)
 	n_z, n_e = zeros_extrema_numbers(m, r_ps, fas, sdof, rvt)
@@ -22,7 +22,9 @@ function peak_factor_cl56(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillato
 	ξ = n_z / n_e
 
 	# compute the Gauss Legendre nodes and weights
-	xi, wi = gausslegendre(nodes)
+    if nodes != length(glxi)
+        glxi, glwi = gausslegendre(nodes)
+    end
 
 	z_min = 0.0
 	z_max = 8.0
@@ -30,19 +32,19 @@ function peak_factor_cl56(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillato
 	pfac = (z_max+z_min)/2
 
 	# scale the nodes to the appropriate range
-	zi = @. dfac * xi + pfac
+	zi = @. dfac * glxi + pfac
 
 	# define the integrand
 	integrand(z) = 1.0 - (1.0 - ξ*exp(-z^2))^n_e
 
-	int_sum = dfac * dot( wi, integrand.(zi) )
+	int_sum = dfac * dot( glwi, integrand.(zi) )
 
 	return sqrt(2.0) * int_sum
 end
 
 
 @doc raw"""
-	peak_factor_cl56(Dex::U, mi::SpectralMoments; nodes::Int=35) where {U<:Real}
+	peak_factor_cl56(Dex::U, mi::SpectralMoments; glxi::Vector{Float64}=xn31i, glwi::Vector{Float64}=wn31i, nodes::Int=length(glxi)) where {U<:Real}
 
 Peak factor computed using the Cartwright and Longuet-Higgins (1956) formulation, using pre-computed `Dex` and `m0` values.
 
@@ -56,7 +58,7 @@ The integral is evaluated using Gauss-Legendre integration -- and is suitable fo
 
 See also: [`peak_factor`](@ref), [`peak_factor_dk80`](@ref)
 """
-function peak_factor_cl56(Dex::U, mi::SpectralMoments; nodes::Int=35) where {U<:Real}
+function peak_factor_cl56(Dex::U, mi::SpectralMoments; glxi::Vector{Float64}=xn31i, glwi::Vector{Float64}=wn31i, nodes::Int=length(glxi)) where {U<:Real}
 	# get all necessary spectral moments
 	m0 = mi.m0
 	m2 = mi.m2
@@ -68,7 +70,9 @@ function peak_factor_cl56(Dex::U, mi::SpectralMoments; nodes::Int=35) where {U<:
 	ξ = n_z / n_e
 
 	# compute the Gauss Legendre nodes and weights
-	xi, wi = gausslegendre(nodes)
+    if nodes != length(glxi)
+        glxi, glwi = gausslegendre(nodes)
+    end
 
 	z_min = 0.0
 	z_max = 8.0
@@ -76,19 +80,19 @@ function peak_factor_cl56(Dex::U, mi::SpectralMoments; nodes::Int=35) where {U<:
 	pfac = (z_max+z_min)/2
 
 	# scale the nodes to the appropriate range
-	zi = @. dfac * xi + pfac
+	zi = @. dfac * glxi + pfac
 
 	# define the integrand
 	integrand(z) = 1.0 - (1.0 - ξ*exp(-z^2))^n_e
 
-	int_sum = dfac * dot( wi, integrand.(zi) )
+	int_sum = dfac * dot( glwi, integrand.(zi) )
 
 	return sqrt(2.0) * int_sum
 end
 
 
 @doc raw"""
-	peak_factor_cl56(n_z::T, n_e::T; nodes::Int=35) where T<:Real
+	peak_factor_cl56(n_z::T, n_e::T; glxi::Vector{Float64}=xn31i, glwi::Vector{Float64}=wn31i, nodes::Int=length(glxi)) where T<:Real
 
 Peak factor computed using the Cartwright and Longuet-Higgins (1956) formulation, using pre-computed `n_z` and `n_e` values.
 
@@ -102,12 +106,14 @@ The integral is evaluated using Gauss-Legendre integration -- and is suitable fo
 
 See also: [`peak_factor`](@ref), [`peak_factor_dk80`](@ref)
 """
-function peak_factor_cl56(n_z::T, n_e::T; nodes::Int=35) where T<:Real
+function peak_factor_cl56(n_z::T, n_e::T; glxi::Vector{Float64}=xn31i, glwi::Vector{Float64}=wn31i, nodes::Int=length(glxi)) where T<:Real
 	# get the ratio of zero crossings to extrema
 	ξ = n_z / n_e
 
 	# compute the Gauss Legendre nodes and weights
-	xi, wi = gausslegendre(nodes)
+    if nodes != length(glxi)
+        glxi, glwi = gausslegendre(nodes)
+    end
 
 	z_min = 0.0
 	z_max = 8.0
@@ -115,12 +121,12 @@ function peak_factor_cl56(n_z::T, n_e::T; nodes::Int=35) where T<:Real
 	pfac = (z_max+z_min)/2
 
 	# scale the nodes to the appropriate range
-	zi = @. dfac * xi + pfac
+	zi = @. dfac * glxi + pfac
 
 	# define the integrand
 	integrand(z) = 1.0 - (1.0 - ξ*exp(-z^2))^n_e
 
-	int_sum = dfac * dot( wi, integrand.(zi) )
+	int_sum = dfac * dot( glwi, integrand.(zi) )
 
 	pf = sqrt(2.0) * int_sum
 	return pf
@@ -197,7 +203,7 @@ end
 
 
 @doc raw"""
-	peak_factor_dk80(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; nodes::Int=30) where {S<:Real,T<:Real}
+	peak_factor_dk80(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; glxi::Vector{Float64}=xn31i, glwi::Vector{Float64}=wn31i, nodes::Int=length(glxi)) where {S<:Real,T<:Real}
 
 Peak factor computed using the Der Kiureghian (1980)/Vanmarcke (1975) formulation.
 
@@ -219,7 +225,7 @@ The integral is evaluated using Gauss-Legendre integration -- and is suitable fo
 
 See also: [`peak_factor`](@ref), [`peak_factor_cl56`](@ref)
 """
-function peak_factor_dk80(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; nodes::Int=30) where {S<:Real,T<:Real}
+function peak_factor_dk80(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; glxi::Vector{Float64}=xn31i, glwi::Vector{Float64}=wn31i, nodes::Int=length(glxi)) where {S<:Real,T<:Real}
 	# compute first three spectral moments
 	mi = spectral_moments([0, 1, 2], m, r_ps, fas, sdof)
 	m0 = mi.m0
@@ -236,7 +242,9 @@ function peak_factor_dk80(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillato
 	n_z = Dex * sqrt( m2/m0 ) / π
 
 	# compute the Gauss Legendre nodes and weights
-	xi, wi = gausslegendre(nodes)
+    if nodes != length(glxi)
+        glxi, glwi = gausslegendre(nodes)
+    end
 
 	z_min = 0.0
 	z_max = 6.0
@@ -244,16 +252,16 @@ function peak_factor_dk80(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillato
 	pfac = (z_max+z_min)/2
 
 	# scale the nodes to the appropriate range
-	zi = @. dfac * xi + pfac
+	zi = @. dfac * glxi + pfac
 	# evaluate integrand
 	yy = vanmarcke_ccdf.(zi, n_z, δeff)
 
-	return dfac * dot( wi, yy )
+	return dfac * dot( glwi, yy )
 end
 
 
 @doc raw"""
-	peak_factor_dk80(Dex::U, mi::SpectralMoments; nodes::Int=30) where {U<:Real}
+	peak_factor_dk80(Dex::U, mi::SpectralMoments; glxi::Vector{Float64}=xn31i, glwi::Vector{Float64}=wn31i, nodes::Int=length(glxi)) where {U<:Real}
 
 Peak factor computed using the Der Kiureghian (1980)/Vanmarcke (1975) formulation, using precomputed `Dex` and `m0`.
 
@@ -275,7 +283,7 @@ The integral is evaluated using Gauss-Legendre integration -- and is suitable fo
 
 See also: [`peak_factor`](@ref), [`peak_factor_cl56`](@ref)
 """
-function peak_factor_dk80(Dex::U, mi::SpectralMoments; nodes::Int=30) where {U<:Real}
+function peak_factor_dk80(Dex::U, mi::SpectralMoments; glxi::Vector{Float64}=xn31i, glwi::Vector{Float64}=wn31i, nodes::Int=length(glxi)) where {U<:Real}
 	# compute first three spectral moments
 	m0 = mi.m0
 	m1 = mi.m1
@@ -289,7 +297,9 @@ function peak_factor_dk80(Dex::U, mi::SpectralMoments; nodes::Int=30) where {U<:
 	n_z = Dex * sqrt( m2/m0 ) / π
 
 	# compute the Gauss Legendre nodes and weights
-	xi, wi = gausslegendre(nodes)
+    if nodes != length(glxi)
+        glxi, glwi = gausslegendre(nodes)
+    end
 
 	z_min = 0.0
 	z_max = 6.0
@@ -297,11 +307,11 @@ function peak_factor_dk80(Dex::U, mi::SpectralMoments; nodes::Int=30) where {U<:
 	pfac = (z_max+z_min)/2
 
 	# scale the nodes to the appropriate range
-	zi = @. dfac * xi + pfac
+	zi = @. dfac * glxi + pfac
 	# evaluate integrand
 	yy = vanmarcke_ccdf.(zi, n_z, δeff)
 
-	return dfac * dot( wi, yy )
+	return dfac * dot( glwi, yy )
 end
 
 
@@ -354,7 +364,7 @@ end
 
 
 @doc raw"""
-	peak_factor(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator; rvt::RandomVibrationParameters) where {S<:Real,T<:Real}
+	peak_factor(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator, rvt::RandomVibrationParameters; glxi::Vector{Float64}=xn31i, glwi::Vector{Float64}=wn31i, nodes::Int=length(glxi)) where {S<:Real,T<:Real}
 
 Peak factor ``u_{max} / u_{rms}`` with a switch of `pf_method` to determine the approach adopted.
 `rvt.pf_method` can currently be one of:
@@ -363,11 +373,11 @@ Peak factor ``u_{max} / u_{rms}`` with a switch of `pf_method` to determine the 
 
 Defaults to `:DK80`.
 """
-function peak_factor(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator, rvt::RandomVibrationParameters) where {S<:Real,T<:Real}
+function peak_factor(m::S, r_ps::T, fas::FourierParameters, sdof::Oscillator, rvt::RandomVibrationParameters; glxi::Vector{Float64}=xn31i, glwi::Vector{Float64}=wn31i) where {S<:Real,T<:Real}
 	if rvt.pf_method == :CL56
-		return peak_factor_cl56(m, r_ps, fas, sdof)
+		return peak_factor_cl56(m, r_ps, fas, sdof, glxi=glxi, glwi=glwi)
 	elseif rvt.pf_method == :DK80
-		return peak_factor_dk80(m, r_ps, fas, sdof)
+		return peak_factor_dk80(m, r_ps, fas, sdof, glxi=glxi, glwi=glwi)
 	else
 		U = get_parametric_type(fas)
 		return U(NaN)
@@ -376,7 +386,7 @@ end
 
 
 """
-	peak_factor(Dex::U, m0::V, rvt::RandomVibrationParameters) where {U<:Real}
+	peak_factor(Dex::U, m0::V, rvt::RandomVibrationParameters; glxi::Vector{Float64}=xn31i, glwi::Vector{Float64}=wn31i, nodes::Int=length(glxi)) where {U<:Real}
 
 Peak factor u_max / u_rms with a switch of `pf_method` to determine the approach adopted.
 `pf_method` can currently be one of:
@@ -385,11 +395,11 @@ Peak factor u_max / u_rms with a switch of `pf_method` to determine the approach
 
 Defaults to `:DK80`.
 """
-function peak_factor(Dex::U, mi::SpectralMoments, rvt::RandomVibrationParameters) where {U<:Real}
+function peak_factor(Dex::U, mi::SpectralMoments, rvt::RandomVibrationParameters; glxi::Vector{Float64}=xn31i, glwi::Vector{Float64}=wn31i) where {U<:Real}
 	if rvt.pf_method == :CL56
-		return peak_factor_cl56(Dex, mi)
+		return peak_factor_cl56(Dex, mi, glxi=glxi, glwi=glwi)
 	elseif rvt.pf_method == :DK80
-		return peak_factor_dk80(Dex, mi)
+		return peak_factor_dk80(Dex, mi, glxi=glxi, glwi=glwi)
 	else
 		return U(NaN)
 	end
