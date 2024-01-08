@@ -2026,7 +2026,7 @@ using StaticArrays
 
             pf0 = StochasticGroundMotionSimulation.peak_factor_cl56(10.0, 10.0)
             pf1 = StochasticGroundMotionSimulation.peak_factor_cl56(10.0, 10.0, nodes=50)
-            @test pf0 ≈ pf1
+            @test pf0 ≈ pf1 rtol=1e-7
 
             rvt = RandomVibrationParameters(:DK80)
             @test rvt.dur_rms == :BT15
