@@ -50,6 +50,20 @@ struct SiteAmpUnit <: SiteAmplification
     end
 end
 
+"""
+    struct SiteAmpConstant <: SiteAmplification
+
+Constant amplification function
+"""
+struct SiteAmpConstant <: SiteAmplification
+    constant::Real
+    amplification::Function
+
+    function SiteAmpConstant(constant::T) where {T<:Real}
+        new(constant, (f) -> constant * oneunit(typeof(f)))
+    end
+end
+
 
 """
     struct SiteAmpBoore2016_760 <: SiteAmplification
