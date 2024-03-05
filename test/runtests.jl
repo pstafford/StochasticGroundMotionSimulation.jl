@@ -534,6 +534,7 @@ using StaticArrays
 
         @testset "Site Constructors" begin
             @test typeof(SiteAmpUnit()) <: StochasticGroundMotionSimulation.SiteAmplification
+            @test typeof(SiteAmpConstant(2.0)) <: StochasticGroundMotionSimulation.SiteAmplification
             @test typeof(SiteAmpBoore2016_760()) <: StochasticGroundMotionSimulation.SiteAmplification
             @test typeof(SiteAmpAlAtikAbrahamson2021_ask14_620()) <: StochasticGroundMotionSimulation.SiteAmplification
             @test typeof(SiteAmpAlAtikAbrahamson2021_ask14_760()) <: StochasticGroundMotionSimulation.SiteAmplification
@@ -553,6 +554,7 @@ using StaticArrays
             @test typeof(SiteParameters(κ0f, SiteAmpAlAtikAbrahamson2021_cy14_760())) <: SiteParameters
             @test typeof(SiteParameters(κ0f, SiteAmpBoore2016_760())) <: SiteParameters
             @test typeof(SiteParameters(κ0f, SiteAmpUnit())) <: SiteParameters
+            @test typeof(SiteParameters(κ0f, SiteAmpConstant(2.0))) <: SiteParameters
 
             @test typeof(SiteParameters(κ0d)) <: SiteParameters
             @test typeof(SiteParameters(κ0d, SiteAmpAlAtikAbrahamson2021_cy14_760())) <: SiteParameters
@@ -574,11 +576,13 @@ using StaticArrays
         siteAf = SiteParameters(κ0f, SiteAmpAlAtikAbrahamson2021_cy14_760())
         siteBf = SiteParameters(κ0f, SiteAmpBoore2016_760())
         siteUf = SiteParameters(κ0f, SiteAmpUnit())
+        siteCf = SiteParameters(κ0f, SiteAmpConstant(2.0))
 
         site0d = SiteParameters(κ0d)
         siteAd = SiteParameters(κ0d, SiteAmpAlAtikAbrahamson2021_cy14_760())
         siteBd = SiteParameters(κ0d, SiteAmpBoore2016_760())
         siteUd = SiteParameters(κ0d, SiteAmpUnit())
+        siteCd = SiteParameters(κ0d, SiteAmpConstant(2.0))
 
         f = 0.05
 
@@ -594,21 +598,26 @@ using StaticArrays
             Af1f = site_amplification(f, siteAf)
             Af2f = site_amplification(f, siteBf)
             Af3f = site_amplification(f, siteUf)
+            Af4f = site_amplification(f, siteCf)
 
             @test Af0f == Af1f
             @test Af3f == 1.0
             @test Af2f < Af1f
+            @test Af4f == 2.0
 
             Af0d = site_amplification(f, site0d)
             Af1d = site_amplification(f, siteAd)
             Af2d = site_amplification(f, siteBd)
             Af3d = site_amplification(f, siteUd)
+            Af4d = site_amplification(f, siteCd)
 
             @test Af0d == Af1d
             @test Af3d == 1.0
             @test Af2d < Af1d
+            @test Af4d == 2.0
 
             @test Af0f == Af0d
+            @test Af4f == Af4d
 
             f0 = 80.0
             f1 = 100.0

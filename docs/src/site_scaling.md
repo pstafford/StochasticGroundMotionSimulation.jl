@@ -31,10 +31,12 @@ Currently, the following impedance functions (custom types) are implemented:
 - `SiteAmpAlAtikAbrahamson2021_cy14_760`: is the Al Atik & Abrahamson (2021) impedance function obtained by inverting the Chiou & Youngs (2014) GMM. The reference profile has a ``V_{S,30}=760`` m/s
 - `SiteAmpAlAtikAbrahamson2021_cy14_1100`: is the Al Atik & Abrahamson (2021) impedance function obtained by inverting the Chiou & Youngs (2014) GMM. The reference profile has a ``V_{S,30}=1100`` m/s
 - `SiteAmpUnit`: simply provides a unit impedance for all frequencies, _i.e._, ``S_I(f)=1.0``
+- `SiteAmpConstant`: provides a constant, `c`, impedance for all frequencies, _i.e._, ``S_I(f)=c``
 
 ```@docs
 site_amplification
 SiteAmpUnit
+SiteAmpConstant
 SiteAmpBoore2016_760
 SiteAmpAlAtikAbrahamson2021_ask14_620
 SiteAmpAlAtikAbrahamson2021_ask14_760
