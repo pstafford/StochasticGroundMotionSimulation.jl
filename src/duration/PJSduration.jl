@@ -181,18 +181,7 @@ function edwards_2023(m, r_ps::U, src::SourceParameters{S,T}) where {S<:Float64,
   end
   # path duration
   Dp = edwards_2023_path_duration(r_ps)
-  # checks on return type for type stability
-  if isnan(Dp)
-    if T <: Dual
-      return T(NaN)
-    elseif U <: Dual
-      return U(NaN)
-    else
-      return S(NaN)
-    end
-  else
-    return Ds + Dp
-  end
+  return Ds + Dp
 end
 
 

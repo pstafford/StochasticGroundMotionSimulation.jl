@@ -1134,6 +1134,19 @@ using StaticArrays
             @test Dex == Dex0
 
             # @code_warntype rms_duration(m, r_ps, fas, sdof, rvt)
+
+            src = SourceParameters(50.0, :AtkinsonSilva2000)
+            fas = FourierParameters(src, path, site)
+
+            m = 1.0
+            r_rup = 40.0
+            r_ps = equivalent_point_source_distance(r_rup, m, fas)
+            Dex = excitation_duration(m, r_ps, fas, rvt)
+            (Drms, Dex0, Drat) = rms_duration(m, r_ps, fas, sdof, rvt)
+            @test Dex == Dex0
+
+            @test StochasticGroundMotionSimulation.edwards_2023_path_duration(-1.0) == 0.0
+
         end
 
         @testset "UK duration models" begin
@@ -1163,6 +1176,9 @@ using StaticArrays
 
             # @code_warntype StochasticGroundMotionSimulation.uk_path_duration_free(r_ps)
 
+            @test StochasticGroundMotionSimulation.uk_path_duration_free(-1.0) == 0.0
+            @test StochasticGroundMotionSimulation.uk_path_duration_fixed(-1.0) == 0.0
+
             m = 0.0
             for r_rup in range(-4.0, stop=600.0, step=5.0)
                 r_ps = equivalent_point_source_distance(r_rup, m, fas)
@@ -1176,6 +1192,21 @@ using StaticArrays
                 (Drms_fixed, Dex0_fixed, Drat_fixed) = rms_duration(m, r_ps, fas, sdof, rvt_fixed)
                 @test Dex_fixed == Dex0_fixed
             end
+
+            src = SourceParameters(50.0, :AtkinsonSilva2000)
+            fas = FourierParameters(src, path, site)
+
+            m = 1.0
+            r_rup = 40.0
+            r_ps = equivalent_point_source_distance(r_rup, m, fas)
+            Dex_free = excitation_duration(m, r_ps, fas, rvt_free)
+            (Drms_free, Dex0_free, Drat_free) = rms_duration(m, r_ps, fas, sdof, rvt_free)
+            @test Dex_free == Dex0_free
+
+            Dex_fixed = excitation_duration(m, r_ps, fas, rvt_fixed)
+            (Drms_fixed, Dex0_fixed, Drat_fixed) = rms_duration(m, r_ps, fas, sdof, rvt_fixed)
+            @test Dex_fixed == Dex0_fixed
+
         end
 
     end
