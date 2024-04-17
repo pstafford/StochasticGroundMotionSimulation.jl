@@ -259,18 +259,8 @@ function uk_duration_free(m, r_ps::U, src::SourceParameters{S,T}) where {S<:Floa
   end
   # path duration
   Dp = uk_path_duration_free(r_ps)
-  # checks on return type for type stability
-  if isnan(Dp)
-    if T <: Dual
-      return T(NaN)
-    elseif U <: Dual
-      return U(NaN)
-    else
-      return S(NaN)
-    end
-  else
-    return Ds + Dp
-  end
+  # combine source and path durations
+  return Ds + Dp
 end
 
 """
@@ -289,18 +279,8 @@ function uk_duration_fixed(m, r_ps::U, src::SourceParameters{S,T}) where {S<:Flo
   end
   # path duration
   Dp = uk_path_duration_fixed(r_ps)
-  # checks on return type for type stability
-  if isnan(Dp)
-    if T <: Dual
-      return T(NaN)
-    elseif U <: Dual
-      return U(NaN)
-    else
-      return S(NaN)
-    end
-  else
-    return Ds + Dp
-  end
+  # combine source and path durations
+  return Ds + Dp
 end
 
 

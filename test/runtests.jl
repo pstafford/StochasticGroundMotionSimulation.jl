@@ -1164,7 +1164,7 @@ using StaticArrays
             # @code_warntype StochasticGroundMotionSimulation.uk_path_duration_free(r_ps)
 
             m = 0.0
-            for r_rup in range(1.0, stop=600.0, step=5.0)
+            for r_rup in range(-4.0, stop=600.0, step=5.0)
                 r_ps = equivalent_point_source_distance(r_rup, m, fas)
                 # StochasticGroundMotionSimulation.uk_path_duration_free(r_ps)
                 # StochasticGroundMotionSimulation.uk_duration_free(m, r_ps, src)
