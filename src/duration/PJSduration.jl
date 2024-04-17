@@ -196,15 +196,124 @@ function edwards_2023(m, r_ps::U, src::SourceParameters{S,T}) where {S<:Float64,
 end
 
 
+"""
+  uk_path_duration_free(r_ps::T) where {T<:Real}
+
+Path duration model for the UK allowing the plateau segment to have a free slope
+"""
+function uk_path_duration_free(r_ps::T) where {T<:Real}
+  r_ref = [ 0.0, 37.1, 133.7, 267.0 ]
+  dg_ref = [ 0.444, -0.048, 0.129, 0.183 ]
+  d_path = zero(T)
+
+  if r_ps <= r_ref[1]
+    return d_path
+  elseif r_ps <= r_ref[2]
+    return d_path + dg_ref[1] * r_ps
+  elseif r_ps <= r_ref[3]
+    return d_path + dg_ref[1] * r_ref[2] + dg_ref[2] * (r_ps - r_ref[2])
+  elseif r_ps <= r_ref[4]
+    return d_path + dg_ref[1] * r_ref[2] + dg_ref[2] * (r_ref[3] - r_ref[2]) + dg_ref[3] * (r_ps - r_ref[3])
+  else
+    return d_path + dg_ref[1] * r_ref[2] + dg_ref[2] * (r_ref[3] - r_ref[2]) + dg_ref[3] * (r_ref[4] - r_ref[3]) + dg_ref[4] * (r_ps - r_ref[4])
+  end
+end
+
+
+"""
+  uk_path_duration_fixed(r_ps::T) where {T<:Real}
+
+Path duration model for the UK forcing the plateau segment to have a flat slope
+"""
+function uk_path_duration_fixed(r_ps::T) where {T<:Real}
+  r_ref = [0.0, 30.0, 143.0, 304.0]
+  dg_ref = [0.445, 0.0, 0.131, 0.198]
+  d_path = zero(T)
+
+  if r_ps <= r_ref[1]
+    return d_path
+  elseif r_ps <= r_ref[2]
+    return d_path + dg_ref[1] * r_ps
+  elseif r_ps <= r_ref[3]
+    return d_path + dg_ref[1] * r_ref[2] + dg_ref[2] * (r_ps - r_ref[2])
+  elseif r_ps <= r_ref[4]
+    return d_path + dg_ref[1] * r_ref[2] + dg_ref[2] * (r_ref[3] - r_ref[2]) + dg_ref[3] * (r_ps - r_ref[3])
+  else
+    return d_path + dg_ref[1] * r_ref[2] + dg_ref[2] * (r_ref[3] - r_ref[2]) + dg_ref[3] * (r_ref[4] - r_ref[3]) + dg_ref[4] * (r_ps - r_ref[4])
+  end
+end
+
+"""
+  uk_duration_free(m, r_ps::U, src::SourceParameters{S,T}) where {S<:Float64,T<:Real,U<:Real}
+
+Excitation duration for the UK. Combines standard reciprocal corner frequency source duration with a UK path duration. 
+"""
+function uk_duration_free(m, r_ps::U, src::SourceParameters{S,T}) where {S<:Float64,T<:Real,U<:Real}
+  # source duration
+  fa, fb, ε = corner_frequency(m, src)
+  # this is not explicitly considered in the Edwards model, but keep the same functionality as other models for consistency
+  if src.model == :Atkinson_Silva_2000
+    Ds = 0.5 / fa + 0.5 / fb
+  else
+    Ds = 1.0 / fa
+  end
+  # path duration
+  Dp = uk_path_duration_free(r_ps)
+  # checks on return type for type stability
+  if isnan(Dp)
+    if T <: Dual
+      return T(NaN)
+    elseif U <: Dual
+      return U(NaN)
+    else
+      return S(NaN)
+    end
+  else
+    return Ds + Dp
+  end
+end
+
+"""
+  uk_duration_fixed(m, r_ps::U, src::SourceParameters{S,T}) where {S<:Float64,T<:Real,U<:Real}
+
+Excitation duration for the UK. Combines standard reciprocal corner frequency source duration with a UK path duration. 
+"""
+function uk_duration_fixed(m, r_ps::U, src::SourceParameters{S,T}) where {S<:Float64,T<:Real,U<:Real}
+  # source duration
+  fa, fb, ε = corner_frequency(m, src)
+  # this is not explicitly considered in the Edwards model, but keep the same functionality as other models for consistency
+  if src.model == :Atkinson_Silva_2000
+    Ds = 0.5 / fa + 0.5 / fb
+  else
+    Ds = 1.0 / fa
+  end
+  # path duration
+  Dp = uk_path_duration_fixed(r_ps)
+  # checks on return type for type stability
+  if isnan(Dp)
+    if T <: Dual
+      return T(NaN)
+    elseif U <: Dual
+      return U(NaN)
+    else
+      return S(NaN)
+    end
+  else
+    return Ds + Dp
+  end
+end
+
 
 """
   excitation_duration(m, r_ps::U, src::SourceParameters{S,T}, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real,U<:Real}
 
 Generic function implementing excitation duration models.
 
-Currently, only the Boore & Thompson (2014, 2015) models are implemented and a project-specific model from Edwards (2023). 
+Currently, only the general Boore & Thompson (2014, 2015) models are implemented along with some project-specific models from Edwards (2023) (for South Africa), 
+and two UK duration models. 
 The first two are both represented within the Boore & Thompson (2015) paper, so just switch path duration based upon `rvt.dur_region`
 To activate the Edwards model, use `rvt.dur_ex == :BE23`
+For the UK models use `rvt.dur_ex == :UKfree` or `rvt.dur_ex == :UKfixed`
 """
 function excitation_duration(m, r_ps::U, src::SourceParameters{S,T}, rvt::RandomVibrationParameters) where {S<:Float64,T<:Real,U<:Real}
   if rvt.dur_ex == :BE23
@@ -214,6 +323,10 @@ function excitation_duration(m, r_ps::U, src::SourceParameters{S,T}, rvt::Random
     # compute r_rup from r_ps
     # r_rup = rupture_distance_from_equivalent_point_source_distance(r_ps, m, sat)
     return edwards_2023(m, r_ps, src)
+  elseif rvt.dur_ex == :UKfree 
+    return uk_duration_free(m, r_ps, src)
+  elseif rvt.dur_ex == :UKfixed 
+    return uk_duration_fixed(m, r_ps, src)
   elseif (rvt.dur_ex == :BT14) & (rvt.dur_region == :ACR)
     return boore_thompson_2014(m, r_ps, src)
   elseif (rvt.dur_ex == :BT15)
