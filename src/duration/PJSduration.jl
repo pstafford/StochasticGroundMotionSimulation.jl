@@ -191,8 +191,8 @@ end
 Path duration model for the UK allowing the plateau segment to have a free slope
 """
 function uk_path_duration_free(r_ps::T) where {T<:Real}
-  r_ref = [ 0.0, 37.1, 133.7, 267.0 ]
-  dg_ref = [ 0.444, -0.048, 0.129, 0.183 ]
+  r_ref = [ 0.0, 21.8, 140.4, 254.2 ]
+  dg_ref = [ 0.667, 0.002, 0.128, 0.192 ]
   d_path = zero(T)
 
   if r_ps <= r_ref[1]
@@ -215,8 +215,8 @@ end
 Path duration model for the UK forcing the plateau segment to have a flat slope
 """
 function uk_path_duration_fixed(r_ps::T) where {T<:Real}
-  r_ref = [0.0, 30.0, 143.0, 304.0]
-  dg_ref = [0.445, 0.0, 0.131, 0.198]
+  r_ref = [0.0, 28.3, 140.5, 254.1]
+  dg_ref = [0.519, 0.0, 0.13, 0.193]
   d_path = zero(T)
 
   if r_ps <= r_ref[1]
