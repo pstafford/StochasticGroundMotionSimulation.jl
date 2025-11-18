@@ -30,7 +30,8 @@ jobs:
       - name: Add Julia General Registry (with retry)
         run: |
             attempt=0
-            until julia -e 'using Pkg; Pkg.Registry.add("General")'; do
+            until julia -e 'using Pkg; Pkg.Registry.add("General")' 
+            do
               attempt=$((attempt+1))
               if [ $attempt -ge 3 ]; then
                 echo "Failed after $attempt attempts."
