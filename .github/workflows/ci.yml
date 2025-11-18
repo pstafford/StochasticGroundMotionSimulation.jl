@@ -27,20 +27,8 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      - name: Add Julia General Registry (with retry)
-        run: |
-            attempt=0
-            until julia -e 'using Pkg; Pkg.Registry.add("General")' 
-            do
-              attempt=$((attempt+1))
-              if [ $attempt -ge 3 ]; then
-                echo "Failed after $attempt attempts."
-                exit 1
-              fi
-              echo "Retrying registry add..."
-              sleep 10
-            done
-
+      - name: Add General registry
+        run: julia -e 'using Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url="https://github.com/JuliaRegistries/General.git"))'
       - name: Cache Julia packages
         uses: actions/cache@v3
         env:
