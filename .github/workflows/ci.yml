@@ -10,8 +10,8 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.7'
-          - '1.10'
+          - '1'   # Automatically picks the latest stable (currently 1.12)
+          - 'lts' # Automatically picks the latest LTS (currently 1.10)
           - 'nightly'
         os:
           - ubuntu-latest
@@ -65,7 +65,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@latest
         with:
-          version: '1.10'
+          version: 'lts'
       - name: Install dependencies
         run: |
           julia --project=docs -e '
