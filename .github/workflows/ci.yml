@@ -21,12 +21,28 @@ jobs:
         arch:
           - x64
     steps:
-      - uses: actions/checkout@v4
-      - uses: julia-actions/setup-julia@v1
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Julia
+        uses: julia-actions/setup-julia@v1
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      - uses: actions/cache@v3
+      - name: Add Julia General Registry (with retry)
+        run: |
+            attempt=0
+            until julia -e 'using Pkg; Pkg.Registry.add("General")'; do
+              attempt=$((attempt+1))
+              if [ $attempt -ge 3 ]; then
+                echo "Failed after $attempt attempts."
+                exit 1
+              fi
+              echo "Retrying registry add..."
+              sleep 10
+            done
+
+      - name: Cache Julia packages
+        uses: actions/cache@v3
         env:
           cache-name: cache-artifacts
         with:
