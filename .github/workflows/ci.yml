@@ -30,6 +30,7 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - name: Add General Registry (mirror & retry)
+        shell: bash
         run: |
           for i in {1..3}; 
           do
