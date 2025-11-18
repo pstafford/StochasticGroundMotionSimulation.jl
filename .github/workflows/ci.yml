@@ -27,8 +27,12 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      - name: Add General registry
-        run: julia -e 'using Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url="https://github.com/JuliaRegistries/General.git"))'
+      - name: Add General Registry (mirror & retry)
+        run: |
+          for i in {1..3}; 
+          do
+            julia -e 'using Pkg; Pkg.Registry.add(Pkg.RegistrySpec(url="https://github.com/JuliaRegistries/General.git"))' && break || sleep 10
+          done
       - name: Cache Julia packages
         uses: actions/cache@v3
         env:
