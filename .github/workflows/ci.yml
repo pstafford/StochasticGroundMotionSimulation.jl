@@ -6,6 +6,8 @@ jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
     runs-on: ${{ matrix.os }}
+    env:
+      JULIA_PKG_SERVER: ""
     strategy:
       fail-fast: false
       matrix:
@@ -53,17 +55,40 @@ jobs:
   docs:
     name: Documentation
     runs-on: ubuntu-latest
+    env:
+      JULIA_PKG_SERVER: ""
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v1
         with:
           version: '1.10'
-      - name: Install dependencies
+      - name: Install dependencies with retries
         run: |
           julia --project=docs -e '
-            using Pkg
+            using Pkg, Logging
             Pkg.develop(PackageSpec(path=pwd()))
-            Pkg.instantiate()'
+            max_tries = 5
+            for i in 1:max_tries
+              try
+                Pkg.instantiate()
+                println("Pkg.instantiate succeeded")
+                break
+              catch e
+                @warn "Pkg.instantiate failed (attempt $i/$max_tries): $e"
+                if i == max_tries
+                  rethrow(e)
+                end
+                sleep(2^i)
+              end
+            end
+          '
+      - name: Cache Julia registries
+        uses: actions/cache@v3
+        with:
+          path: ~/.julia/registries
+          key: ${{ runner.os }}-julia-registries-${{ hashFiles('**/Project.toml','**/Manifest.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-julia-registries-
       - run: |
           julia --project=docs -e '
             using Documenter: doctest
