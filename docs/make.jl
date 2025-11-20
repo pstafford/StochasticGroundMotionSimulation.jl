@@ -27,6 +27,7 @@ makedocs(;
                 "Path scaling" => "path_scaling.md",
                 "Site scaling" => "site_scaling.md",
             ],
+            "Custom Models" => "custom_models.md",
             "Method Index" => "method_index.md"
         ]
     ],

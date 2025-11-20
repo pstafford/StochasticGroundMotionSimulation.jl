@@ -35,3 +35,4 @@ RandomVibrationParameters() = RandomVibrationParameters(:DK80, :BT15, :BT15, :AC
 RandomVibrationParameters(pf) = RandomVibrationParameters(pf, :BT15, ((pf == :DK80) ? :BT15 : :BT12), :ACR)
 RandomVibrationParameters(pf, region) = RandomVibrationParameters(pf, :BT15, ((pf == :DK80) ? :BT15 : :BT12), region)
 
+

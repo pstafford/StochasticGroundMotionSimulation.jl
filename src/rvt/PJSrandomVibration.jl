@@ -154,3 +154,49 @@ function rvt_response_spectrum!(Sa::Vector{U}, period::Vector{V}, m::S, r_ps::T,
 		@inbounds Sa[i] = rvt_response_spectral_ordinate(period[i], m, r_ps, fas, rvt, glxi=glxi, glwi=glwi)
   	end
 end
+
+
+"""
+    rvt_response_spectral_ordinate(T, mag, dist, fas_model, duration_model; kwargs...)
+
+Unified interface for computing response spectral ordinates.
+
+Can accept either:
+- Traditional FourierParameters and RandomVibrationParameters
+- Custom AbstractFASModel and AbstractDurationModel instances
+"""
+function rvt_response_spectral_ordinate(
+    T::Real,
+    mag::Real,
+    dist::Real,
+    fas_model::Union{FourierParameters,AbstractFASModel},
+    duration_model::Union{RandomVibrationParameters,AbstractDurationModel};
+    kwargs...
+)
+    # Convert old-style parameters to new interface if needed
+    if fas_model isa FourierParameters
+        fas_model = FourierParametersWrapper(fas_model)
+    end
+
+    if duration_model isa RandomVibrationParameters
+        duration_model = ExistingDurationWrapper(duration_model)
+    end
+
+    # Call the custom implementation
+    return rvt_response_spectral_ordinate_custom(T, mag, dist, fas_model, duration_model; kwargs...)
+end
+
+# Keep the original function signature as a dispatch
+function rvt_response_spectral_ordinate(
+    T::Real,
+    mag::Real,
+    r_ps::Real,
+    fas::FourierParameters,
+    rvt::RandomVibrationParameters
+)
+    # Original implementation or redirect to new interface
+    return rvt_response_spectral_ordinate(T, mag, r_ps,
+        FourierParametersWrapper(fas),
+        ExistingDurationWrapper(rvt))
+end
+
