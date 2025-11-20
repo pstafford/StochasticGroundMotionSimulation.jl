@@ -2246,4 +2246,8 @@ using StaticArrays
 
         end
     end
+
+    @testset "Custom Models" begin
+        include("test_custom_models.jl")
+    end
 end
