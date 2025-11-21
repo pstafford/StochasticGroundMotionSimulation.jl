@@ -83,4 +83,5 @@ StochasticGroundMotionSimulation.CustomModels.rvt_response_spectral_ordinate_cus
 ### Utilities
 ```@docs
 StochasticGroundMotionSimulation.CustomModels.FourierParametersWrapper
+StochasticGroundMotionSimulation.CustomModels.ExistingDurationWrapper
 ```
