@@ -330,3 +330,5 @@ function get_parametric_type(fas::FourierParameters)
         return T
     end
 end
+
+

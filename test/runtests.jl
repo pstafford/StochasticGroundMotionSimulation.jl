@@ -2246,4 +2246,12 @@ using StaticArrays
 
         end
     end
+
+    @testset "Custom Models" begin
+        include("test_custom_models.jl")
+    end
+
+    @testset "RVT Interface Branching" begin
+        include("test_rvt_interface_branching.jl")
+    end
 end

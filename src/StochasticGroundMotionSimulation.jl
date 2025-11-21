@@ -1,4 +1,3 @@
-
 module StochasticGroundMotionSimulation
 
 using Interpolations
@@ -11,16 +10,18 @@ using LinearAlgebra
 using StaticArrays
 
 
-export Oscillator,
-	FourierParameters,
-	SourceParameters,
-	GeometricSpreadingParameters,
-	NearSourceSaturationParameters,
-	AnelasticAttenuationParameters,
-	PathParameters,
-	SiteParameters,
-	SiteAmpUnit,
-	SiteAmpConstant,
+export AbstractFASModel,
+    AbstractDurationModel,
+    Oscillator,
+    FourierParameters,
+    SourceParameters,
+    GeometricSpreadingParameters,
+    NearSourceSaturationParameters,
+    AnelasticAttenuationParameters,
+    PathParameters,
+    SiteParameters,
+    SiteAmpUnit,
+    SiteAmpConstant,
     SiteAmpBoore2016_760,
     SiteAmpAlAtikAbrahamson2021_ask14_620,
     SiteAmpAlAtikAbrahamson2021_ask14_760,
@@ -35,39 +36,66 @@ export Oscillator,
     SiteAmpAlAtikAbrahamson2021_cy14_760,
     SiteAmpAlAtikAbrahamson2021_cy14_1100,
     RandomVibrationParameters,
-	SpectralMoments,
-	create_spectral_moments,
+    SpectralMoments,
+    create_spectral_moments,
     period,
     transfer,
     transfer!,
     squared_transfer,
     squared_transfer!,
     site_amplification,
-	kappa_filter,
-	magnitude_to_moment,
-	corner_frequency,
-	geometric_spreading,
-	near_source_saturation,
-	equivalent_point_source_distance,
-	anelastic_attenuation,
-	fourier_constant,
-	fourier_source,
-	fourier_source_shape,
-	fourier_path,
-	fourier_attenuation,
-	fourier_site,
-	combined_kappa_frequency,
-	fourier_spectral_ordinate,
-	fourier_spectrum,
-	fourier_spectrum!,
-	spectral_moment,
-	spectral_moments,
+    kappa_filter,
+    magnitude_to_moment,
+    corner_frequency,
+    geometric_spreading,
+    near_source_saturation,
+    equivalent_point_source_distance,
+    anelastic_attenuation,
+    fourier_constant,
+    fourier_source,
+    fourier_source_shape,
+    fourier_path,
+    fourier_attenuation,
+    fourier_site,
+    combined_kappa_frequency,
+    fourier_spectral_ordinate,
+    fourier_spectrum,
+    fourier_spectrum!,
+    spectral_moment,
+    spectral_moments,
     excitation_duration,
-	rms_duration,
-	peak_factor,
-	rvt_response_spectral_ordinate,
-	rvt_response_spectrum,
-	rvt_response_spectrum!
+    rms_duration,
+    peak_factor,
+    rvt_response_spectral_ordinate,
+    rvt_response_spectrum,
+    rvt_response_spectrum!
+
+export CustomModels
+export AbstractFASModel, AbstractDurationModel
+export compute_fas, compute_duration
+export FunctionalFASModel, FunctionalDurationModel
+export CustomFASModel, CustomDurationModel
+export HybridFASModel
+export rvt_response_spectral_ordinate_custom
+export validate_fas_model, validate_duration_model
+export FourierParametersWrapper, ExistingDurationWrapper
+
+# Define abstract types HERE in main module so they're available to all included files
+"""
+    AbstractFASModel
+
+Abstract base type for Fourier Amplitude Spectrum models.
+All custom FAS models should subtype this.
+"""
+abstract type AbstractFASModel end
+
+"""
+    AbstractDurationModel
+
+Abstract base type for duration models.
+All custom duration models should subtype this.
+"""
+abstract type AbstractDurationModel end
 
 
 # Write your package code here.
@@ -83,6 +111,16 @@ include("fourier/PJSfourierSpectrum.jl")
 include("duration/PJSduration.jl")
 include("rvt/PJSintegration.jl")
 include("rvt/PJSpeakFactor.jl")
+include("custom/PJScustomModels.jl")
 include("rvt/PJSrandomVibration.jl")
+
+# Import everything from CustomModels submodule
+using .CustomModels: FunctionalFASModel, FunctionalDurationModel
+using .CustomModels: CustomFASModel, CustomDurationModel
+using .CustomModels: HybridFASModel
+using .CustomModels: FourierParametersWrapper, ExistingDurationWrapper
+using .CustomModels: compute_fas, compute_duration
+using .CustomModels: rvt_response_spectral_ordinate_custom
+using .CustomModels: validate_fas_model, validate_duration_model
 
 end
