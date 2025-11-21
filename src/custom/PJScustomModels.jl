@@ -91,7 +91,7 @@ struct FunctionalFASModel{F,P} <: AbstractFASModel
         if !(eltype(params) <: Real)
             throw(ArgumentError("Parameters must be Real-valued for ForwardDiff compatibility"))
         end
-        new{F,P}(func, params)
+        new{F,P}(func, copy(params))
     end
 end
 
@@ -141,7 +141,7 @@ struct FunctionalDurationModel{F,P} <: AbstractDurationModel
         if !(eltype(params) <: Real)
             throw(ArgumentError("Parameters must be Real-valued for ForwardDiff compatibility"))
         end
-        new{F,P}(func, params)
+        new{F,P}(func, copy(params))
     end
 end
 
@@ -264,9 +264,10 @@ end
         mag::Real,
         dist::Real,
         fas_model::AbstractFASModel,
-        duration_model::AbstractDurationModel;
-        freq_range=(0.01, 100.0),
-        nfreq=200
+        duration_model::AbstractDurationModel,
+        damping::Real=0.05,
+        glxi=nothing,
+        glwi=nothing
     )
 
 Compute response spectral ordinate using custom FAS and duration models.
@@ -277,21 +278,33 @@ Compute response spectral ordinate using custom FAS and duration models.
 - `dist`: Distance (km)
 - `fas_model`: Custom FAS model
 - `duration_model`: Custom duration model
+- `damping`: Damping ratio (default: 0.05)
+- `glxi`: Gauss-Legendre quadrature points (optional, for compatibility)
+- `glwi`: Gauss-Legendre quadrature weights (optional, for compatibility)
+
+# Keyword Arguments (for backward compatibility)
 - `freq_range`: Frequency range for integration (Hz)
 - `nfreq`: Number of frequency points for integration
 
 # Returns
 - Response spectral acceleration (g)
+
+# Notes
+- The `glxi` and `glwi` parameters are included for API compatibility with the
+  traditional RVT interface but are not currently used in this implementation,
+  which uses log-spaced frequency points instead.
 """
 function rvt_response_spectral_ordinate_custom(
     T::Real,
     mag::Real,
     dist::Real,
     fas_model::AbstractFASModel,
-    duration_model::AbstractDurationModel;
+    duration_model::AbstractDurationModel,
+    damping::Real=0.05,
+    glxi=nothing,
+    glwi=nothing;
     freq_range=(0.01, 100.0),
-    nfreq=200,
-    damping=0.05
+    nfreq=200
 )
     # Natural frequency of oscillator
     fn = 1 / T
@@ -373,12 +386,54 @@ end
 """
     HybridFASModel
 
-Allows mixing custom source model with built-in path and site models.
+Combines multiple FAS models with a custom combining function.
+Useful for mixing different model components or creating ensemble models.
+
+# Fields
+- `models`: Vector of AbstractFASModel instances to combine
+- `combine_func`: Function that combines results: (results, freq, mag, dist, params) -> combined_result
+- `params`: Additional parameters for the combining function
+
+# Example
+```julia
+# Create component models
+source_model = FunctionalFASModel((f, m, r, p) -> p[1] * f^(-2), [1e20])
+path_model = FunctionalFASModel((f, m, r, p) -> exp(-π*f*r/(p[1]*3.5)), [200.0])
+
+# Combine by multiplication
+combine = (results, f, m, r, p) -> results[1] * results[2]
+hybrid = HybridFASModel([source_model, path_model], combine, Float64[])
+
+# Use like any other FAS model
+fas = compute_fas(hybrid, 1.0, 6.0, 10.0)
+```
 """
-struct HybridFASModel{S,P,T} <: AbstractFASModel
-    custom_source::S
-    builtin_path::P
-    builtin_site::T
+struct HybridFASModel{M,F,P} <: AbstractFASModel
+    models::M  # Vector of models
+    combine_func::F
+    params::P
+
+    function HybridFASModel(models::Vector{<:AbstractFASModel}, combine_func::F, params::P) where {F,P}
+        length(models) >= 1 || throw(ArgumentError("HybridFASModel requires at least one component model"))
+        new{typeof(models),F,P}(models, combine_func, params)
+    end
+end
+
+function compute_fas(model::HybridFASModel, freq, mag, dist)
+    # Compute FAS for each component model
+    results = [compute_fas(m, freq, mag, dist) for m in model.models]
+
+    # Promote types for ForwardDiff compatibility
+    T = promote_type(typeof(freq), typeof(mag), typeof(dist), eltype(model.params))
+
+    # Combine results using the provided function
+    return model.combine_func(
+        results,
+        convert(T, freq),
+        convert(T, mag),
+        convert(T, dist),
+        convert(Vector{T}, model.params)
+    )
 end
 
 # =====================================
@@ -386,7 +441,7 @@ end
 # =====================================
 
 # Import FourierParameters and related functions from parent module
-using ..StochasticGroundMotionSimulation: FourierParameters, fourier_spectral_ordinate
+using ..StochasticGroundMotionSimulation: FourierParameters, fourier_spectral_ordinate, RandomVibrationParameters, excitation_duration
 
 """
     FourierParametersWrapper <: AbstractFASModel
@@ -416,10 +471,65 @@ struct FourierParametersWrapper <: AbstractFASModel
     params::FourierParameters
 end
 
-function compute_fas(model::FourierParametersWrapper, freq::T, mag::T, dist::T) where T<:Real
+function compute_fas(model::FourierParametersWrapper, freq, mag, dist)
     # Delegate to the existing fourier_spectral_ordinate function
     return fourier_spectral_ordinate(freq, mag, dist, model.params)
 end
+
+
+# simple container type (internal)
+struct ModelPair
+    fas_model::AbstractFASModel
+    duration_model::AbstractDurationModel
+end
+
+# 2-arg constructor for tests and convenience
+FourierParametersWrapper(
+    fas_model::AbstractFASModel,
+    duration_model::AbstractDurationModel,
+) = ModelPair(fas_model, duration_model)
+
+
+
+"""
+    ExistingDurationWrapper <: AbstractDurationModel
+
+Wrapper to make existing RandomVibrationParameters compatible with AbstractDurationModel interface.
+
+Since `excitation_duration` requires both FourierParameters and RandomVibrationParameters,
+this wrapper stores both to enable proper delegation to the existing duration calculation.
+
+# Example
+```julia
+# Create traditional parameters
+fourier_params = FourierParameters(...)
+rvt_params = RandomVibrationParameters(:BT15)
+
+# Wrap for use with custom interface
+# Note: Must provide both parameters
+wrapper = ExistingDurationWrapper(rvt_params, fourier_params)
+
+# Now can use compute_duration
+duration = compute_duration(wrapper, mag, dist)
+```
+
+# Important
+This wrapper is only used when BOTH FourierParameters and RandomVibrationParameters
+are provided (the fully concrete case). If you're using a custom FAS model, you must
+also use a custom duration model.
+"""
+struct ExistingDurationWrapper <: AbstractDurationModel
+    rvt_params::RandomVibrationParameters
+    fourier_params::FourierParameters
+end
+
+function compute_duration(model::ExistingDurationWrapper, mag, dist)
+    # Delegate to the existing excitation_duration function
+    # This requires both FourierParameters and RandomVibrationParameters
+    return excitation_duration(mag, dist, model.fourier_params, model.rvt_params)
+end
+
+
 
 # =====================================
 # Utilities for Model Development
@@ -522,9 +632,8 @@ export compute_fas, compute_duration
 export FunctionalFASModel, FunctionalDurationModel
 export CustomFASModel, CustomDurationModel
 export HybridFASModel
-export FourierParametersWrapper
+export FourierParametersWrapper, ExistingDurationWrapper
 export rvt_response_spectral_ordinate_custom
 export validate_fas_model, validate_duration_model
-
 
 end

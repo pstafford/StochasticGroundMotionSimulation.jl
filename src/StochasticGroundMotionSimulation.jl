@@ -78,7 +78,7 @@ export CustomFASModel, CustomDurationModel
 export HybridFASModel
 export rvt_response_spectral_ordinate_custom
 export validate_fas_model, validate_duration_model
-export FourierParametersWrapper
+export FourierParametersWrapper, ExistingDurationWrapper
 
 # Define abstract types HERE in main module so they're available to all included files
 """
@@ -118,7 +118,7 @@ include("rvt/PJSrandomVibration.jl")
 using .CustomModels: FunctionalFASModel, FunctionalDurationModel
 using .CustomModels: CustomFASModel, CustomDurationModel
 using .CustomModels: HybridFASModel
-using .CustomModels: FourierParametersWrapper
+using .CustomModels: FourierParametersWrapper, ExistingDurationWrapper
 using .CustomModels: compute_fas, compute_duration
 using .CustomModels: rvt_response_spectral_ordinate_custom
 using .CustomModels: validate_fas_model, validate_duration_model
