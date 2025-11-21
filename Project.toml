@@ -1,6 +1,6 @@
 name = "StochasticGroundMotionSimulation"
 uuid = "b8c06d6b-f458-43ac-b37a-3e779b88779f"
-version = "0.2.8"
+version = "0.3.0"
 authors = ["Peter Stafford <p.stafford@me.com>"]
 
 [deps]
