@@ -355,7 +355,6 @@ function anelastic_attenuation(f::S, r::T, anelastic::AnelasticAttenuationParame
             Qfilt *= exp(-π * fpow * (Rr1 - Rr0) / (Q0_r * cQ_r))
         end
     end
-    return Qfilt
 end
 
 anelastic_attenuation(f, r, path::PathParameters) = anelastic_attenuation(f, r, path.anelastic)

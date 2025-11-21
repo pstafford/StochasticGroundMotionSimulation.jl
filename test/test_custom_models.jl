@@ -61,6 +61,19 @@ using ForwardDiff
         @test isfinite(ForwardDiff.partials(dual_result)[1])
     end
 
+    @testset "FunctionalFASModel functor call" begin
+        fas_func = (f, m, r, p) -> p[1] * f^(-p[2])
+        fas_model = FunctionalFASModel(fas_func, [100.0, 1.0])
+
+        # Direct compute_fas
+        fas_val = compute_fas(fas_model, test_freq, test_mag, test_dist)
+
+        # Functor call syntax: model(f, m, r)
+        fas_call = fas_model(test_freq, test_mag, test_dist)
+
+        @test fas_call ≈ fas_val
+    end
+
     @testset "FunctionalDurationModel" begin
         # Basic functionality
         simple_duration = (m, r, p) -> p[1] + p[2] * (m - 6.0) + p[3] * r
@@ -102,6 +115,29 @@ using ForwardDiff
         @test isfinite(ForwardDiff.partials(dual_result)[1])
     end
 
+    @testset "FunctionalDurationModel functor call" begin
+        dur_func = (m, r, p) -> p[1] + p[2] * m + p[3] * r
+        dur_model = FunctionalDurationModel(dur_func, [5.0, 0.5, 0.1])
+
+        dur_val = compute_duration(dur_model, test_mag, test_dist)
+        dur_call = dur_model(test_mag, test_dist)
+
+        @test dur_call ≈ dur_val
+
+        dur_call_int = dur_model(Int(5), Int(10))
+        @test dur_call_int isa Real
+    end
+
+    @testset "Functional models parameter type validation" begin
+        # Non-Real element type → should throw for FAS
+        fas_func = (f, m, r, p) -> p[1] * f
+        @test_throws ArgumentError FunctionalFASModel(fas_func, ComplexF64[1+1im])
+
+        # Another non-Real element type → should throw for Duration
+        dur_func = (m, r, p) -> p[1]
+        @test_throws ArgumentError FunctionalDurationModel(dur_func, ["not", "real"])
+    end
+    
     @testset "CustomFASModel" begin
         # Create a custom FAS model type
         struct TestCustomFAS <: AbstractFASModel
