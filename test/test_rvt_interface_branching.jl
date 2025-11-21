@@ -405,6 +405,69 @@ using ForwardDiff
         @test Sa_a ≈ Sa_a2
         @test Sa_a != Sa_b  # Different models should give different results
     end
+
+    @testset "Native RVT with FourierParameters (PJSrandomVibration.jl)" begin
+        SGS = StochasticGroundMotionSimulation
+
+        # Reuse the test parameters
+        T = test_period
+        mag = test_mag
+        dist = test_dist
+        ζ = test_damping
+
+        # --- Build a simple FourierParameters instance (same recipe as above) ---
+
+        src = SGS.SourceParameters(100.0)
+        geo = SGS.GeometricSpreadingParameters([1.0, Inf], [1.0])
+        sat = SGS.NearSourceSaturationParameters(:BT15)
+        anel = SGS.AnelasticAttenuationParameters(300.0, 0.0, 3.5)
+        path = SGS.PathParameters(geo, anel)
+        site = SGS.SiteParameters(0.04, 0.0, 0.0, SGS.SiteAmpUnit())
+        fas_params = SGS.FourierParameters(src, path, site)
+
+        # Two different RVT settings to exercise pf_method branching
+        rvt_DK = SGS.RandomVibrationParameters(:DK80)
+        rvt_CL = SGS.RandomVibrationParameters(:CL56)
+
+        # SDOF oscillator
+        sdof = SGS.Oscillator(1.0 / T, ζ)
+
+        # --- 1. Direct SDOF interface (lines 69–87) ---
+
+        Sa_DK_sdof = rvt_response_spectral_ordinate(
+            mag, dist,
+            fas_params, sdof, rvt_DK,
+        )
+        Sa_CL_sdof = rvt_response_spectral_ordinate(
+            mag, dist,
+            fas_params, sdof, rvt_CL,
+        )
+
+        @test isfinite(Sa_DK_sdof)
+        @test isfinite(Sa_CL_sdof)
+        @test Sa_DK_sdof > 0
+        @test Sa_CL_sdof > 0
+
+        # --- 2. Convenience wrapper with period (lines 103–107) ---
+
+        Sa_DK_T = rvt_response_spectral_ordinate(
+            T, mag, dist,
+            fas_params, rvt_DK;
+            damping=ζ,
+        )
+        Sa_CL_T = rvt_response_spectral_ordinate(
+            T, mag, dist,
+            fas_params, rvt_CL;
+            damping=ζ,
+        )
+
+        @test isfinite(Sa_DK_T)
+        @test isfinite(Sa_CL_T)
+
+        # The period-based wrapper should not match the explicit SDOF call because the dispatch path is different for the two cases (and we end up using different duration models)
+        @test Sa_DK_T != Sa_DK_sdof 
+        @test Sa_CL_T != Sa_CL_sdof 
+    end
 end
 
 println("\n✓ All RVT interface branching tests completed successfully!")

@@ -135,6 +135,56 @@ using ForwardDiff
         @test isfinite(gradient)
     end
 
+    @testset "Built-in CustomFASModel (PJScustomModels.jl)" begin
+        # Valid model
+        custom_fas = CustomFASModel(50.0, 200.0, 0.3, 0.04, 760.0)
+
+        @test custom_fas isa AbstractFASModel
+
+        # r <= 50 branch
+        fas_near = compute_fas(custom_fas, test_freq, test_mag, 10.0)
+        # r > 50 branch
+        fas_far = compute_fas(custom_fas, test_freq, test_mag, 100.0)
+
+        @test fas_near > fas_far > 0.0
+        @test isfinite(fas_near)
+        @test isfinite(fas_far)
+
+        # Type promotion: Float32 inputs
+        fas_f32 = compute_fas(
+            custom_fas,
+            Float32(test_freq),
+            Float32(test_mag),
+            Float32(test_dist),
+        )
+        @test typeof(fas_f32) <: AbstractFloat
+
+        # ForwardDiff compatibility and gradient
+        @test validate_fas_model(custom_fas)
+
+        grad_m = ForwardDiff.derivative(
+            m -> compute_fas(custom_fas, test_freq, m, test_dist),
+            test_mag,
+        )
+        grad_r = ForwardDiff.derivative(
+            r -> compute_fas(custom_fas, test_freq, test_mag, r),
+            test_dist,
+        )
+
+        @test isfinite(grad_m)
+        @test isfinite(grad_r)
+
+        # Mixed-type constructor uses `promote`
+        mixed_fas = CustomFASModel(50, 200.0, 0.3f0, 0.04, 760)
+        @test mixed_fas isa CustomFASModel
+
+        # Constructor validation branches
+        @test_throws ArgumentError CustomFASModel(-1.0, 200.0, 0.3, 0.04, 760.0)   # stress_drop
+        @test_throws ArgumentError CustomFASModel(50.0, 0.0, 0.3, 0.04, 760.0)     # Q0
+        @test_throws ArgumentError CustomFASModel(50.0, 200.0, 0.3, -0.01, 760.0)  # kappa
+        @test_throws ArgumentError CustomFASModel(50.0, 200.0, 0.3, 0.04, 0.0)     # vs30
+    end
+
     @testset "CustomDurationModel" begin
         # Create a custom duration model type
         struct TestCustomDuration <: AbstractDurationModel
@@ -167,6 +217,48 @@ using ForwardDiff
         # Test gradient
         gradient = ForwardDiff.derivative(m -> compute_duration(model, m, test_dist), test_mag)
         @test isfinite(gradient)
+    end
+
+    @testset "Built-in CustomDurationModel (PJScustomModels.jl)" begin
+        custom_dur = CustomDurationModel(0.1, 0.05, 0.1, 2.0)
+
+        @test custom_dur isa AbstractDurationModel
+
+        dur = compute_duration(custom_dur, test_mag, test_dist)
+        @test dur > 0
+        @test isfinite(dur)
+
+        # Check dependence on distance (path term)
+        dur_near = compute_duration(custom_dur, test_mag, test_dist / 2)
+        dur_far = compute_duration(custom_dur, test_mag, test_dist * 2)
+        @test dur_far > dur_near
+
+        # Float32 inputs
+        dur_f32 = compute_duration(
+            custom_dur,
+            Float32(test_mag),
+            Float32(test_dist),
+        )
+        @test typeof(dur_f32) <: AbstractFloat
+
+        # Validation and gradients
+        @test validate_duration_model(custom_dur)
+
+        grad_m = ForwardDiff.derivative(
+            m -> compute_duration(custom_dur, m, test_dist),
+            test_mag,
+        )
+        grad_r = ForwardDiff.derivative(
+            r -> compute_duration(custom_dur, test_mag, r),
+            test_dist,
+        )
+
+        @test isfinite(grad_m)
+        @test isfinite(grad_r)
+
+        # Mixed-type constructor uses `promote`
+        mixed_dur = CustomDurationModel(1, 0.5f0, 0.1, 2)
+        @test mixed_dur isa CustomDurationModel
     end
 
     @testset "HybridFASModel" begin
@@ -248,6 +340,50 @@ using ForwardDiff
         @test isfinite(dur_result)
     end
 
+    @testset "Delegating wrappers to existing spectrum / duration" begin
+        SGS = StochasticGroundMotionSimulation
+
+        # --- Build a simple FourierParameters instance ---
+
+        # Source: just stress drop – uses default radiation pattern, etc.
+        src = SGS.SourceParameters(100.0)
+
+        # Geometric spreading: piecewise with a single segment (very simple)
+        geo = SGS.GeometricSpreadingParameters([1.0, Inf], [1.0])
+
+        # Saturation: no saturation
+        sat = SGS.NearSourceSaturationParameters(:BT15)
+
+        # Anelastic attenuation: simple Q0, η 
+        anel = SGS.AnelasticAttenuationParameters(
+            300.0,  # Q0 (constrained or variable, depending on constructor)
+            0.0,     # η
+            3.5 # c\_Q    
+        )
+
+        path = SGS.PathParameters(geo, sat, anel)
+
+        site = SGS.SiteParameters(0.04, 0.0, 0.0, SGS.SiteAmpUnit())
+
+        fas_params = SGS.FourierParameters(src, path, site)
+
+        # Random vibration parameters (default DK80 / BT15 / BT15 / ACR)
+        rvt_params = SGS.RandomVibrationParameters()
+
+        # --- FourierParametersWrapper: compute_fas delegation ---
+
+        fp_wrapper = FourierParametersWrapper(fas_params)
+        fp_val = compute_fas(fp_wrapper, test_freq, test_mag, test_dist)
+        @test isfinite(fp_val)
+
+        # --- ExistingDurationWrapper: compute_duration delegation ---
+
+        dur_wrapper = ExistingDurationWrapper(rvt_params, fas_params)
+        dur_val = compute_duration(dur_wrapper, test_mag, test_dist)
+        @test isfinite(dur_val)
+        @test dur_val > 0
+    end
+    
     @testset "rvt_response_spectral_ordinate_custom" begin
         # Create models
         fas_func = (f, m, r, p) -> p[1] * f^(-p[2]) * exp(-p[3] * f) * 10^(p[4] * m) / r
@@ -315,6 +451,41 @@ using ForwardDiff
             test_mag
         )
         @test isfinite(gradient_hybrid)
+    end
+
+    @testset "rvt_response_spectral_ordinate_custom - zero FAS fallback branch" begin
+        # FAS model that returns exactly zero at all frequencies
+        zero_fas = FunctionalFASModel(
+            (f, m, r, p) -> zero(eltype(p)),
+            Float64[],   # params unused
+        )
+
+        # Simple constant duration
+        const_dur = FunctionalDurationModel(
+            (m, r, p) -> 10.0,
+            Float64[],
+        )
+
+        Sa_zero = rvt_response_spectral_ordinate_custom(
+            test_period, test_mag, test_dist,
+            zero_fas, const_dur, test_damping;
+            freq_range=(0.5, 2.0),  # non-default range
+            nfreq=5,                # non-default number of frequencies
+        )
+
+        # With zero FAS everywhere, arms = 0, so spectral ordinate should be 0
+        @test Sa_zero == 0.0
+    end
+   
+    @testset "HybridFASModel constructor validation" begin
+        combine_func = (results, f, m, r, p) -> results[1]
+
+        # Empty model list should throw
+        @test_throws ArgumentError HybridFASModel(
+            AbstractFASModel[],  # empty
+            combine_func,
+            Float64[],
+        )
     end
 
     @testset "Validation Functions" begin
